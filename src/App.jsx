@@ -10,6 +10,8 @@ import AdminDashboard from './pages/AdminDashboard'
 import CaseEditorPage from './pages/CaseEditorPage'
 import ProfilePage from './pages/ProfilePage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
 import { API_BASE_URL } from './config'
 
@@ -77,7 +79,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              <AuthControls setAuth={setAuth} />
+              <Link to="/login" className="btn-primary">Login</Link>
             )}
           </div>
         </header>
@@ -86,13 +88,15 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/membership" element={<MembershipPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/login" element={auth ? <Navigate to="/cases" /> : <LoginPage setAuth={setAuth} />} />
+            <Route path="/register" element={auth ? <Navigate to="/cases" /> : <RegisterPage setAuth={setAuth} />} />
             <Route
               path="/cases"
               element={<CasesPage auth={auth} />}
             />
             <Route
               path="/cases/:id"
-              element={auth ? <CaseRunnerPage auth={auth} /> : <Navigate to="/" />}
+              element={auth ? <CaseRunnerPage auth={auth} /> : <Navigate to="/login" />}
             />
             <Route
               path="/admin"
@@ -108,11 +112,11 @@ function App() {
             />
             <Route
               path="/profile"
-              element={auth ? <ProfilePage auth={auth} setAuth={setAuth} /> : <Navigate to="/" />}
+              element={auth ? <ProfilePage auth={auth} setAuth={setAuth} /> : <Navigate to="/login" />}
             />
             <Route
               path="/leaderboard"
-              element={auth ? <LeaderboardPage auth={auth} /> : <Navigate to="/" />}
+              element={auth ? <LeaderboardPage auth={auth} /> : <Navigate to="/login" />}
             />
           </Routes>
         </main>
@@ -121,72 +125,6 @@ function App() {
   )
 }
 
-function AuthControls({ setAuth }) {
-  const [mode, setMode] = useState('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/` + (mode === 'login' ? 'login' : 'register'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
-        },
-        body: JSON.stringify({ email, password }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.message || 'Authentication failed')
-      }
-      const data = await res.json()
-      setAuth(data)
-      setEmail('')
-      setPassword('')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="auth-controls">
-      <form onSubmit={handleSubmit} className="auth-form">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {error && <div className="error-text">{error}</div>}
-        <button className="btn-primary" type="submit" disabled={loading}>
-          {loading ? '...' : mode === 'login' ? 'Login' : 'Register'}
-        </button>
-      </form>
-      <button
-        className="link-button"
-        type="button"
-        onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-      >
-        {mode === 'login' ? 'Create account' : 'Have an account? Login'}
-      </button>
-    </div>
-  )
-}
 
 export default App
