@@ -39,7 +39,7 @@ function App() {
             <Link to="/">Home</Link>
             <Link to="/membership">Membership</Link>
             <Link to="/about">About</Link>
-            {auth && <Link to="/cases">Cases</Link>}
+            <Link to="/cases">Cases</Link>
             {auth && <Link to="/leaderboard">Leaderboard</Link>}
             {isAdmin && <Link to="/admin">Admin</Link>}
           </nav>
@@ -88,7 +88,7 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route
               path="/cases"
-              element={auth ? <CasesPage auth={auth} /> : <Navigate to="/" />}
+              element={<CasesPage auth={auth} />}
             />
             <Route
               path="/cases/:id"

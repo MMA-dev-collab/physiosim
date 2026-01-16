@@ -19,12 +19,14 @@ function CasesPage({ auth }) {
       setError(null)
       try {
         // Load cases
-        const res = await fetch(`${API_BASE_URL}/api/cases`, {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
-          },
-        })
+        const headers = {
+          'ngrok-skip-browser-warning': 'true'
+        }
+        if (auth?.token) {
+          headers.Authorization = `Bearer ${auth.token}`
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/cases`, { headers })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
           throw new Error(data.message || 'Failed to load cases')
@@ -159,10 +161,10 @@ function CasesPage({ auth }) {
                 </div>
                 <button
                   className="case-card-button"
-                  disabled={c.isLocked && !c.isCompleted}
+                  disabled={(c.isLocked && !c.isCompleted) || !auth}
                   onClick={() => navigate(`/cases/${c.id}`)}
                 >
-                  {c.isLocked && !c.isCompleted ? 'Locked' : c.isCompleted ? 'Review Case' : 'Start Case'}
+                  {!auth ? 'Login to Start' : (c.isLocked && !c.isCompleted ? 'Locked' : c.isCompleted ? 'Review Case' : 'Start Case')}
                 </button>
               </div>
             </div>

@@ -90,10 +90,10 @@ function CaseRunnerPage({ auth }) {
     }
   }
 
-  // For MCQ steps, can go next only after answer is submitted (selectedOption is set by handleAnswer)
+  // For MCQ steps, can go next only after answer is submitted AND Correct
   // For non-MCQ steps, can always go next
   const canGoNext =
-    currentStep?.type !== 'mcq' || selectedOption !== null
+    currentStep?.type !== 'mcq' || (selectedOption !== null && isCorrect === true)
 
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {
@@ -105,9 +105,7 @@ function CaseRunnerPage({ auth }) {
     setSelectedOption(null)
     setFeedback(null)
     setIsCorrect(null)
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((i) => i - 1)
-    }
+    // Stay on current step to retry
   }
 
   if (loading) return <div className="page"><div className="loading-text">Loading case…</div></div>
@@ -282,11 +280,13 @@ function McqStep({ step, selectedOption, feedback, isCorrect, onAnswer }) {
     }
   }
 
-  // Reset submission state when step changes
+  // Reset submission state when step changes or when retry happens (selectedOption becomes null)
   React.useEffect(() => {
-    setIsSubmitted(false)
-    setLocalSelection(null)
-  }, [step.id])
+    if (!selectedOption) {
+      setIsSubmitted(false)
+      setLocalSelection(null)
+    }
+  }, [step.id, selectedOption])
 
   // Determine which selection to show: submitted answer or local selection
   const displaySelection = isSubmitted ? (selectedOption || localSelection) : localSelection

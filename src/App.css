@@ -1963,3 +1963,9 @@
   background: #fef2f2;
   color: #dc2626;
 }
+
+/* MCQ Selected State */
+.mcq-option-card.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
