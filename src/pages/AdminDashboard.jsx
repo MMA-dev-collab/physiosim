@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import CasesTab from '../components/admin/CasesTab'
 import UsersTab from '../components/admin/UsersTab'
 import CategoriesTab from '../components/admin/CategoriesTab'
+import AdminDevices from './AdminDevices'
 import { API_BASE_URL } from '../config'
 import './AdminDashboard.css'
 
@@ -41,6 +42,12 @@ function AdminDashboard({ auth }) {
           >
             <span>🏷️</span> Categories
           </button>
+          <button
+            className={`admin-sidebar-item ${activeTab === 'devices' ? 'active' : ''}`}
+            onClick={() => setActiveTab('devices')}
+          >
+            <span>🔒</span> Device Locks
+          </button>
         </nav>
       </aside>
 
@@ -71,6 +78,7 @@ function AdminDashboard({ auth }) {
           {activeTab === 'cases' && <CasesTab auth={auth} />}
           {activeTab === 'users' && <UsersTab auth={auth} />}
           {activeTab === 'categories' && <CategoriesTab auth={auth} />}
+          {activeTab === 'devices' && <AdminDevices auth={auth} />}
         </div>
       </main>
     </div>
