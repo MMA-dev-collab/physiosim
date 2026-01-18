@@ -3,6 +3,9 @@ import CasesTab from '../components/admin/CasesTab'
 import UsersTab from '../components/admin/UsersTab'
 import CategoriesTab from '../components/admin/CategoriesTab'
 import AdminDevices from './AdminDevices'
+import SubscriptionsTab from '../components/admin/SubscriptionsTab'
+import CaseAccessTab from '../components/admin/CaseAccessTab'
+import SubscriptionPlansTab from '../components/admin/SubscriptionPlansTab'
 import { API_BASE_URL } from '../config'
 import './AdminDashboard.css'
 
@@ -43,6 +46,24 @@ function AdminDashboard({ auth }) {
             <span>🏷️</span> Categories
           </button>
           <button
+            className={`admin-sidebar-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
+            onClick={() => setActiveTab('subscriptions')}
+          >
+            <span>💳</span> Subscriptions
+          </button>
+          <button
+            className={`admin-sidebar-item ${activeTab === 'case-access' ? 'active' : ''}`}
+            onClick={() => setActiveTab('case-access')}
+          >
+            <span>🔐</span> Case Access
+          </button>
+          <button
+            className={`admin-sidebar-item ${activeTab === 'plans' ? 'active' : ''}`}
+            onClick={() => setActiveTab('plans')}
+          >
+            <span>📦</span> Plans
+          </button>
+          <button
             className={`admin-sidebar-item ${activeTab === 'devices' ? 'active' : ''}`}
             onClick={() => setActiveTab('devices')}
           >
@@ -78,6 +99,9 @@ function AdminDashboard({ auth }) {
           {activeTab === 'cases' && <CasesTab auth={auth} />}
           {activeTab === 'users' && <UsersTab auth={auth} />}
           {activeTab === 'categories' && <CategoriesTab auth={auth} />}
+          {activeTab === 'subscriptions' && <SubscriptionsTab auth={auth} />}
+          {activeTab === 'case-access' && <CaseAccessTab auth={auth} />}
+          {activeTab === 'plans' && <SubscriptionPlansTab auth={auth} />}
           {activeTab === 'devices' && <AdminDevices auth={auth} />}
         </div>
       </main>

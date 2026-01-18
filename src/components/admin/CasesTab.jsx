@@ -67,6 +67,7 @@ export default function CasesTab({ auth }) {
     }
   }
 
+
   // Filter Logic
   const filteredCases = cases.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase())
