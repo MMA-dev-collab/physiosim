@@ -17,44 +17,105 @@ function RegisterPage({ setAuth }) {
     const [loading, setLoading] = useState(false)
     const [serverError, setServerError] = useState(null)
 
+    const [touched, setTouched] = useState({})
+
     const validateName = (name) => {
-        const nameRegex = /^[A-Za-z\s]{1,20}$/
         if (!name) return 'Name is required'
-        if (!nameRegex.test(name)) return 'Name must contain only English letters (max 20 characters)'
+        const trimmedName = name.trim()
+
+        // Regex: 3-40 chars, letters (Arabic/English), numbers, spaces
+        const nameRegex = /^[A-Za-z0-9\u0600-\u06FF\s]{3,40}$/
+        const hasLetter = /[A-Za-z\u0600-\u06FF]/.test(trimmedName)
+
+        if (!nameRegex.test(trimmedName) || !hasLetter) {
+            return 'Name must be 3–40 characters and contain at least one letter'
+        }
         return null
     }
 
     const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!email) return 'Email is required'
-        if (!emailRegex.test(email)) return 'Invalid email format'
+        const trimmedEmail = email.trim().toLowerCase()
 
-        // Basic domain validation
-        const domain = email.split('@')[1]
-        if (!domain || domain.split('.').length < 2) return 'Invalid email domain'
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
+        if (!emailRegex.test(trimmedEmail)) return 'Invalid email format'
+
+        // Deny-list check
+        const domain = trimmedEmail.split('@')[1]
+        const denyList = ["gil.com", "gamil.com", "hotnail.com", "yaho.com", "outlok.com", "icloud.co"]
+        if (denyList.includes(domain)) {
+            let suggestion = ""
+            if (domain === "gamil.com" || domain === "gil.com") suggestion = "gmail.com"
+            else if (domain === "hotnail.com") suggestion = "hotmail.com"
+            else if (domain === "yaho.com") suggestion = "yahoo.com"
+            else if (domain === "outlok.com") suggestion = "outlook.com"
+            else if (domain === "icloud.co") suggestion = "icloud.com"
+
+            return `Invalid email. Did you mean ${suggestion}?`
+        }
 
         return null
     }
 
     const validatePhone = (phone) => {
-        const phoneRegex = /^\d{10,15}$/
         if (!phone) return 'Phone number is required'
-        if (!phoneRegex.test(phone)) return 'Phone must contain only digits (10-15 digits)'
+        const trimmedPhone = phone.trim()
+
+        // Egyptian Phone Regex
+        const phoneRegex = /^(?:\+20|0)(10|11|12|15)\d{8}$/
+        if (!phoneRegex.test(trimmedPhone)) {
+            return 'Please enter a valid Egyptian phone number (010/011/012/015)'
+        }
         return null
     }
 
     const validatePassword = (password) => {
         if (!password) return 'Password is required'
         if (password.length < 8) return 'Password must be at least 8 characters'
+
+        const hasLetter = /[A-Za-z]/.test(password)
+        const hasNumber = /\d/.test(password)
+        if (!hasLetter || !hasNumber) return 'Password must contain at least one letter and one number'
+
         return null
+    }
+
+    const handleBlur = (e) => {
+        const { name, value } = e.target
+        setTouched(prev => ({ ...prev, [name]: true }))
+
+        let error = null
+        switch (name) {
+            case 'name': error = validateName(value); break
+            case 'email': error = validateEmail(value); break
+            case 'phone': error = validatePhone(value); break
+            case 'password': error = validatePassword(value); break
+            case 'confirmPassword':
+                if (value !== formData.password) error = 'Passwords do not match'
+                break
+        }
+
+        setErrors(prev => ({ ...prev, [name]: error }))
     }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
 
-        // Clear error for this field
-        setErrors(prev => ({ ...prev, [name]: null }))
+        // If field was already touched, validate immediately on change for better UX
+        if (touched[name]) {
+            let error = null
+            switch (name) {
+                case 'name': error = validateName(value); break
+                case 'email': error = validateEmail(value); break
+                case 'phone': error = validatePhone(value); break
+                case 'password': error = validatePassword(value); break
+                case 'confirmPassword':
+                    if (value !== formData.password) error = 'Passwords do not match'
+                    break
+            }
+            setErrors(prev => ({ ...prev, [name]: error }))
+        }
         setServerError(null)
     }
 
@@ -87,6 +148,15 @@ function RegisterPage({ setAuth }) {
         e.preventDefault()
         setServerError(null)
 
+        // Mark all as touched
+        setTouched({
+            name: true,
+            email: true,
+            phone: true,
+            password: true,
+            confirmPassword: true
+        })
+
         // Validate all fields
         const newErrors = {
             name: validateName(formData.name),
@@ -110,6 +180,12 @@ function RegisterPage({ setAuth }) {
         setLoading(true)
 
         try {
+            // Auto-normalize phone for submission
+            let phoneToSend = formData.phone.trim()
+            if (phoneToSend.startsWith('+20')) {
+                phoneToSend = '0' + phoneToSend.substring(3)
+            }
+
             const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
@@ -117,9 +193,9 @@ function RegisterPage({ setAuth }) {
                     'ngrok-skip-browser-warning': 'true'
                 },
                 body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
+                    name: formData.name.trim(),
+                    email: formData.email.trim().toLowerCase(),
+                    phone: phoneToSend,
                     password: formData.password,
                     profileImage: formData.profileImage
                 }),
@@ -131,8 +207,15 @@ function RegisterPage({ setAuth }) {
             }
 
             const data = await res.json()
-            setAuth(data)
-            navigate('/cases')
+
+            // Backend now returns { message, userId } instead of token
+            // Navigate to verification page with userId and email
+            navigate('/verify-email', {
+                state: {
+                    userId: data.userId,
+                    email: formData.email
+                }
+            })
         } catch (err) {
             setServerError(err.message)
         } finally {
@@ -159,13 +242,14 @@ function RegisterPage({ setAuth }) {
                                 name="name"
                                 type="text"
                                 className={`form-input ${errors.name ? 'input-error' : ''}`}
-                                placeholder="Enter your full name (English only)"
+                                placeholder="Enter your full name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                maxLength={20}
+                                onBlur={handleBlur}
+                                maxLength={40}
                             />
                             {errors.name && <span className="field-error">{errors.name}</span>}
-                            <span className="field-hint">Max 20 characters, English letters only</span>
+                            {!errors.name && <span className="field-hint">3-40 chars, Arabic or English</span>}
                         </div>
 
                         <div className="form-group">
@@ -180,6 +264,7 @@ function RegisterPage({ setAuth }) {
                                 placeholder="Enter your email address"
                                 value={formData.email}
                                 onChange={handleInputChange}
+                                onBlur={handleBlur}
                             />
                             {errors.email && <span className="field-error">{errors.email}</span>}
                         </div>
@@ -193,12 +278,13 @@ function RegisterPage({ setAuth }) {
                                 name="phone"
                                 type="tel"
                                 className={`form-input ${errors.phone ? 'input-error' : ''}`}
-                                placeholder="Enter your phone number (digits only)"
+                                placeholder="01xxxxxxxxx"
                                 value={formData.phone}
                                 onChange={handleInputChange}
+                                onBlur={handleBlur}
                             />
                             {errors.phone && <span className="field-error">{errors.phone}</span>}
-                            <span className="field-hint">10-15 digits, no spaces or special characters</span>
+                            {!errors.phone && <span className="field-hint">Egyptian numbers only (010, 011, 012, 015)</span>}
                         </div>
 
                         <div className="form-group">
@@ -213,9 +299,10 @@ function RegisterPage({ setAuth }) {
                                 placeholder="Create a password"
                                 value={formData.password}
                                 onChange={handleInputChange}
+                                onBlur={handleBlur}
                             />
                             {errors.password && <span className="field-error">{errors.password}</span>}
-                            <span className="field-hint">Minimum 8 characters</span>
+                            {!errors.password && <span className="field-hint">Min 8 chars, 1 letter & 1 number</span>}
                         </div>
 
                         <div className="form-group">
@@ -230,6 +317,7 @@ function RegisterPage({ setAuth }) {
                                 placeholder="Confirm your password"
                                 value={formData.confirmPassword}
                                 onChange={handleInputChange}
+                                onBlur={handleBlur}
                             />
                             {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
                         </div>

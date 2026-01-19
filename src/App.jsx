@@ -12,6 +12,7 @@ import ProfilePage from './pages/ProfilePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 
 import { API_BASE_URL } from './config'
 
@@ -90,6 +91,7 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={auth ? <Navigate to="/cases" /> : <LoginPage setAuth={setAuth} />} />
             <Route path="/register" element={auth ? <Navigate to="/cases" /> : <RegisterPage setAuth={setAuth} />} />
+            <Route path="/verify-email" element={<VerifyEmailPage setAuth={setAuth} />} />
             <Route
               path="/cases"
               element={<CasesPage auth={auth} />}
