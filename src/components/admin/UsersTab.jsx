@@ -75,7 +75,7 @@ export default function UsersTab({ auth }) {
                         fontWeight: '500'
                       }}
                     >
-                      {user.membershipType || 'Normal'}
+                      {(user.membershipType === 'Free' || !user.membershipType) ? 'Normal' : user.membershipType}
                     </span>
                     <small style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                       {user.membershipType && user.membershipType !== 'Normal' && user.membershipType !== 'Free' ?

@@ -150,8 +150,8 @@ export default function ProfilePage({ auth, setAuth }) {
                   <div className="stat">
                     <div className="stat-label">Current Plan</div>
                     <div className="stat-value">
-                      <span className={`badge ${stats.membershipType === 'premium' ? 'badge-completed' : ''}`}>
-                        {stats.membershipType === 'premium' ? 'Premium' : 'Free'}
+                      <span className={`badge ${stats.membershipType && stats.membershipType.toLowerCase() !== 'normal' && stats.membershipType.toLowerCase() !== 'free' ? 'badge-completed' : ''}`}>
+                        {stats.membershipType || 'Free'}
                       </span>
                     </div>
                   </div>
@@ -164,7 +164,7 @@ export default function ProfilePage({ auth, setAuth }) {
                     </div>
                   )}
                 </div>
-                {stats.membershipType !== 'premium' && (
+                {(!stats.membershipType || stats.membershipType.toLowerCase() === 'normal' || stats.membershipType.toLowerCase() === 'free') && (
                   <Link to="/membership" style={{ display: 'inline-block', marginTop: '1rem' }}>
                     <button className="btn-primary">Upgrade to Premium</button>
                   </Link>
@@ -225,7 +225,7 @@ export default function ProfilePage({ auth, setAuth }) {
           <Link to="/leaderboard">
             <button className="btn-secondary">View Leaderboard</button>
           </Link>
-          {stats.membershipType !== 'premium' && (
+          {(!stats.membershipType || stats.membershipType.toLowerCase() === 'normal' || stats.membershipType.toLowerCase() === 'free') && (
             <Link to="/membership">
               <button className="btn-secondary">Upgrade Membership</button>
             </Link>

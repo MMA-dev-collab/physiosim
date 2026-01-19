@@ -28,6 +28,7 @@ export default function SubscriptionPlansTab({ auth }) {
     description: '',
     features: [],
     isActive: true,
+    isPremium: false,
     newFeature: ''
   })
 
@@ -82,6 +83,7 @@ export default function SubscriptionPlansTab({ auth }) {
           description: plan.description || '',
           features: Array.isArray(plan.features) ? plan.features : [],
           isActive: plan.isActive !== undefined ? !!plan.isActive : true,
+          isPremium: plan.role === 'premium',
           newFeature: ''
         })
       } else {
@@ -96,6 +98,7 @@ export default function SubscriptionPlansTab({ auth }) {
           description: '',
           features: [],
           isActive: true,
+          isPremium: false,
           newFeature: ''
         })
       }
@@ -120,6 +123,7 @@ export default function SubscriptionPlansTab({ auth }) {
       description: '',
       features: [],
       isActive: true,
+      isPremium: false,
       newFeature: ''
     })
   }
@@ -231,6 +235,15 @@ export default function SubscriptionPlansTab({ auth }) {
         requestBody.isActive = formData.isActive
       }
 
+      // Handle Role Logic
+      // If editing a core plan (Normal/Premium), we don't send role (backend prevents change anyway)
+      // If creating new or editing custom, we send role based on isPremium
+      const isCorePlan = editingPlan && (editingPlan.name === 'Normal' || (editingPlan.name === 'Premium' && editingPlan.role === 'premium'));
+
+      if (!isCorePlan) {
+        requestBody.role = formData.isPremium ? 'premium' : 'custom';
+      }
+
       console.log('Sending request to:', url)
       console.log('Request method:', method)
       console.log('Request body:', requestBody)
@@ -272,9 +285,9 @@ export default function SubscriptionPlansTab({ auth }) {
   }
 
   const confirmDelete = (planId, plan) => {
-    // Prevent deletion of core plans (normal/premium role)
-    const planRole = plan?.role || (plan?.name === 'Normal' ? 'normal' : plan?.name === 'Premium' ? 'premium' : 'custom');
-    if (planRole === 'normal' || planRole === 'premium') {
+    // Prevent deletion of core plans only (Normal and system Premium)
+    const isCore = plan?.name === 'Normal' || (plan?.name === 'Premium' && plan?.role === 'premium');
+    if (isCore) {
       toast.error('Cannot delete core plans. Deactivate instead.')
       return
     }
@@ -292,6 +305,7 @@ export default function SubscriptionPlansTab({ auth }) {
       }
     })
   }
+
 
   const handleDelete = async (planId) => {
     try {
@@ -508,9 +522,15 @@ export default function SubscriptionPlansTab({ auth }) {
                 </td>
                 <td>
                   {plan.role === 'premium' ? (
-                    <span className="badge" style={{ background: '#eff6ff', color: '#2563eb', fontWeight: '600' }}>
-                      🔒 Premium Access
-                    </span>
+                    plan.name === 'Premium' ? (
+                      <span className="badge" style={{ background: '#eff6ff', color: '#2563eb', fontWeight: '600' }}>
+                        🔒 Premium Access
+                      </span>
+                    ) : (
+                      <span className="badge" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                        🔒 Custom (Premium Access)
+                      </span>
+                    )
                   ) : plan.role === 'normal' ? (
                     <span className="badge" style={{ background: '#fef3c7', color: '#d97706', fontWeight: '600' }}>
                       🆓 Free Access
@@ -584,7 +604,7 @@ export default function SubscriptionPlansTab({ auth }) {
                     >
                       {plan.isActive ? 'Deactivate' : 'Activate'}
                     </button>
-                    {plan.role !== 'normal' && plan.role !== 'premium' && (
+                    {(plan.name !== 'Normal' && !(plan.name === 'Premium' && plan.role === 'premium')) && (
                       <button
                         onClick={() => confirmDelete(plan.id, plan)}
                         style={{
@@ -858,7 +878,7 @@ export default function SubscriptionPlansTab({ auth }) {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '1rem' }}>
+                <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
@@ -867,6 +887,21 @@ export default function SubscriptionPlansTab({ auth }) {
                     />
                     <span>Active (plan is available for subscription)</span>
                   </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.isPremium}
+                      onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+                      disabled={editingPlan && (editingPlan.name === 'Normal' || (editingPlan.name === 'Premium' && editingPlan.role === 'premium'))}
+                    />
+                    <span>Grant Premium Access (unlocks premium cases)</span>
+                  </label>
+                  {editingPlan && (editingPlan.name === 'Normal' || (editingPlan.name === 'Premium' && editingPlan.role === 'premium')) && (
+                    <small style={{ color: '#6b7280', marginLeft: '1.5rem' }}>
+                      Access level for core '{editingPlan.name}' plan cannot be changed.
+                    </small>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
