@@ -63,12 +63,12 @@ function AdminDashboard({ auth }) {
           >
             <span>📦</span> Plans
           </button>
-          <button
+          {/* <button
             className={`admin-sidebar-item ${activeTab === 'devices' ? 'active' : ''}`}
             onClick={() => setActiveTab('devices')}
           >
             <span>🔒</span> Device Locks
-          </button>
+          </button> */}
         </nav>
       </aside>
 
@@ -102,7 +102,7 @@ function AdminDashboard({ auth }) {
           {activeTab === 'subscriptions' && <SubscriptionsTab auth={auth} />}
           {activeTab === 'case-access' && <CaseAccessTab auth={auth} />}
           {activeTab === 'plans' && <SubscriptionPlansTab auth={auth} />}
-          {activeTab === 'devices' && <AdminDevices auth={auth} />}
+          {/* {activeTab === 'devices' && <AdminDevices auth={auth} />} */}
         </div>
       </main>
     </div>
