@@ -82,7 +82,6 @@ function App() {
                     )}
                   </div>
                 </div>
-<<<<<<< HEAD
               ) : (
                 <Link to="/login" className="btn-primary">Login</Link>
               )}
