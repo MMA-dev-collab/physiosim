@@ -105,60 +105,22 @@ export default function CaseAccessTab({ auth }) {
     }
   }
 
-  // Bulk update multiple cases
-  const handleBulkUpdate = async (caseIds, updates) => {
-    if (!window.confirm(`Update access for ${caseIds.length} case(s)?`)) return
 
-    setUpdating('bulk')
-    try {
-      const promises = caseIds.map(caseId => {
-        const caseData = cases.find(c => c.id === caseId)
-        const updateData = { ...caseData, ...updates }
-
-        // Sync logic
-        if (updates.accessLevel === 'premium') {
-          updateData.isPremiumOnly = true
-          updateData.isFree = false
-        } else if (updates.accessLevel === 'free') {
-          updateData.isFree = true
-          updateData.isPremiumOnly = false
-        } else if (updates.accessLevel === 'all') {
-          updateData.isFree = true
-          updateData.isPremiumOnly = false
-        }
-
-        return fetch(`${API_BASE_URL}/api/admin/cases/${caseId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
-          },
-          body: JSON.stringify(updateData)
-        })
-      })
-
-      await Promise.all(promises)
-      showToast('success', `Updated ${caseIds.length} case(s)`)
-      loadCases()
-    } catch (e) {
-      showToast('error', 'Failed to update cases')
-    } finally {
-      setUpdating(null)
-    }
-  }
 
   // Filter Logic
   const filteredCases = cases.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase())
     const matchesCategory = categoryFilter === 'all' ||
       (c.categoryId && c.categoryId.toString() === categoryFilter) ||
-      (!c.categoryId && c.category === categoryFilter)
+      (!c.categoryId && c.category === categories.find(cat => cat.id.toString() === categoryFilter)?.name)
 
-    const matchesAccess = accessFilter === 'all' ||
-      (accessFilter === 'free' && (c.accessLevel === 'free' || c.isFree)) ||
-      (accessFilter === 'premium' && (c.accessLevel === 'premium' || c.isPremiumOnly)) ||
-      (accessFilter === 'allUsers' && c.accessLevel === 'all')
+    const matchesAccess = (() => {
+      if (accessFilter === 'all') return true
+      if (accessFilter === 'none') return !c.requiredPlanId // No plan assigned
+
+      // If accessFilter is a number (plan ID), check if case requires that plan
+      return c.requiredPlanId === Number(accessFilter)
+    })()
 
     return matchesSearch && matchesCategory && matchesAccess
   })
@@ -226,12 +188,15 @@ export default function CaseAccessTab({ auth }) {
         <select
           value={accessFilter}
           onChange={(e) => setAccessFilter(e.target.value)}
-          style={{ padding: '0.5rem 1rem', borderRadius: '100px', border: '1px solid #e2e8f0' }}
+          style={{ padding: '0.5rem 1rem', borderRadius: '100px', border: '1px solid #e2e8f0', minWidth: '200px' }}
         >
-          <option value="all">All Access Levels</option>
-          <option value="free">Free Cases</option>
-          <option value="premium">Premium Cases</option>
-          <option value="allUsers">All Users Cases</option>
+          <option value="all">All Plans</option>
+          <option value="none">No Plan (Public)</option>
+          {plans.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.role === 'premium' ? '🔒' : p.role === 'normal' ? '🆓' : '⭐'} {p.name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -316,20 +281,7 @@ export default function CaseAccessTab({ auth }) {
         <table className="cases-table">
           <thead>
             <tr>
-              <th style={{ width: '30px' }}>
-                <input
-                  type="checkbox"
-                  onChange={(e) => {
-                    // Select all visible cases
-                    const allSelected = filteredCases.every(c => c.selected)
-                    filteredCases.forEach(c => {
-                      setCases(prev => prev.map(caseItem =>
-                        caseItem.id === c.id ? { ...caseItem, selected: !allSelected } : caseItem
-                      ))
-                    })
-                  }}
-                />
-              </th>
+
               <th>Case Title</th>
               <th>Category</th>
               <th>Current Access</th>
@@ -340,17 +292,7 @@ export default function CaseAccessTab({ auth }) {
           <tbody>
             {filteredCases.map(c => (
               <tr key={c.id} style={{ opacity: updating === c.id ? 0.5 : 1 }}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={c.selected || false}
-                    onChange={(e) => {
-                      setCases(prev => prev.map(caseItem =>
-                        caseItem.id === c.id ? { ...caseItem, selected: e.target.checked } : caseItem
-                      ))
-                    }}
-                  />
-                </td>
+
                 <td>
                   <div style={{ fontWeight: '500' }}>{c.title}</div>
                   <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
@@ -428,80 +370,7 @@ export default function CaseAccessTab({ auth }) {
         )}
       </div>
 
-      {/* Bulk Actions */}
-      {filteredCases.some(c => c.selected) && (
-        <div style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          background: 'white',
-          padding: '1rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
-          zIndex: 100
-        }}>
-          <div style={{ marginBottom: '0.5rem', fontWeight: '500' }}>
-            Bulk Update ({filteredCases.filter(c => c.selected).length} selected)
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => {
-                const selectedIds = filteredCases.filter(c => c.selected).map(c => c.id)
-                handleBulkUpdate(selectedIds, { accessLevel: 'free' })
-              }}
-              disabled={updating === 'bulk'}
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#fef3c7',
-                color: '#d97706',
-                border: '1px solid #fde68a',
-                borderRadius: '4px',
-                cursor: updating === 'bulk' ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              Set All Free
-            </button>
-            <button
-              onClick={() => {
-                const selectedIds = filteredCases.filter(c => c.selected).map(c => c.id)
-                handleBulkUpdate(selectedIds, { accessLevel: 'premium' })
-              }}
-              disabled={updating === 'bulk'}
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#eff6ff',
-                color: '#2563eb',
-                border: '1px solid #bfdbfe',
-                borderRadius: '4px',
-                cursor: updating === 'bulk' ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              Set All Premium
-            </button>
-            <button
-              onClick={() => {
-                const selectedIds = filteredCases.filter(c => c.selected).map(c => c.id)
-                handleBulkUpdate(selectedIds, { accessLevel: 'all' })
-              }}
-              disabled={updating === 'bulk'}
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#f0fdf4',
-                color: '#16a34a',
-                border: '1px solid #bbf7d0',
-                borderRadius: '4px',
-                cursor: updating === 'bulk' ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              Set All Users
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Toast Notification */}
       {toast && (

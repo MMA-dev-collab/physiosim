@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import StepEditor from '../components/StepEditor'
+import { useToast } from '../context/ToastContext'
+import ConfirmationModal from '../components/common/ConfirmationModal'
 import './CaseEditorPage.css'
 
 export default function CaseEditorPage({ auth }) {
@@ -13,6 +15,9 @@ export default function CaseEditorPage({ auth }) {
     const [loading, setLoading] = useState(isEdit)
     const [categories, setCategories] = useState([])
     const [error, setError] = useState(null)
+    const [stepToDelete, setStepToDelete] = useState(null)
+
+    const { toast } = useToast()
 
     // Case Data
     const [caseData, setCaseData] = useState({
@@ -92,6 +97,12 @@ export default function CaseEditorPage({ auth }) {
     }, [id, auth.token, isEdit])
 
     const handleSaveBasic = async () => {
+        // Validation
+        if (!caseData.title || !caseData.categoryId || !caseData.metadata.brief || !caseData.duration) {
+            toast.error('Please fill in all required fields:\n- Title\n- Category\n- Duration\n- Brief Description')
+            return
+        }
+
         try {
             const url = isEdit
                 ? `${API_BASE_URL}/api/admin/cases/${id}`
@@ -113,12 +124,13 @@ export default function CaseEditorPage({ auth }) {
 
             if (!isEdit) {
                 // Redirect to edit mode to add steps
+                toast.success('Case created! Please add steps.')
                 navigate(`/admin/cases/${data.id}/edit`)
             } else {
-                alert('Case saved successfully')
+                toast.success('Case saved successfully')
             }
         } catch (e) {
-            alert(e.message)
+            toast.error(e.message)
         }
     }
 
@@ -146,7 +158,7 @@ export default function CaseEditorPage({ auth }) {
             const stepsData = await stepsRes.json()
             setSteps(stepsData)
             setEditingStepId(null)
-            alert('Step updated successfully!')
+            toast.success('Step updated successfully!')
         } catch (e) {
             throw e
         }
@@ -188,24 +200,32 @@ export default function CaseEditorPage({ auth }) {
             })
             const stepsData = await stepsRes.json()
             setSteps(stepsData)
+            toast.success('Step added!')
         } catch (e) {
-            alert(e.message)
+            toast.error(e.message)
         }
     }
 
-    const handleDeleteStep = async (stepId) => {
-        if (!window.confirm('Delete step?')) return
+    const handleDeleteStep = (stepId) => {
+        setStepToDelete(stepId)
+    }
+
+    const confirmDeleteStep = async () => {
+        if (!stepToDelete) return
+
         try {
-            await fetch(`${API_BASE_URL}/api/admin/steps/${stepId}`, {
+            await fetch(`${API_BASE_URL}/api/admin/steps/${stepToDelete}`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${auth.token}`,
                     'ngrok-skip-browser-warning': 'true'
                 }
             })
-            setSteps(steps.filter(s => s.id !== stepId))
+            setSteps(steps.filter(s => s.id !== stepToDelete))
+            toast.success('Step deleted')
+            setStepToDelete(null)
         } catch (e) {
-            alert(e.message)
+            toast.error(e.message)
         }
     }
 
@@ -214,7 +234,13 @@ export default function CaseEditorPage({ auth }) {
     return (
         <div className="case-editor-page">
             <div className="editor-header">
-                <button className="back-btn" onClick={() => navigate('/admin')}>← Back to Dashboard</button>
+                <button className="back-btn" onClick={() => {
+                    if (steps.length < 2) {
+                        toast.error('You must have at least 2 steps to complete the case.')
+                        return
+                    }
+                    navigate('/admin')
+                }}>← Back to Dashboard</button>
                 <h1>{isEdit ? `Edit Case: ${caseData.title}` : 'Create New Case'}</h1>
             </div>
 
@@ -229,7 +255,7 @@ export default function CaseEditorPage({ auth }) {
                     className={`tab-btn ${activeTab === 'steps' ? 'active' : ''}`}
                     onClick={() => {
                         if (!isEdit) {
-                            alert('Please save the case first before adding steps.')
+                            toast.warning('Please save the case first before adding steps.')
                             return
                         }
                         setActiveTab('steps')
@@ -371,6 +397,18 @@ export default function CaseEditorPage({ auth }) {
                     </div>
                 )}
             </div>
+
+
+
+            <ConfirmationModal
+                isOpen={!!stepToDelete}
+                title="Delete Step"
+                message="Are you sure you want to delete this step? This action cannot be undone."
+                confirmText="Delete"
+                onConfirm={confirmDeleteStep}
+                onCancel={() => setStepToDelete(null)}
+                isDanger={true}
+            />
         </div>
     )
 }

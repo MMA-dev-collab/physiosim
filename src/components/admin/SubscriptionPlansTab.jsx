@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
-import './CasesTab.css' // Reuse table styles
+import { useToast } from '../../context/ToastContext'
+import ConfirmationModal from '../common/ConfirmationModal'
 
 export default function SubscriptionPlansTab({ auth }) {
+  const { toast } = useToast()
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingPlan, setEditingPlan] = useState(null)
-  const [toast, setToast] = useState(null)
+
+  // Modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    isDanger: false
+  })
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -46,15 +56,10 @@ export default function SubscriptionPlansTab({ auth }) {
       setLoading(false)
     } catch (err) {
       console.error('Error loading plans:', err)
-      showToast('error', `Failed to load plans: ${err.message}`)
+      toast.error(`Failed to load plans: ${err.message}`)
       setPlans([])
       setLoading(false)
     }
-  }
-
-  const showToast = (type, message) => {
-    setToast({ type, message })
-    setTimeout(() => setToast(null), 3000)
   }
 
   const handleOpenModal = (plan = null) => {
@@ -98,7 +103,7 @@ export default function SubscriptionPlansTab({ auth }) {
       console.log('Modal should be visible now')
     } catch (err) {
       console.error('Error opening modal:', err)
-      alert(`Error opening form: ${err.message}`)
+      toast.error(`Error opening form: ${err.message}`)
     }
   }
 
@@ -150,13 +155,13 @@ export default function SubscriptionPlansTab({ auth }) {
 
     // Validation
     if (!formData.name || formData.name.trim() === '') {
-      showToast('error', 'Plan name is required')
+      toast.error('Plan name is required')
       setLoading(false)
       return
     }
 
     if (!formData.price || formData.price === '') {
-      showToast('error', 'Price is required')
+      toast.error('Price is required')
       setLoading(false)
       return
     }
@@ -167,7 +172,7 @@ export default function SubscriptionPlansTab({ auth }) {
     const hours = parseInt(formData.durationHours) || 0
 
     if (years === 0 && days === 0 && hours === 0) {
-      showToast('error', 'Please specify at least one duration (years, days, or hours)')
+      toast.error('Please specify at least one duration (years, days, or hours)')
       setLoading(false)
       return
     }
@@ -175,7 +180,7 @@ export default function SubscriptionPlansTab({ auth }) {
     // Validate numeric fields
     const price = parseFloat(formData.price)
     if (isNaN(price) || price < 0) {
-      showToast('error', 'Price must be a valid number (0 or greater)')
+      toast.error('Price must be a valid number (0 or greater)')
       setLoading(false)
       return
     }
@@ -188,7 +193,7 @@ export default function SubscriptionPlansTab({ auth }) {
     if (formData.maxFreeCases && formData.maxFreeCases.trim() !== '') {
       const parsed = parseInt(formData.maxFreeCases);
       if (isNaN(parsed) || parsed < 0) {
-        showToast('error', 'Max Free Cases must be empty (unlimited) or a number >= 0')
+        toast.error('Max Free Cases must be empty (unlimited) or a number >= 0')
         setLoading(false)
         return
       }
@@ -246,7 +251,7 @@ export default function SubscriptionPlansTab({ auth }) {
       console.log('Response data:', responseData)
 
       if (res.ok) {
-        showToast('success', editingPlan ? 'Plan updated successfully' : 'Plan created successfully')
+        toast.success(editingPlan ? 'Plan updated successfully' : 'Plan created successfully')
         setTimeout(() => {
           handleCloseModal()
           loadPlans()
@@ -255,38 +260,40 @@ export default function SubscriptionPlansTab({ auth }) {
       } else {
         console.error('Error response:', responseData)
         const errorMsg = responseData.message || responseData.error || `HTTP ${res.status}: Failed to save plan`
-        showToast('error', errorMsg)
+        toast.error(errorMsg)
         setLoading(false)
-        // Show alert for critical errors
-        if (res.status === 401 || res.status === 403) {
-          alert(`Authentication Error: ${errorMsg}\n\nPlease refresh the page and log in again.`)
-        } else if (res.status >= 500) {
-          alert(`Server Error: ${errorMsg}\n\nPlease try again later or contact support.`)
-        }
       }
     } catch (err) {
       console.error('Create plan error:', err)
       const errorMsg = err.message || 'Network error. Please check your connection.'
-      showToast('error', `Failed to save plan: ${errorMsg}`)
+      toast.error(`Failed to save plan: ${errorMsg}`)
       setLoading(false)
-      alert(`Network Error: ${errorMsg}\n\nPlease check your internet connection and try again.`)
     }
   }
 
-  const handleDelete = async (planId, plan) => {
+  const confirmDelete = (planId, plan) => {
     // Prevent deletion of core plans (normal/premium role)
     const planRole = plan?.role || (plan?.name === 'Normal' ? 'normal' : plan?.name === 'Premium' ? 'premium' : 'custom');
     if (planRole === 'normal' || planRole === 'premium') {
-      showToast('error', 'Cannot delete core plans. Deactivate instead.')
+      toast.error('Cannot delete core plans. Deactivate instead.')
       return
     }
 
     const planName = plan?.name || 'Unknown';
 
-    if (!window.confirm(`Are you sure you want to delete the plan "${planName}"? This action cannot be undone.`)) {
-      return
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Subscription Plan?',
+      message: `Are you sure you want to delete the plan "${planName}"? This action cannot be undone.`,
+      isDanger: true,
+      onConfirm: () => {
+        handleDelete(planId)
+        setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
 
+  const handleDelete = async (planId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscription-plans/${planId}`, {
         method: 'DELETE',
@@ -297,18 +304,31 @@ export default function SubscriptionPlansTab({ auth }) {
       })
 
       if (res.ok) {
-        showToast('success', 'Plan deleted successfully')
+        toast.success('Plan deleted successfully')
         loadPlans()
       } else {
         const error = await res.json()
-        showToast('error', error.message || 'Failed to delete plan')
+        toast.error(error.message || 'Failed to delete plan')
       }
     } catch (err) {
-      showToast('error', 'Failed to delete plan')
+      toast.error('Failed to delete plan')
     }
   }
 
-  const handleToggleActive = async (plan) => {
+  const confirmToggleActive = (plan) => {
+    setConfirmModal({
+      isOpen: true,
+      title: `${plan.isActive ? 'Deactivate' : 'Activate'} Plan?`,
+      message: `Are you sure you want to ${plan.isActive ? 'deactivate' : 'activate'} the plan "${plan.name}"? Users ${plan.isActive ? 'will no longer be able to subscribe to it' : 'will be able to subscribe to it'}.`,
+      isDanger: plan.isActive,
+      onConfirm: () => {
+        toggleActive(plan)
+        setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
+
+  const toggleActive = async (plan) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscription-plans/${plan.id}`, {
         method: 'PUT',
@@ -323,13 +343,13 @@ export default function SubscriptionPlansTab({ auth }) {
       })
 
       if (res.ok) {
-        showToast('success', `Plan ${!plan.isActive ? 'activated' : 'deactivated'} successfully`)
+        toast.success(`Plan ${!plan.isActive ? 'activated' : 'deactivated'} successfully`)
         loadPlans()
       } else {
-        showToast('error', 'Failed to update plan')
+        toast.error('Failed to update plan')
       }
     } catch (err) {
-      showToast('error', 'Failed to update plan')
+      toast.error('Failed to update plan')
     }
   }
 
@@ -551,7 +571,7 @@ export default function SubscriptionPlansTab({ auth }) {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleToggleActive(plan)}
+                      onClick={() => confirmToggleActive(plan)}
                       style={{
                         padding: '0.25rem 0.5rem',
                         background: plan.isActive ? '#f59e0b' : '#10b981',
@@ -566,7 +586,7 @@ export default function SubscriptionPlansTab({ auth }) {
                     </button>
                     {plan.role !== 'normal' && plan.role !== 'premium' && (
                       <button
-                        onClick={() => handleDelete(plan.id, plan)}
+                        onClick={() => confirmDelete(plan.id, plan)}
                         style={{
                           padding: '0.25rem 0.5rem',
                           background: '#ef4444',
@@ -589,310 +609,323 @@ export default function SubscriptionPlansTab({ auth }) {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
+      {
+        showModal && (
           <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '600px',
-            maxHeight: '90vh',
-            overflow: 'auto'
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
           }}>
-            <h3 style={{ marginTop: 0 }}>
-              {editingPlan ? 'Edit Subscription Plan' : 'Create New Subscription Plan'}
-            </h3>
+            <div style={{
+              background: 'white',
+              padding: '2rem',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '600px',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}>
+              <h3 style={{ marginTop: 0 }}>
+                {editingPlan ? 'Edit Subscription Plan' : 'Create New Subscription Plan'}
+              </h3>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Plan Name <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  disabled={editingPlan && (editingPlan.role === 'normal' || editingPlan.role === 'premium')}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    borderRadius: '4px',
-                    border: '1px solid #e2e8f0'
-                  }}
-                  placeholder="e.g., Premium, Enterprise"
-                />
-                {editingPlan && (editingPlan.role === 'normal' || editingPlan.role === 'premium') && (
-                  <small style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                    Core plan names cannot be changed (role: {editingPlan.role})
-                  </small>
-                )}
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '1rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Price ($) <span style={{ color: '#ef4444' }}>*</span>
+                    Plan Name <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    disabled={editingPlan && (editingPlan.role === 'normal' || editingPlan.role === 'premium')}
                     style={{
                       width: '100%',
                       padding: '0.5rem',
                       borderRadius: '4px',
                       border: '1px solid #e2e8f0'
                     }}
+                    placeholder="e.g., Premium, Enterprise"
                   />
+                  {editingPlan && (editingPlan.role === 'normal' || editingPlan.role === 'premium') && (
+                    <small style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
+                      Core plan names cannot be changed (role: {editingPlan.role})
+                    </small>
+                  )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                      Years
+                      Price ($) <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
-                      value={formData.durationYears}
-                      onChange={(e) => setFormData({ ...formData, durationYears: e.target.value })}
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
                       style={{
                         width: '100%',
                         padding: '0.5rem',
                         borderRadius: '4px',
                         border: '1px solid #e2e8f0'
                       }}
-                      placeholder="0"
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                      Days
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.durationDays}
-                      onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: '4px',
-                        border: '1px solid #e2e8f0'
-                      }}
-                      placeholder="0"
-                    />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                        Years
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.durationYears}
+                        onChange={(e) => setFormData({ ...formData, durationYears: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          border: '1px solid #e2e8f0'
+                        }}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                        Days
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.durationDays}
+                        onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          border: '1px solid #e2e8f0'
+                        }}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                        Hours
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.durationHours}
+                        onChange={(e) => setFormData({ ...formData, durationHours: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          border: '1px solid #e2e8f0'
+                        }}
+                        placeholder="0"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                      Hours
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.durationHours}
-                      onChange={(e) => setFormData({ ...formData, durationHours: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: '4px',
-                        border: '1px solid #e2e8f0'
-                      }}
-                      placeholder="0"
-                    />
-                  </div>
+                  <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    Specify at least one duration. Example: 1 year + 30 days + 12 hours
+                  </small>
                 </div>
-                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  Specify at least one duration. Example: 1 year + 30 days + 12 hours
-                </small>
-              </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Max Free Cases
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.maxFreeCases}
-                  onChange={(e) => setFormData({ ...formData, maxFreeCases: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    borderRadius: '4px',
-                    border: '1px solid #e2e8f0'
-                  }}
-                  placeholder="Leave empty for unlimited"
-                />
-                <small style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                  Maximum number of free cases allowed. Leave empty for unlimited access (null = unlimited). Used for Premium plans.
-                </small>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows="3"
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    borderRadius: '4px',
-                    border: '1px solid #e2e8f0',
-                    resize: 'vertical'
-                  }}
-                  placeholder="Describe what this plan offers..."
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Features
-                </label>
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Max Free Cases
+                  </label>
                   <input
-                    type="text"
-                    value={formData.newFeature}
-                    onChange={(e) => setFormData({ ...formData, newFeature: e.target.value })}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleAddFeature()
-                      }
-                    }}
+                    type="number"
+                    min="0"
+                    value={formData.maxFreeCases}
+                    onChange={(e) => setFormData({ ...formData, maxFreeCases: e.target.value })}
                     style={{
-                      flex: 1,
+                      width: '100%',
                       padding: '0.5rem',
                       borderRadius: '4px',
                       border: '1px solid #e2e8f0'
                     }}
-                    placeholder="Add a feature..."
+                    placeholder="Leave empty for unlimited"
                   />
+                  <small style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
+                    Maximum number of free cases allowed. Leave empty for unlimited access (null = unlimited). Used for Premium plans.
+                  </small>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Description
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      borderRadius: '4px',
+                      border: '1px solid #e2e8f0',
+                      resize: 'vertical'
+                    }}
+                    placeholder="Describe what this plan offers..."
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Features
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={formData.newFeature}
+                      onChange={(e) => setFormData({ ...formData, newFeature: e.target.value })}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleAddFeature()
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0'
+                      }}
+                      placeholder="Add a feature..."
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddFeature}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {formData.features.map((feature, index) => (
+                      <span
+                        key={index}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          background: '#eff6ff',
+                          color: '#2563eb',
+                          borderRadius: '4px',
+                          fontSize: '0.875rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        {feature}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFeature(index)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            padding: 0,
+                            lineHeight: 1
+                          }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    />
+                    <span>Active (plan is available for subscription)</span>
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                   <button
                     type="button"
-                    onClick={handleAddFeature}
+                    onClick={handleCloseModal}
                     style={{
                       padding: '0.5rem 1rem',
-                      background: '#10b981',
-                      color: 'white',
+                      background: '#f3f4f6',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer'
                     }}
                   >
-                    Add
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: loading ? '#9ca3af' : 'var(--primary-color, #2563eb)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontWeight: '500',
+                      opacity: loading ? 0.6 : 1
+                    }}
+                  >
+                    {loading ? 'Saving...' : (editingPlan ? 'Update Plan' : 'Create Plan')}
                   </button>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {formData.features.map((feature, index) => (
-                    <span
-                      key={index}
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        background: '#eff6ff',
-                        color: '#2563eb',
-                        borderRadius: '4px',
-                        fontSize: '0.875rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      {feature}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFeature(index)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                          fontSize: '1rem',
-                          padding: 0,
-                          lineHeight: 1
-                        }}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                  <span>Active (plan is available for subscription)</span>
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#f3f4f6',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: loading ? '#9ca3af' : 'var(--primary-color, #2563eb)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontWeight: '500',
-                    opacity: loading ? 0.6 : 1
-                  }}
-                >
-                  {loading ? 'Saving...' : (editingPlan ? 'Update Plan' : 'Create Plan')}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Toast Notification */}
-      {toast && (
-        <div className="toast-container">
-          <div className={`toast ${toast.type}`}>
-            <span>{toast.type === 'success' ? '✅' : '❌'}</span>
-            <span>{toast.message}</span>
+      {
+        toast && (
+          <div className="toast-container">
+            <div className={`toast ${toast.type}`}>
+              <span>{toast.type === 'success' ? '✅' : '❌'}</span>
+              <span>{toast.message}</span>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        isDanger={confirmModal.isDanger}
+      />
+    </div >
   )
 }

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import './ProfilePage.css'
+import { useToast } from '../context/ToastContext'
 
 export default function ProfilePage({ auth, setAuth }) {
+  const { toast } = useToast()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -61,9 +63,10 @@ export default function ProfilePage({ auth, setAuth }) {
         }
       }
       setAuth(updatedAuth)
+      toast.success('Profile updated successfully')
       setEditing(false)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message)
     } finally {
       setSaving(false)
     }

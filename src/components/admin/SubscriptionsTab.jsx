@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import './CasesTab.css' // Reuse table styles
+import { useToast } from '../../context/ToastContext'
+import ConfirmationModal from '../common/ConfirmationModal'
+import InputModal from '../common/InputModal'
 
 export default function SubscriptionsTab({ auth }) {
+  const { toast } = useToast()
   const [subscriptions, setSubscriptions] = useState([])
   const [plans, setPlans] = useState([])
   const [users, setUsers] = useState([])
@@ -16,6 +20,25 @@ export default function SubscriptionsTab({ auth }) {
     endDate: '',
     daysToAdd: ''
   })
+
+  // Modal states
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    isDanger: false
+  })
+  const [inputModal, setInputModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    placeholder: '',
+    onSubmit: () => { }
+  })
+
+  // Form validation state
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -61,28 +84,29 @@ export default function SubscriptionsTab({ auth }) {
   }
 
   const handleCreateSubscription = async () => {
+    setHasAttemptedSubmit(true)
     try {
       // Validate user selection
       if (!formData.userId || formData.userId === '') {
-        alert('Please select a user')
+        toast.warning('Please select a user')
         return
       }
 
       // Validate plan selection
       if (!formData.planId || formData.planId === '') {
-        alert('Please select a plan')
+        toast.warning('Please select a plan')
         return
       }
 
       const selectedPlan = plans.find(p => p.id === parseInt(formData.planId))
       if (!selectedPlan) {
-        alert('Selected plan not found. Please refresh and try again.')
+        toast.error('Selected plan not found. Please refresh and try again.')
         return
       }
 
       // Validate start date
       if (!formData.startDate) {
-        alert('Please select a start date')
+        toast.warning('Please select a start date')
         return
       }
 
@@ -95,7 +119,7 @@ export default function SubscriptionsTab({ auth }) {
       }
 
       if (!endDate) {
-        alert('Please provide an end date')
+        toast.warning('Please provide an end date')
         return
       }
 
@@ -116,7 +140,7 @@ export default function SubscriptionsTab({ auth }) {
 
       if (res.ok) {
         const newSubscription = await res.json()
-        alert(`Subscription created successfully! User now has ${newSubscription.planName} plan.`)
+        toast.success(`Subscription created successfully! User now has ${newSubscription.planName} plan.`)
         setShowModal(false)
         setFormData({
           userId: '',
@@ -125,20 +149,34 @@ export default function SubscriptionsTab({ auth }) {
           endDate: '',
           daysToAdd: ''
         })
+        setHasAttemptedSubmit(false)
         loadData()
       } else {
         const error = await res.json()
-        alert(error.message || 'Failed to create subscription')
+        toast.error(error.message || 'Failed to create subscription')
       }
     } catch (err) {
       console.error('Create subscription error:', err)
-      alert('Failed to create subscription: ' + err.message)
+      toast.error('Failed to create subscription: ' + err.message)
     }
   }
 
+  const openExtendModal = (subscriptionId) => {
+    setInputModal({
+      isOpen: true,
+      title: 'Extend Subscription',
+      message: 'Enter number of days to extend:',
+      placeholder: 'e.g. 30',
+      onSubmit: (value) => {
+        handleExtend(subscriptionId, parseInt(value))
+        setInputModal(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
+
   const handleExtend = async (subscriptionId, daysToAdd) => {
-    if (!daysToAdd || daysToAdd <= 0) {
-      alert('Please enter a valid number of days')
+    if (!daysToAdd || isNaN(daysToAdd) || daysToAdd <= 0) {
+      toast.warning('Please enter a valid number of days')
       return
     }
 
@@ -155,24 +193,34 @@ export default function SubscriptionsTab({ auth }) {
 
       if (res.ok) {
         loadData()
+        toast.success('Subscription extended successfully')
       } else {
-        alert('Failed to extend subscription')
+        toast.error('Failed to extend subscription')
       }
     } catch (err) {
-      alert('Failed to extend subscription')
+      toast.error('Failed to extend subscription')
     }
   }
 
-  const handleDeactivate = async (subscriptionId, currentPlanName) => {
+  const confirmDeactivate = (subscriptionId, currentPlanName) => {
     if (currentPlanName === 'Normal') {
-      alert('This user is already on the Normal plan.')
+      toast.info('This user is already on the Normal plan.')
       return
     }
 
-    if (!confirm(`Deactivate this subscription? User will be downgraded to Normal plan.`)) {
-      return
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Deactivate Subscription?',
+      message: `Are you sure you want to deactivate this subscription? The user will be downgraded to the Normal plan immediately.`,
+      isDanger: true,
+      onConfirm: () => {
+        handleDeactivate(subscriptionId)
+        setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
 
+  const handleDeactivate = async (subscriptionId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscriptions/${subscriptionId}/cancel`, {
         method: 'PUT',
@@ -185,21 +233,30 @@ export default function SubscriptionsTab({ auth }) {
       })
 
       if (res.ok) {
-        alert('Subscription deactivated. User downgraded to Normal plan.')
+        toast.success('Subscription deactivated. User downgraded to Normal plan.')
         loadData()
       } else {
-        alert('Failed to deactivate subscription')
+        toast.error('Failed to deactivate subscription')
       }
     } catch (err) {
-      alert('Failed to deactivate subscription')
+      toast.error('Failed to deactivate subscription')
     }
   }
 
-  const handleChangePlan = async (subscriptionId, newPlanId) => {
-    if (!confirm('Are you sure you want to change this subscription plan?')) {
-      return
-    }
+  const confirmChangePlan = (subscriptionId, newPlanId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Change Subscription Plan',
+      message: 'Are you sure you want to change this subscription plan?',
+      isDanger: false,
+      onConfirm: () => {
+        handleChangePlan(subscriptionId, newPlanId)
+        setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
 
+  const handleChangePlan = async (subscriptionId, newPlanId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscriptions/${subscriptionId}/change-plan`, {
         method: 'PUT',
@@ -213,11 +270,12 @@ export default function SubscriptionsTab({ auth }) {
 
       if (res.ok) {
         loadData()
+        toast.success('Plan changed successfully')
       } else {
-        alert('Failed to change plan')
+        toast.error('Failed to change plan')
       }
     } catch (err) {
-      alert('Failed to change plan')
+      toast.error('Failed to change plan')
     }
   }
 
@@ -262,13 +320,14 @@ export default function SubscriptionsTab({ auth }) {
         <button
           onClick={() => {
             if (users.length === 0) {
-              alert('No users found. Please ensure users exist in the system.')
+              toast.warning('No users found. Please ensure users exist in the system.')
               return
             }
             if (plans.length === 0) {
-              alert('No subscription plans found. Please run the database migration.')
+              toast.warning('No subscription plans found. Please run the database migration.')
               return
             }
+            setHasAttemptedSubmit(false)
             setShowModal(true)
           }}
           style={{
@@ -345,10 +404,7 @@ export default function SubscriptionsTab({ auth }) {
                     {sub.status === 'active' && (
                       <>
                         <button
-                          onClick={() => {
-                            const days = prompt('Enter days to extend:')
-                            if (days) handleExtend(sub.id, days)
-                          }}
+                          onClick={() => openExtendModal(sub.id)}
                           style={{
                             padding: '0.25rem 0.5rem',
                             background: '#10b981',
@@ -364,7 +420,7 @@ export default function SubscriptionsTab({ auth }) {
                         <select
                           onChange={(e) => {
                             if (e.target.value && e.target.value !== sub.planId) {
-                              handleChangePlan(sub.id, e.target.value)
+                              confirmChangePlan(sub.id, e.target.value)
                             }
                           }}
                           value={sub.planId}
@@ -382,7 +438,7 @@ export default function SubscriptionsTab({ auth }) {
                         </select>
                         {sub.planName !== 'Normal' && (
                           <button
-                            onClick={() => handleDeactivate(sub.id, sub.planName)}
+                            onClick={() => confirmDeactivate(sub.id, sub.planName)}
                             style={{
                               padding: '0.25rem 0.5rem',
                               background: '#f59e0b',
@@ -464,12 +520,15 @@ export default function SubscriptionsTab({ auth }) {
                   }
                   const plan = plans.find(p => p.id === parseInt(e.target.value))
                   if (plan) {
-                    const start = new Date(formData.startDate)
-                    start.setDate(start.getDate() + plan.durationDays)
-                    const calculatedEndDate = start.toISOString().split('T')[0]
+                    const today = new Date()
+                    const startDate = today.toISOString().split('T')[0]
+                    const end = new Date(today)
+                    end.setDate(end.getDate() + plan.durationDays)
+                    const calculatedEndDate = end.toISOString().split('T')[0]
                     setFormData({
                       ...formData,
                       planId: e.target.value,
+                      startDate: startDate,
                       endDate: calculatedEndDate
                     })
                   } else {
@@ -480,7 +539,7 @@ export default function SubscriptionsTab({ auth }) {
                   width: '100%',
                   padding: '0.5rem',
                   borderRadius: '4px',
-                  border: formData.planId ? '1px solid #e2e8f0' : '1px solid #ef4444'
+                  border: hasAttemptedSubmit && !formData.planId ? '1px solid #ef4444' : '1px solid #e2e8f0'
                 }}
                 required
               >
@@ -491,7 +550,7 @@ export default function SubscriptionsTab({ auth }) {
                   </option>
                 ))}
               </select>
-              {!formData.planId && (
+              {hasAttemptedSubmit && !formData.planId && (
                 <small style={{ color: '#ef4444', marginTop: '0.25rem', display: 'block' }}>
                   Please select a plan
                 </small>
@@ -505,24 +564,15 @@ export default function SubscriptionsTab({ auth }) {
               <input
                 type="date"
                 value={formData.startDate}
-                onChange={(e) => {
-                  const newStart = e.target.value
-                  const plan = plans.find(p => p.id === parseInt(formData.planId))
-                  setFormData({
-                    ...formData,
-                    startDate: newStart,
-                    endDate: plan ? (() => {
-                      const start = new Date(newStart)
-                      start.setDate(start.getDate() + plan.durationDays)
-                      return start.toISOString().split('T')[0]
-                    })() : formData.endDate
-                  })
-                }}
+                disabled
+                readOnly
                 style={{
                   width: '100%',
                   padding: '0.5rem',
                   borderRadius: '4px',
-                  border: '1px solid #e2e8f0'
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: '#f3f4f6',
+                  cursor: 'not-allowed'
                 }}
               />
             </div>
@@ -534,12 +584,15 @@ export default function SubscriptionsTab({ auth }) {
               <input
                 type="date"
                 value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                disabled
+                readOnly
                 style={{
                   width: '100%',
                   padding: '0.5rem',
                   borderRadius: '4px',
-                  border: '1px solid #e2e8f0'
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: '#f3f4f6',
+                  cursor: 'not-allowed'
                 }}
               />
             </div>
@@ -548,6 +601,7 @@ export default function SubscriptionsTab({ auth }) {
               <button
                 onClick={() => {
                   setShowModal(false)
+                  setHasAttemptedSubmit(false)
                   setFormData({
                     userId: '',
                     planId: '',
@@ -583,6 +637,24 @@ export default function SubscriptionsTab({ auth }) {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        isDanger={confirmModal.isDanger}
+      />
+
+      <InputModal
+        isOpen={inputModal.isOpen}
+        title={inputModal.title}
+        message={inputModal.message}
+        placeholder={inputModal.placeholder}
+        onSubmit={inputModal.onSubmit}
+        onCancel={() => setInputModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   )
 }
