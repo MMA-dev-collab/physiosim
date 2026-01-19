@@ -11,7 +11,9 @@ export default function SubscriptionPlansTab({ auth }) {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    durationYears: '',
     durationDays: '',
+    durationHours: '',
     maxFreeCases: '0',
     description: '',
     features: [],
@@ -32,12 +34,12 @@ export default function SubscriptionPlansTab({ auth }) {
           'ngrok-skip-browser-warning': 'true'
         }
       })
-      
+
       if (!res.ok) {
         const error = await res.json()
         throw new Error(error.message || `HTTP ${res.status}`)
       }
-      
+
       const data = await res.json()
       console.log('Loaded plans:', data) // Debug log
       setPlans(data || [])
@@ -60,10 +62,17 @@ export default function SubscriptionPlansTab({ auth }) {
     try {
       if (plan) {
         setEditingPlan(plan)
+        // Parse existing duration into years, days, hours
+        const totalDays = plan.durationDays || 0
+        const years = Math.floor(totalDays / 365)
+        const remainingDays = totalDays % 365
+
         setFormData({
           name: plan.name || '',
           price: plan.price || '',
-          durationDays: plan.durationDays || '',
+          durationYears: years > 0 ? years.toString() : '',
+          durationDays: remainingDays > 0 ? remainingDays.toString() : '',
+          durationHours: '',
           maxFreeCases: plan.maxFreeCases === null || plan.maxFreeCases === undefined ? '' : plan.maxFreeCases.toString(),
           description: plan.description || '',
           features: Array.isArray(plan.features) ? plan.features : [],
@@ -75,7 +84,9 @@ export default function SubscriptionPlansTab({ auth }) {
         setFormData({
           name: '',
           price: '',
+          durationYears: '',
           durationDays: '',
+          durationHours: '',
           maxFreeCases: '0',
           description: '',
           features: [],
@@ -97,7 +108,9 @@ export default function SubscriptionPlansTab({ auth }) {
     setFormData({
       name: '',
       price: '',
+      durationYears: '',
       durationDays: '',
+      durationHours: '',
       maxFreeCases: '0',
       description: '',
       features: [],
@@ -126,34 +139,39 @@ export default function SubscriptionPlansTab({ auth }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    
+
     if (loading) {
       console.log('Already submitting, ignoring...')
       return
     }
-    
+
     setLoading(true)
     console.log('Form submitted with data:', formData) // Debug
-    
+
     // Validation
     if (!formData.name || formData.name.trim() === '') {
       showToast('error', 'Plan name is required')
       setLoading(false)
       return
     }
-    
+
     if (!formData.price || formData.price === '') {
       showToast('error', 'Price is required')
       setLoading(false)
       return
     }
-    
-    if (!formData.durationDays || formData.durationDays === '') {
-      showToast('error', 'Duration is required')
+
+    // Validate that at least one duration field is filled
+    const years = parseInt(formData.durationYears) || 0
+    const days = parseInt(formData.durationDays) || 0
+    const hours = parseInt(formData.durationHours) || 0
+
+    if (years === 0 && days === 0 && hours === 0) {
+      showToast('error', 'Please specify at least one duration (years, days, or hours)')
       setLoading(false)
       return
     }
-    
+
     // Validate numeric fields
     const price = parseFloat(formData.price)
     if (isNaN(price) || price < 0) {
@@ -161,14 +179,10 @@ export default function SubscriptionPlansTab({ auth }) {
       setLoading(false)
       return
     }
-    
-    const duration = parseInt(formData.durationDays)
-    if (isNaN(duration) || duration < 1) {
-      showToast('error', 'Duration must be at least 1 day')
-      setLoading(false)
-      return
-    }
-    
+
+    // Calculate total duration in days
+    const totalDays = (years * 365) + days + Math.ceil(hours / 24)
+
     // Validate maxFreeCases - allow null/empty for unlimited, or a valid number >= 0
     let maxCases = null;
     if (formData.maxFreeCases && formData.maxFreeCases.trim() !== '') {
@@ -188,17 +202,19 @@ export default function SubscriptionPlansTab({ auth }) {
       const url = editingPlan
         ? `${API_BASE_URL}/api/admin/subscription-plans/${editingPlan.id}`
         : `${API_BASE_URL}/api/admin/subscription-plans`
-      
+
       const method = editingPlan ? 'PUT' : 'POST'
-      
-      // Build request body
+
+      // Build request body with combined duration
       const requestBody = {
         name: formData.name.trim(),
         price: price,
-        durationDays: duration,
+        durationDays: totalDays,
+        duration_value: totalDays,
+        duration_unit: 'day',
         maxFreeCases: maxCases
       }
-      
+
       // Add optional fields if they exist
       if (formData.description && formData.description.trim()) {
         requestBody.description = formData.description.trim()
@@ -209,12 +225,12 @@ export default function SubscriptionPlansTab({ auth }) {
       if (formData.isActive !== undefined) {
         requestBody.isActive = formData.isActive
       }
-      
+
       console.log('Sending request to:', url)
       console.log('Request method:', method)
       console.log('Request body:', requestBody)
       console.log('Auth token exists:', !!auth.token)
-      
+
       const res = await fetch(url, {
         method,
         headers: {
@@ -328,7 +344,7 @@ export default function SubscriptionPlansTab({ auth }) {
             Create and manage subscription plans that users can subscribe to
           </p>
         </div>
-        
+
         <div style={{
           background: '#fef3c7',
           border: '1px solid #fde68a',
@@ -450,7 +466,15 @@ export default function SubscriptionPlansTab({ auth }) {
                 </td>
                 <td>
                   <span className="badge">
-                    {plan.durationDays} {plan.durationDays === 1 ? 'day' : 'days'}
+                    {(() => {
+                      const totalDays = plan.durationDays || 0
+                      const years = Math.floor(totalDays / 365)
+                      const days = totalDays % 365
+                      const parts = []
+                      if (years > 0) parts.push(`${years}y`)
+                      if (days > 0) parts.push(`${days}d`)
+                      return parts.length > 0 ? parts.join(' + ') : `${totalDays}d`
+                    })()}
                   </span>
                 </td>
                 <td>
@@ -477,11 +501,11 @@ export default function SubscriptionPlansTab({ auth }) {
                     </span>
                   )}
                   <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                    {plan.role === 'premium' 
-                      ? 'Can access premium cases' 
+                    {plan.role === 'premium'
+                      ? 'Can access premium cases'
                       : plan.role === 'normal'
-                      ? 'Can access free cases (limited)'
-                      : 'Access depends on plan settings'}
+                        ? 'Can access free cases (limited)'
+                        : 'Access depends on plan settings'}
                   </div>
                 </td>
                 <td>
@@ -503,7 +527,7 @@ export default function SubscriptionPlansTab({ auth }) {
                   </div>
                 </td>
                 <td>
-                  <span className="badge" style={{ 
+                  <span className="badge" style={{
                     background: plan.isActive ? '#10b98120' : '#ef444420',
                     color: plan.isActive ? '#10b981' : '#ef4444'
                   }}>
@@ -590,7 +614,7 @@ export default function SubscriptionPlansTab({ auth }) {
             <h3 style={{ marginTop: 0 }}>
               {editingPlan ? 'Edit Subscription Plan' : 'Create New Subscription Plan'}
             </h3>
-            
+
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
@@ -637,24 +661,65 @@ export default function SubscriptionPlansTab({ auth }) {
                     }}
                   />
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Duration (Days) <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.durationDays}
-                    onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      borderRadius: '4px',
-                      border: '1px solid #e2e8f0'
-                    }}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Years
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.durationYears}
+                      onChange={(e) => setFormData({ ...formData, durationYears: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0'
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Days
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.durationDays}
+                      onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0'
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Hours
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.durationHours}
+                      onChange={(e) => setFormData({ ...formData, durationHours: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0'
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Specify at least one duration. Example: 1 year + 30 days + 12 hours
+                </small>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>

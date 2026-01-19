@@ -128,7 +128,9 @@ function CasesPage({ auth }) {
               <div className="case-card-link-icon">↗</div>
               {c.isLocked && !c.isCompleted && (
                 <div className="case-card-locked-overlay">
-                  <span className="case-card-locked-badge">Locked</span>
+                  <span className="case-card-locked-badge">
+                    {c.isLockedByPlan ? `🔒 ${c.requiredPlanName || 'Plan'} Required` : 'Locked'}
+                  </span>
                 </div>
               )}
               <div className="case-card-thumbnail">
@@ -150,6 +152,19 @@ function CasesPage({ auth }) {
                     {c.categoryIcon} {c.categoryName}
                   </div>
                 )}
+                {c.requiredPlanName && (
+                  <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                    <span style={{
+                      background: '#eff6ff',
+                      color: '#2563eb',
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '4px',
+                      fontWeight: '500'
+                    }}>
+                      {c.requiredPlanName} Plan
+                    </span>
+                  </div>
+                )}
                 <div className="case-card-footer">
                   <span className={`case-card-difficulty difficulty-${c.difficulty?.toLowerCase() || 'intermediate'}`}>
                     {c.difficulty?.toUpperCase() || 'INTERMEDIATE'}
@@ -164,7 +179,7 @@ function CasesPage({ auth }) {
                   disabled={(c.isLocked && !c.isCompleted) || !auth}
                   onClick={() => navigate(`/cases/${c.id}`)}
                 >
-                  {!auth ? 'Login to Start' : (c.isLocked && !c.isCompleted ? 'Locked' : c.isCompleted ? 'Review Case' : 'Start Case')}
+                  {!auth ? 'Login to Start' : (c.isLocked && !c.isCompleted ? (c.isLockedByPlan ? 'Not Available' : 'Locked') : c.isCompleted ? 'Review Case' : 'Start Case')}
                 </button>
               </div>
             </div>

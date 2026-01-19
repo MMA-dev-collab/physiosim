@@ -163,8 +163,13 @@ export default function SubscriptionsTab({ auth }) {
     }
   }
 
-  const handleCancel = async (subscriptionId) => {
-    if (!confirm('Are you sure you want to cancel this subscription? This will downgrade Premium users to Normal.')) {
+  const handleDeactivate = async (subscriptionId, currentPlanName) => {
+    if (currentPlanName === 'Normal') {
+      alert('This user is already on the Normal plan.')
+      return
+    }
+
+    if (!confirm(`Deactivate this subscription? User will be downgraded to Normal plan.`)) {
       return
     }
 
@@ -176,16 +181,17 @@ export default function SubscriptionsTab({ auth }) {
           Authorization: `Bearer ${auth.token}`,
           'ngrok-skip-browser-warning': 'true'
         },
-        body: JSON.stringify({ reason: 'Cancelled by admin' })
+        body: JSON.stringify({ reason: 'Deactivated by admin - downgraded to Normal' })
       })
 
       if (res.ok) {
+        alert('Subscription deactivated. User downgraded to Normal plan.')
         loadData()
       } else {
-        alert('Failed to cancel subscription')
+        alert('Failed to deactivate subscription')
       }
     } catch (err) {
-      alert('Failed to cancel subscription')
+      alert('Failed to deactivate subscription')
     }
   }
 
@@ -301,7 +307,7 @@ export default function SubscriptionsTab({ auth }) {
                   <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>ID: {sub.userId}</div>
                 </td>
                 <td>
-                  <span className="badge" style={{ 
+                  <span className="badge" style={{
                     background: sub.planName === 'Premium' ? '#eff6ff' : '#f3f4f6',
                     color: sub.planName === 'Premium' ? '#2563eb' : '#374151'
                   }}>
@@ -309,7 +315,7 @@ export default function SubscriptionsTab({ auth }) {
                   </span>
                 </td>
                 <td>
-                  <span className="badge" style={{ 
+                  <span className="badge" style={{
                     background: getStatusColor(sub.status) + '20',
                     color: getStatusColor(sub.status)
                   }}>
@@ -319,7 +325,7 @@ export default function SubscriptionsTab({ auth }) {
                 <td>{new Date(sub.startDate).toLocaleDateString()}</td>
                 <td>{new Date(sub.endDate).toLocaleDateString()}</td>
                 <td>
-                  <span style={{ 
+                  <span style={{
                     color: sub.daysRemaining < 0 ? '#ef4444' : sub.daysRemaining <= 7 ? '#f59e0b' : '#10b981',
                     fontWeight: '500'
                   }}>
@@ -327,7 +333,7 @@ export default function SubscriptionsTab({ auth }) {
                   </span>
                 </td>
                 <td>
-                  <span className="badge" style={{ 
+                  <span className="badge" style={{
                     background: getHealthColor(sub.health) + '20',
                     color: getHealthColor(sub.health)
                   }}>
@@ -374,20 +380,22 @@ export default function SubscriptionsTab({ auth }) {
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}
                         </select>
-                        <button
-                          onClick={() => handleCancel(sub.id)}
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            background: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.75rem'
-                          }}
-                        >
-                          Cancel
-                        </button>
+                        {sub.planName !== 'Normal' && (
+                          <button
+                            onClick={() => handleDeactivate(sub.id, sub.planName)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              background: '#f59e0b',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem'
+                            }}
+                          >
+                            Deactivate
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -421,7 +429,7 @@ export default function SubscriptionsTab({ auth }) {
             overflow: 'auto'
           }}>
             <h3 style={{ marginTop: 0 }}>Create New Subscription</h3>
-            
+
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                 User
@@ -459,8 +467,8 @@ export default function SubscriptionsTab({ auth }) {
                     const start = new Date(formData.startDate)
                     start.setDate(start.getDate() + plan.durationDays)
                     const calculatedEndDate = start.toISOString().split('T')[0]
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       planId: e.target.value,
                       endDate: calculatedEndDate
                     })
@@ -500,8 +508,8 @@ export default function SubscriptionsTab({ auth }) {
                 onChange={(e) => {
                   const newStart = e.target.value
                   const plan = plans.find(p => p.id === parseInt(formData.planId))
-                  setFormData({ 
-                    ...formData, 
+                  setFormData({
+                    ...formData,
                     startDate: newStart,
                     endDate: plan ? (() => {
                       const start = new Date(newStart)
