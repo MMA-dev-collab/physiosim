@@ -67,51 +67,16 @@ export default function CaseAccessTab({ auth }) {
     setTimeout(() => setToast(null), 3000)
   }
 
-  // Update case access - Fixed logic
+  // Update case access - Refactored for Plan-based Access
   const handleAccessUpdate = async (caseId, updates) => {
     setUpdating(caseId)
     try {
       const caseData = cases.find(c => c.id === caseId)
-      if (!caseData) {
-        throw new Error('Case not found')
-      }
+      if (!caseData) throw new Error('Case not found')
 
-      // Build update data with proper logic
       const updateData = {
         ...caseData,
         ...updates
-      }
-
-      // Sync accessLevel with isFree and isPremiumOnly
-      if (updates.hasOwnProperty('accessLevel')) {
-        // If accessLevel is set directly, sync the flags
-        if (updates.accessLevel === 'premium') {
-          updateData.isPremiumOnly = true
-          updateData.isFree = false
-        } else if (updates.accessLevel === 'free') {
-          updateData.isFree = true
-          updateData.isPremiumOnly = false
-        } else if (updates.accessLevel === 'all') {
-          updateData.isFree = true
-          updateData.isPremiumOnly = false
-        }
-      } else if (updates.hasOwnProperty('isPremiumOnly')) {
-        // If isPremiumOnly is changed, update accessLevel
-        if (updates.isPremiumOnly) {
-          updateData.accessLevel = 'premium'
-          updateData.isFree = false
-        } else {
-          updateData.accessLevel = updateData.accessLevel || 'free'
-          updateData.isFree = true
-        }
-      } else if (updates.hasOwnProperty('isFree')) {
-        // If isFree is changed, update accessLevel if needed
-        if (!updates.isFree && !updateData.isPremiumOnly) {
-          updateData.accessLevel = 'premium'
-          updateData.isPremiumOnly = true
-        } else if (updates.isFree && !updateData.isPremiumOnly) {
-          updateData.accessLevel = 'free'
-        }
       }
 
       const res = await fetch(`${API_BASE_URL}/api/admin/cases/${caseId}`, {
@@ -126,8 +91,7 @@ export default function CaseAccessTab({ auth }) {
 
       if (res.ok) {
         showToast('success', 'Case access updated successfully')
-        // Update local state immediately
-        setCases(cases.map(c => 
+        setCases(cases.map(c =>
           c.id === caseId ? { ...c, ...updateData } : c
         ))
       } else {
@@ -144,13 +108,13 @@ export default function CaseAccessTab({ auth }) {
   // Bulk update multiple cases
   const handleBulkUpdate = async (caseIds, updates) => {
     if (!window.confirm(`Update access for ${caseIds.length} case(s)?`)) return
-    
+
     setUpdating('bulk')
     try {
       const promises = caseIds.map(caseId => {
         const caseData = cases.find(c => c.id === caseId)
         const updateData = { ...caseData, ...updates }
-        
+
         // Sync logic
         if (updates.accessLevel === 'premium') {
           updateData.isPremiumOnly = true
@@ -190,7 +154,7 @@ export default function CaseAccessTab({ auth }) {
     const matchesCategory = categoryFilter === 'all' ||
       (c.categoryId && c.categoryId.toString() === categoryFilter) ||
       (!c.categoryId && c.category === categoryFilter)
-    
+
     const matchesAccess = accessFilter === 'all' ||
       (accessFilter === 'free' && (c.accessLevel === 'free' || c.isFree)) ||
       (accessFilter === 'premium' && (c.accessLevel === 'premium' || c.isPremiumOnly)) ||
@@ -200,13 +164,14 @@ export default function CaseAccessTab({ auth }) {
   })
 
   const getAccessBadge = (caseData) => {
-    if (caseData.accessLevel === 'premium' || caseData.isPremiumOnly) {
-      return <span className="badge" style={{ background: '#eff6ff', color: '#2563eb' }}>🔒 Premium</span>
-    }
-    if (caseData.accessLevel === 'all') {
-      return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a' }}>🌐 All Users</span>
-    }
-    return <span className="badge" style={{ background: '#fef3c7', color: '#d97706' }}>🆓 Free</span>
+    const plan = plans.find(p => p.id === caseData.requiredPlanId);
+    if (!plan) return <span className="badge" style={{ background: '#f3f4f6', color: '#6b7280' }}>Unknown</span>;
+
+    if (plan.role === 'premium') return <span className="badge" style={{ background: '#eff6ff', color: '#2563eb' }}>🔒 {plan.name}</span>;
+    if (plan.role === 'normal') return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a' }}>🆓 {plan.name}</span>;
+    if (plan.role === 'ultra') return <span className="badge" style={{ background: '#fef3c7', color: '#d97706' }}>⭐ {plan.name}</span>;
+
+    return <span className="badge" style={{ background: '#f3f4f6' }}>{plan.name}</span>
   }
 
   // Check if a plan can access a case based on accessLevel
@@ -215,17 +180,17 @@ export default function CaseAccessTab({ auth }) {
     if (caseData.accessLevel === 'all') {
       return true
     }
-    
+
     // Free cases - accessible to all plans (but may have limits)
     if (caseData.accessLevel === 'free' || caseData.isFree) {
       return true
     }
-    
+
     // Premium cases - only accessible to premium role plans
     if (caseData.accessLevel === 'premium' || caseData.isPremiumOnly) {
       return plan.role === 'premium'
     }
-    
+
     return false
   }
 
@@ -272,12 +237,12 @@ export default function CaseAccessTab({ auth }) {
 
       {/* Plans Overview */}
       {plans.length > 0 && (
-        <div style={{ 
-          background: '#f9fafb', 
-          border: '1px solid #e5e7eb', 
-          borderRadius: '8px', 
-          padding: '1.5rem', 
-          marginBottom: '1.5rem' 
+        <div style={{
+          background: '#f9fafb',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '1.5rem'
         }}>
           <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
             📋 Available Subscription Plans
@@ -292,7 +257,7 @@ export default function CaseAccessTab({ auth }) {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                   <strong style={{ fontSize: '0.95rem' }}>{plan.name}</strong>
-                  <span className="badge" style={{ 
+                  <span className="badge" style={{
                     background: plan.role === 'premium' ? '#eff6ff' : plan.role === 'normal' ? '#f0fdf4' : '#f3f4f6',
                     color: plan.role === 'premium' ? '#2563eb' : plan.role === 'normal' ? '#16a34a' : '#6b7280',
                     fontSize: '0.75rem'
@@ -326,12 +291,12 @@ export default function CaseAccessTab({ auth }) {
       )}
 
       {/* Info Box */}
-      <div style={{ 
-        background: '#eff6ff', 
-        border: '1px solid #bfdbfe', 
-        borderRadius: '8px', 
-        padding: '1rem', 
-        marginBottom: '1.5rem' 
+      <div style={{
+        background: '#eff6ff',
+        border: '1px solid #bfdbfe',
+        borderRadius: '8px',
+        padding: '1rem',
+        marginBottom: '1.5rem'
       }}>
         <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
           <div>
@@ -358,7 +323,7 @@ export default function CaseAccessTab({ auth }) {
                     // Select all visible cases
                     const allSelected = filteredCases.every(c => c.selected)
                     filteredCases.forEach(c => {
-                      setCases(prev => prev.map(caseItem => 
+                      setCases(prev => prev.map(caseItem =>
                         caseItem.id === c.id ? { ...caseItem, selected: !allSelected } : caseItem
                       ))
                     })
@@ -380,7 +345,7 @@ export default function CaseAccessTab({ auth }) {
                     type="checkbox"
                     checked={c.selected || false}
                     onChange={(e) => {
-                      setCases(prev => prev.map(caseItem => 
+                      setCases(prev => prev.map(caseItem =>
                         caseItem.id === c.id ? { ...caseItem, selected: e.target.checked } : caseItem
                       ))
                     }}
@@ -423,8 +388,8 @@ export default function CaseAccessTab({ auth }) {
                 </td>
                 <td>
                   <select
-                    value={c.accessLevel || 'free'}
-                    onChange={(e) => handleAccessUpdate(c.id, { accessLevel: e.target.value })}
+                    value={c.requiredPlanId || ''}
+                    onChange={(e) => handleAccessUpdate(c.id, { requiredPlanId: e.target.value ? Number(e.target.value) : null })}
                     disabled={updating === c.id}
                     style={{
                       padding: '0.5rem',
@@ -432,74 +397,25 @@ export default function CaseAccessTab({ auth }) {
                       border: '1px solid #e2e8f0',
                       fontSize: '0.875rem',
                       cursor: updating === c.id ? 'not-allowed' : 'pointer',
-                      minWidth: '120px',
+                      minWidth: '150px',
                       background: updating === c.id ? '#f3f4f6' : 'white'
                     }}
                   >
-                    <option value="free">🆓 Free</option>
-                    <option value="premium">🔒 Premium</option>
-                    <option value="all">🌐 All Users</option>
+                    {!c.requiredPlanId && <option value="">Select Plan...</option>}
+                    {plans.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.role === 'normal' ? '🆓' : p.role === 'premium' ? '🔒' : '⭐'} {p.name}
+                      </option>
+                    ))}
                   </select>
                   {updating === c.id && (
                     <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
-                      Updating...
+                      ...
                     </span>
                   )}
                 </td>
                 <td>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={() => handleAccessUpdate(c.id, { accessLevel: 'free' })}
-                      disabled={updating === c.id || (c.accessLevel === 'free' && c.isFree)}
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        background: '#fef3c7',
-                        color: '#d97706',
-                        border: '1px solid #fde68a',
-                        borderRadius: '4px',
-                        cursor: updating === c.id ? 'not-allowed' : 'pointer',
-                        fontSize: '0.75rem',
-                        opacity: (updating === c.id || (c.accessLevel === 'free' && c.isFree)) ? 0.5 : 1
-                      }}
-                      title="Set as Free"
-                    >
-                      🆓 Free
-                    </button>
-                    <button
-                      onClick={() => handleAccessUpdate(c.id, { accessLevel: 'premium' })}
-                      disabled={updating === c.id || (c.accessLevel === 'premium' && c.isPremiumOnly)}
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        background: '#eff6ff',
-                        color: '#2563eb',
-                        border: '1px solid #bfdbfe',
-                        borderRadius: '4px',
-                        cursor: updating === c.id ? 'not-allowed' : 'pointer',
-                        fontSize: '0.75rem',
-                        opacity: (updating === c.id || (c.accessLevel === 'premium' && c.isPremiumOnly)) ? 0.5 : 1
-                      }}
-                      title="Set as Premium"
-                    >
-                      🔒 Premium
-                    </button>
-                    <button
-                      onClick={() => handleAccessUpdate(c.id, { accessLevel: 'all' })}
-                      disabled={updating === c.id || c.accessLevel === 'all'}
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        background: '#f0fdf4',
-                        color: '#16a34a',
-                        border: '1px solid #bbf7d0',
-                        borderRadius: '4px',
-                        cursor: updating === c.id ? 'not-allowed' : 'pointer',
-                        fontSize: '0.75rem',
-                        opacity: (updating === c.id || c.accessLevel === 'all') ? 0.5 : 1
-                      }}
-                      title="Set as All Users"
-                    >
-                      🌐 All
-                    </button>
-                  </div>
+                  {/* Actions replaced by direct dropdown */}
                 </td>
               </tr>
             ))}

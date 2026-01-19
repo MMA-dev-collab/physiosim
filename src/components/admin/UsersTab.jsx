@@ -6,7 +6,7 @@ export default function UsersTab({ auth }) {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const loadUsers = () => {
     fetch(`${API_BASE_URL}/api/admin/users`, {
       headers: {
         Authorization: `Bearer ${auth.token}`,
@@ -18,34 +18,28 @@ export default function UsersTab({ auth }) {
         setUsers(data)
         setLoading(false)
       })
-      .catch((e) => console.error(e))
-  }, [auth])
-
-  const handleMembershipUpdate = async (userId, type) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/membership`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-          'ngrok-skip-browser-warning': 'true'
-        },
-        body: JSON.stringify({ membershipType: type }),
+      .catch((e) => {
+        console.error(e)
+        setLoading(false)
       })
-      if (res.ok) {
-        setUsers(users.map(u => u.id === userId ? { ...u, membershipType: type } : u))
-      }
-    } catch (e) {
-      alert('Failed to update membership')
-    }
   }
+
+  useEffect(() => {
+    loadUsers()
+  }, [auth])
 
   if (loading) return <div>Loading users...</div>
 
   return (
     <div className="admin-users">
-      <div className="section-header" style={{ marginBottom: '1.5rem' }}>
+      <div className="section-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0 }}>User Management</h2>
+        <button
+          onClick={() => { setLoading(true); loadUsers(); }}
+          style={{ padding: '0.5rem 1rem', background: 'var(--primary-color, #2563eb)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        >
+          Refresh
+        </button>
       </div>
 
       <div className="cases-table-container">
@@ -70,20 +64,25 @@ export default function UsersTab({ auth }) {
                   <span className="badge" style={{ background: '#f3f4f6' }}>{user.role}</span>
                 </td>
                 <td>
-                  <select
-                    value={user.membershipType}
-                    onChange={(e) => handleMembershipUpdate(user.id, e.target.value)}
-                    style={{
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      border: '1px solid #e2e8f0',
-                      background: user.membershipType === 'premium' ? '#eff6ff' : 'white',
-                      color: user.membershipType === 'premium' ? '#2563eb' : 'inherit'
-                    }}
-                  >
-                    <option value="free">Free</option>
-                    <option value="premium">Premium</option>
-                  </select>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <span
+                      className="badge"
+                      style={{
+                        background: (user.planRole === 'premium' || user.membershipType === 'Premium') ? '#eff6ff' :
+                          (user.planRole === 'ultra' || user.membershipType === 'Ultra') ? '#fef3c7' : '#f3f4f6',
+                        color: (user.planRole === 'premium' || user.membershipType === 'Premium') ? '#2563eb' :
+                          (user.planRole === 'ultra' || user.membershipType === 'Ultra') ? '#d97706' : '#6b7280',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {user.membershipType || 'Normal'}
+                    </span>
+                    <small style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      {user.membershipType && user.membershipType !== 'Normal' && user.membershipType !== 'Free' ?
+                        'Via active subscription' :
+                        'Default Access'}
+                    </small>
+                  </div>
                 </td>
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
