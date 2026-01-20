@@ -24,11 +24,11 @@ function RegisterPage({ setAuth }) {
         const trimmedName = name.trim()
 
         // Regex: 3-40 chars, letters (Arabic/English), numbers, spaces
-        const nameRegex = /^[A-Za-z0-9\u0600-\u06FF\s]{3,40}$/
+        const nameRegex = /^[A-Za-z\u0600-\u06FF\s]{3,40}$/
         const hasLetter = /[A-Za-z\u0600-\u06FF]/.test(trimmedName)
 
         if (!nameRegex.test(trimmedName) || !hasLetter) {
-            return 'Name must be 3–40 characters and contain at least one letter'
+            return 'Name must be 3–40 characters and contain only letters (Arabic or English) and spaces'
         }
         return null
     }
