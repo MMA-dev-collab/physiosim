@@ -11,6 +11,10 @@ function CasesPage({ auth }) {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [difficultyFilter, setDifficultyFilter] = useState('all')
   const [durationFilter, setDurationFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+  const limit = 10
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -18,7 +22,7 @@ function CasesPage({ auth }) {
       setLoading(true)
       setError(null)
       try {
-        // Load cases
+        // Load cases with pagination
         const headers = {
           'ngrok-skip-browser-warning': 'true'
         }
@@ -26,13 +30,15 @@ function CasesPage({ auth }) {
           headers.Authorization = `Bearer ${auth.token}`
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/cases`, { headers })
+        const res = await fetch(`${API_BASE_URL}/api/cases?page=${page}&limit=${limit}`, { headers })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
           throw new Error(data.message || 'Failed to load cases')
         }
-        const data = await res.json()
-        setCases(data)
+        const response = await res.json()
+        setCases(response.data || [])
+        setTotalPages(response.meta?.totalPages || 1)
+        setTotal(response.meta?.total || 0)
 
         // Load categories
         const catRes = await fetch(`${API_BASE_URL}/api/categories`, {
@@ -48,7 +54,12 @@ function CasesPage({ auth }) {
       }
     }
     load()
-  }, [auth])
+  }, [auth, page])
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1)
+  }, [search, categoryFilter, difficultyFilter, durationFilter])
 
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {
@@ -189,6 +200,50 @@ function CasesPage({ auth }) {
               No cases match your filters yet.
             </div>
           )}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && !error && totalPages > 1 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '1rem',
+          marginTop: '2rem',
+          paddingBottom: '2rem'
+        }}>
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              background: page === 1 ? '#f3f4f6' : 'white',
+              cursor: page === 1 ? 'not-allowed' : 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            ← Previous
+          </button>
+          <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+            Page {page} of {totalPages} ({total} cases)
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              background: page === totalPages ? '#f3f4f6' : 'white',
+              cursor: page === totalPages ? 'not-allowed' : 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            Next →
+          </button>
         </div>
       )}
     </div>

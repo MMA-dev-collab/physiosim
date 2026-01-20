@@ -31,6 +31,7 @@ export default function CaseEditorPage({ auth }) {
         metadata: { brief: '' },
         thumbnailUrl: '',
         duration: 10,
+        status: 'draft',
     })
 
     // Steps Data
@@ -190,6 +191,56 @@ export default function CaseEditorPage({ auth }) {
         }
     }
 
+    const handlePublish = async () => {
+        if (steps.length < 2) {
+            toast.error('Cannot publish: Case must have at least 2 steps.')
+            return
+        }
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.token}`,
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: JSON.stringify({ ...caseData, status: 'published' }),
+            })
+
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.message || 'Failed to publish')
+            }
+
+            setCaseData({ ...caseData, status: 'published' })
+            toast.success('Case published successfully!')
+        } catch (e) {
+            toast.error(e.message)
+        }
+    }
+
+    const handleUnpublish = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.token}`,
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: JSON.stringify({ ...caseData, status: 'draft' }),
+            })
+
+            if (!res.ok) throw new Error('Failed to unpublish')
+
+            setCaseData({ ...caseData, status: 'draft' })
+            toast.success('Case unpublished successfully!')
+        } catch (e) {
+            toast.error(e.message)
+        }
+    }
+
     const handleAddStep = async (type) => {
         // Basic step template
         const newStep = {
@@ -267,7 +318,42 @@ export default function CaseEditorPage({ auth }) {
                     }
                     navigate('/admin')
                 }}>← Back to Dashboard</button>
-                <h1>{isEdit ? `Edit Case: ${caseData.title}` : 'Create New Case'}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <h1>{isEdit ? `Edit Case: ${caseData.title}` : 'Create New Case'}</h1>
+                    {isEdit && (
+                        <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '100px',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            background: caseData.status === 'published' ? '#dcfce7' : '#fef3c7',
+                            color: caseData.status === 'published' ? '#166534' : '#92400e'
+                        }}>
+                            {caseData.status === 'published' ? '✓ Published' : '📝 Draft'}
+                        </span>
+                    )}
+                </div>
+                {isEdit && (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {caseData.status === 'draft' ? (
+                            <button
+                                className="btn-primary"
+                                onClick={handlePublish}
+                                style={{ fontSize: '0.875rem' }}
+                            >
+                                Publish Case
+                            </button>
+                        ) : (
+                            <button
+                                className="btn-secondary"
+                                onClick={handleUnpublish}
+                                style={{ fontSize: '0.875rem' }}
+                            >
+                                Unpublish
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="editor-tabs">
@@ -297,7 +383,7 @@ export default function CaseEditorPage({ auth }) {
                     <div className="form-section">
                         <div className="form-grid">
                             <label>
-                                <span>Title <span style={{ color: 'red' }}>*</span></span> 
+                                <span>Title <span style={{ color: 'red' }}>*</span></span>
                                 <input
                                     id="field-title"
                                     value={caseData.title}
