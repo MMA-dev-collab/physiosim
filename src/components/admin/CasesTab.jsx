@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../../config'
+import ConfirmationModal from '../common/ConfirmationModal'
 import './CasesTab.css'
 
 export default function CasesTab({ auth }) {
@@ -9,6 +10,7 @@ export default function CasesTab({ auth }) {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState(null)
+  const [caseToDelete, setCaseToDelete] = useState(null)
 
   // Filters
   const [search, setSearch] = useState('')
@@ -49,10 +51,15 @@ export default function CasesTab({ auth }) {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this case?')) return
+  const handleDelete = (c) => {
+    setCaseToDelete(c)
+  }
+
+  const confirmDelete = async () => {
+    if (!caseToDelete) return
+
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/cases/${caseToDelete.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${auth.token}`,
@@ -62,6 +69,7 @@ export default function CasesTab({ auth }) {
       if (!res.ok) throw new Error('Failed to delete')
       showToast('success', 'Case deleted')
       loadCases()
+      setCaseToDelete(null)
     } catch (e) {
       showToast('error', e.message)
     }
@@ -139,7 +147,7 @@ export default function CasesTab({ auth }) {
                 <td>
                   <div className="action-buttons">
                     <button className="btn-icon btn-edit" onClick={() => navigate(`/admin/cases/${c.id}/edit`)} title="Edit">✎</button>
-                    <button className="btn-icon btn-delete" onClick={() => handleDelete(c.id)} title="Delete">🗑</button>
+                    <button className="btn-icon btn-delete" onClick={() => handleDelete(c)} title="Delete">🗑</button>
                   </div>
                 </td>
               </tr>
@@ -160,6 +168,16 @@ export default function CasesTab({ auth }) {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={!!caseToDelete}
+        title="Delete Case?"
+        message="Are you sure you want to permanently delete this case? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setCaseToDelete(null)}
+        isDanger={true}
+      />
     </div>
   )
 }

@@ -96,10 +96,36 @@ export default function CaseEditorPage({ auth }) {
         }
     }, [id, auth.token, isEdit])
 
+    const [touched, setTouched] = useState({})
+
+    const validate = () => {
+        const errors = {}
+        if (!caseData.title) errors.title = 'Title is required'
+        if (!caseData.categoryId) errors.categoryId = 'Category is required'
+        if (!caseData.duration) errors.duration = 'Duration is required'
+        else if (caseData.duration > 30) errors.duration = 'Duration cannot exceed 30 minutes'
+        if (!caseData.metadata.brief) errors.brief = 'Brief Description is required'
+        return errors
+    }
+
+    const errors = validate()
+
     const handleSaveBasic = async () => {
         // Validation
-        if (!caseData.title || !caseData.categoryId || !caseData.metadata.brief || !caseData.duration) {
-            toast.error('Please fill in all required fields:\n- Title\n- Category\n- Duration\n- Brief Description')
+        if (Object.keys(errors).length > 0) {
+            setTouched({
+                title: true,
+                categoryId: true,
+                duration: true,
+                brief: true
+            })
+            toast.error('Please fix the errors before saving.')
+
+            // Auto-focus first error
+            const firstErrorKey = Object.keys(errors)[0]
+            const element = document.getElementById(`field-${firstErrorKey}`)
+            if (element) element.focus()
+
             return
         }
 
@@ -271,16 +297,21 @@ export default function CaseEditorPage({ auth }) {
                     <div className="form-section">
                         <div className="form-grid">
                             <label>
-                                Title
+                                <span>Title <span style={{ color: 'red' }}>*</span></span> 
                                 <input
+                                    id="field-title"
                                     value={caseData.title}
                                     onChange={e => setCaseData({ ...caseData, title: e.target.value })}
+                                    onBlur={() => setTouched({ ...touched, title: true })}
                                     placeholder="Case Title"
+                                    style={touched.title && errors.title ? { borderColor: 'red' } : {}}
                                 />
+                                {touched.title && errors.title && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.title}</span>}
                             </label>
                             <label>
-                                Category
+                                <span>Category <span style={{ color: 'red' }}>*</span></span>
                                 <select
+                                    id="field-categoryId"
                                     value={caseData.categoryId || ''}
                                     onChange={(e) => {
                                         const val = e.target.value
@@ -288,15 +319,18 @@ export default function CaseEditorPage({ auth }) {
                                         const cat = categories.find(c => c.id === catId)
                                         setCaseData({ ...caseData, categoryId: catId, category: cat ? cat.name : '' })
                                     }}
+                                    onBlur={() => setTouched({ ...touched, categoryId: true })}
+                                    style={touched.categoryId && errors.categoryId ? { borderColor: 'red' } : {}}
                                 >
                                     <option value="">Select Category</option>
                                     {categories.map(c => (
                                         <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                                     ))}
                                 </select>
+                                {touched.categoryId && errors.categoryId && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.categoryId}</span>}
                             </label>
                             <label>
-                                Difficulty
+                                <span>Difficulty <span style={{ color: 'red' }}>*</span></span>
                                 <select
                                     value={caseData.difficulty}
                                     onChange={e => setCaseData({ ...caseData, difficulty: e.target.value })}
@@ -307,20 +341,28 @@ export default function CaseEditorPage({ auth }) {
                                 </select>
                             </label>
                             <label>
-                                Duration (min)
+                                <span>Duration (min) <span style={{ color: 'red' }}>*</span></span>
                                 <input
+                                    id="field-duration"
                                     type="number"
                                     value={caseData.duration}
                                     onChange={e => setCaseData({ ...caseData, duration: parseInt(e.target.value) })}
+                                    onBlur={() => setTouched({ ...touched, duration: true })}
+                                    style={touched.duration && errors.duration ? { borderColor: 'red' } : {}}
                                 />
+                                {touched.duration && errors.duration && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.duration}</span>}
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                Brief Description
+                                <span>Brief Description <span style={{ color: 'red' }}>*</span></span>
                                 <textarea
+                                    id="field-brief"
                                     value={caseData.metadata.brief || ''}
                                     onChange={e => setCaseData({ ...caseData, metadata: { ...caseData.metadata, brief: e.target.value } })}
+                                    onBlur={() => setTouched({ ...touched, brief: true })}
                                     rows={3}
+                                    style={touched.brief && errors.brief ? { borderColor: 'red' } : {}}
                                 />
+                                {touched.brief && errors.brief && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.brief}</span>}
                             </label>
                         </div>
                         <div className="form-actions">
