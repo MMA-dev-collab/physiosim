@@ -2,7 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #2563eb; /* Royal Blue */
+  --primary-color: #2563eb;
+  /* Royal Blue */
   --primary-light: #eff6ff;
   --secondary-color: #64748b;
   --bg-color: #f3f4f6;
@@ -107,7 +108,8 @@
 /* Main Content */
 .admin-main-content {
   flex: 1;
-  margin-left: 280px; /* Sidebar width */
+  margin-left: 280px;
+  /* Sidebar width */
   padding: 2rem 3rem;
   max-width: 1600px;
 }
@@ -336,8 +338,13 @@
   gap: 0.25rem;
 }
 
-.trend-up { color: var(--success); }
-.trend-down { color: var(--danger); }
+.trend-up {
+  color: var(--success);
+}
+
+.trend-down {
+  color: var(--danger);
+}
 
 /* Activity & Schedule */
 .secondary-widgets {
@@ -419,12 +426,21 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Overrides for existing components to match theme */
-.admin-cases .card, .admin-users .card, .admin-categories .card {
+.admin-cases .card,
+.admin-users .card,
+.admin-categories .card {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   border: none;
@@ -439,4 +455,10 @@
 
 .btn-secondary {
   border-radius: 100px;
+}
+
+.edite-title {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 }

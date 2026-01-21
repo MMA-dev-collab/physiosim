@@ -192,10 +192,6 @@ export default function CaseEditorPage({ auth }) {
     }
 
     const handlePublish = async () => {
-        if (steps.length < 2) {
-            toast.error('Cannot publish: Case must have at least 2 steps.')
-            return
-        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}`, {
@@ -312,10 +308,6 @@ export default function CaseEditorPage({ auth }) {
         <div className="case-editor-page">
             <div className="editor-header">
                 <button className="back-btn" onClick={() => {
-                    if (steps.length < 2) {
-                        toast.error('You must have at least 2 steps to complete the case.')
-                        return
-                    }
                     navigate('/admin')
                 }}>← Back to Dashboard</button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

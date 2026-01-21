@@ -9,7 +9,10 @@ const InputModal = ({
     onSubmit,
     onCancel,
     submitText = 'Submit',
-    placeholder = ''
+    placeholder = '',
+    type = 'number',
+    min,
+    max
 }) => {
     const [value, setValue] = useState(defaultValue);
 
@@ -28,11 +31,30 @@ const InputModal = ({
                 <div className="modal-body">
                     <p style={{ marginTop: 0 }}>{message}</p>
                     <input
-                        type="text"
+                        type={type}
                         className="form-input"
                         value={value}
-                        onChange={(e) => setValue(e.target.value)}
+                        onChange={(e) => {
+                            let val = e.target.value;
+                            if (type === 'number') {
+                                // Strictly allow only digits for whole numbers
+                                val = val.replace(/\D/g, '');
+                            }
+                            setValue(val);
+                        }}
+                        onKeyDown={(e) => {
+                            if (type === 'number') {
+                                // List of allowed control keys
+                                const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                                // Allow if it's a digit or an allowed control key
+                                if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+                                    e.preventDefault();
+                                }
+                            }
+                        }}
                         placeholder={placeholder}
+                        min={min}
+                        max={max}
                         style={{
                             width: '100%',
                             padding: '0.5rem',

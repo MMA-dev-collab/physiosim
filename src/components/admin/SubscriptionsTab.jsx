@@ -88,13 +88,11 @@ export default function SubscriptionsTab({ auth }) {
     try {
       // Validate user selection
       if (!formData.userId || formData.userId === '') {
-        toast.warning('Please select a user')
         return
       }
 
       // Validate plan selection
       if (!formData.planId || formData.planId === '') {
-        toast.warning('Please select a plan')
         return
       }
 
@@ -167,19 +165,30 @@ export default function SubscriptionsTab({ auth }) {
     setInputModal({
       isOpen: true,
       title: 'Extend Subscription',
-      message: 'Enter number of days to extend:',
-      placeholder: 'e.g. 30',
-      onSubmit: (value) => {
-        handleExtend(subscriptionId, parseInt(value))
-        setInputModal(prev => ({ ...prev, isOpen: false }))
+      message: 'Enter number of days to extend (max 180):',
+      placeholder: '30',
+      type: 'number',
+      min: 0,
+      max: 180,
+      onSubmit: async (value) => {
+        const success = await handleExtend(subscriptionId, value)
+        if (success) {
+          setInputModal(prev => ({ ...prev, isOpen: false }))
+        }
       }
     })
   }
 
-  const handleExtend = async (subscriptionId, daysToAdd) => {
-    if (!daysToAdd || isNaN(daysToAdd) || daysToAdd <= 0) {
+  const handleExtend = async (subscriptionId, daysToAddInput) => {
+    const daysToAdd = parseInt(daysToAddInput);
+    if (isNaN(daysToAdd) || daysToAdd <= 0) {
       toast.warning('Please enter a valid number of days')
-      return
+      return false
+    }
+
+    if (daysToAdd > 180) {
+      toast.warning('Maximum extension is 180 days. Please enter a value between 1 and 180.');
+      return false
     }
 
     try {
@@ -196,11 +205,14 @@ export default function SubscriptionsTab({ auth }) {
       if (res.ok) {
         loadData()
         toast.success('Subscription extended successfully')
+        return true
       } else {
         toast.error('Failed to extend subscription')
+        return false
       }
     } catch (err) {
       toast.error('Failed to extend subscription')
+      return false
     }
   }
 
@@ -521,7 +533,7 @@ export default function SubscriptionsTab({ auth }) {
                   width: '100%',
                   padding: '0.5rem',
                   borderRadius: '4px',
-                  border: '1px solid #e2e8f0'
+                  border: hasAttemptedSubmit && !formData.userId ? '1px solid #ef4444' : '1px solid #e2e8f0'
                 }}
               >
                 <option value="">Select user...</option>
@@ -529,6 +541,11 @@ export default function SubscriptionsTab({ auth }) {
                   <option key={u.id} value={u.id}>{u.email} ({u.name || 'No name'})</option>
                 ))}
               </select>
+              {hasAttemptedSubmit && !formData.userId && (
+                <small style={{ color: '#ef4444', marginTop: '0.25rem', display: 'block' }}>
+                  Please select a user
+                </small>
+              )}
             </div>
 
             <div style={{ marginBottom: '1rem' }}>

@@ -29,6 +29,7 @@ export default function SubscriptionPlansTab({ auth }) {
     features: [],
     isActive: true,
     isPremium: false,
+    isUnlimited: false,
     newFeature: ''
   })
 
@@ -87,6 +88,7 @@ export default function SubscriptionPlansTab({ auth }) {
           features: Array.isArray(plan.features) ? plan.features : [],
           isActive: plan.isActive !== undefined ? !!plan.isActive : true,
           isPremium: plan.role === 'premium',
+          isUnlimited: parseInt(plan.durationDays) >= 36500,
           newFeature: ''
         })
       } else {
@@ -127,6 +129,7 @@ export default function SubscriptionPlansTab({ auth }) {
       features: [],
       isActive: true,
       isPremium: false,
+      isUnlimited: false,
       newFeature: ''
     })
   }
@@ -178,12 +181,8 @@ export default function SubscriptionPlansTab({ auth }) {
     const days = parseInt(formData.durationDays) || 0
     const hours = parseInt(formData.durationHours) || 0
 
-    // For Normal plan, we might want unlimited duration
-    // If name is Normal, bypass duration check or set to a very high number/special value
-    const isNormal = editingPlan && editingPlan.name === 'Normal';
-
-    // Validate that at least one duration field is filled (unless Normal which is unlimited)
-    if (!isNormal && years === 0 && days === 0 && hours === 0) {
+    // Validate that at least one duration field is filled
+    if (years === 0 && days === 0 && hours === 0) {
       toast.error('Please specify at least one duration (years, days, or hours)')
       setLoading(false)
       return
@@ -218,18 +217,14 @@ export default function SubscriptionPlansTab({ auth }) {
     }
 
     // Calculate total duration in days
-    // 1 Year = 365 days
-    let finalDays = 0;
     let totalDays = 0;
+    let finalDays = 0;
 
-    if (isNormal) {
-      // Set to a high number for "unlimited" effectively, or handle as special case on backend
-      // Assuming existing logic uses days. Let's use 36500 (100 years) as placeholder or strict 'unlimited' if backend supports null.
-      // Based on previous code, likely just a large number.
-      finalDays = 36500;
+    if (formData.isUnlimited) {
+      finalDays = 36500; // 100 years = Unlimited
     } else {
       totalDays = (years * 365) + days + (hours / 24)
-      finalDays = parseFloat(totalDays.toFixed(4)); // Keep precision for hours
+      finalDays = parseFloat(totalDays.toFixed(4));
     }
 
     // Backend likely expects integer or float. If using 'durationDays' column (integer usually or float), we might round up?
@@ -277,8 +272,6 @@ export default function SubscriptionPlansTab({ auth }) {
       const requestBody = {
         name: formData.name.trim(),
         price: price,
-        name: formData.name.trim(),
-        price: price,
         durationDays: finalDays,
         duration_value: finalDays,
         duration_unit: 'day',
@@ -297,12 +290,17 @@ export default function SubscriptionPlansTab({ auth }) {
       }
 
       // Handle Role Logic
-      // If editing a core plan (Normal/Premium), we don't send role (backend prevents change anyway)
-      // If creating new or editing custom, we send role based on isPremium
-      const isCorePlan = editingPlan && (editingPlan.name === 'Normal' || (editingPlan.name === 'Premium' && editingPlan.role === 'premium'));
-
-      if (!isCorePlan) {
-        requestBody.role = formData.isPremium ? 'premium' : 'custom';
+      if (formData.isPremium) {
+        requestBody.role = 'premium';
+      } else {
+        // If not premium, preserve existing role if it was a core/special one (normal/ultra)
+        // Otherwise default to custom
+        const preservedRoles = ['normal', 'ultra'];
+        if (editingPlan && preservedRoles.includes(editingPlan.role)) {
+          requestBody.role = editingPlan.role;
+        } else {
+          requestBody.role = 'custom';
+        }
       }
 
       console.log('Sending request to:', url)
@@ -501,7 +499,7 @@ export default function SubscriptionPlansTab({ auth }) {
   return (
     <div className="admin-subscriptions">
       <div className="section-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
+        <div className='edite-title'>
           <h2 style={{ margin: 0 }}>Subscription Plans Management</h2>
           <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0' }}>
             Create and manage subscription plans that users can subscribe to
@@ -563,6 +561,8 @@ export default function SubscriptionPlansTab({ auth }) {
                   <span className="badge">
                     {(() => {
                       const totalDays = plan.durationDays || 0;
+                      if (totalDays >= 36500) return 'Unlimited';
+
                       const years = Math.floor(totalDays / 365);
                       const dayRemainder = totalDays % 365;
                       const days = Math.floor(dayRemainder);
@@ -725,7 +725,6 @@ export default function SubscriptionPlansTab({ auth }) {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    disabled={editingPlan && (editingPlan.role === 'normal' || editingPlan.role === 'premium')}
                     style={{
                       width: '100%',
                       padding: '0.5rem',
@@ -734,11 +733,6 @@ export default function SubscriptionPlansTab({ auth }) {
                     }}
                     placeholder="e.g., Premium, Enterprise"
                   />
-                  {editingPlan && (editingPlan.role === 'normal' || editingPlan.role === 'premium') && (
-                    <small style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                      Core plan names cannot be changed (role: {editingPlan.role})
-                    </small>
-                  )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -776,12 +770,19 @@ export default function SubscriptionPlansTab({ auth }) {
                           if (val < 0) val = 0;
                           setFormData({ ...formData, durationYears: val.toString() });
                         }}
+                        onKeyDown={(e) => {
+                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                          if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         style={{
                           width: '100%',
                           padding: '0.5rem',
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
+                        disabled={formData.isUnlimited}
                         placeholder="e.g. 1"
                       />
                     </div>
@@ -815,12 +816,19 @@ export default function SubscriptionPlansTab({ auth }) {
                             durationYears: years.toString()
                           });
                         }}
+                        onKeyDown={(e) => {
+                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                          if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         style={{
                           width: '100%',
                           padding: '0.5rem',
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
+                        disabled={formData.isUnlimited}
                         placeholder="e.g. 30"
                       />
                     </div>
@@ -864,19 +872,35 @@ export default function SubscriptionPlansTab({ auth }) {
                             durationYears: years.toString()
                           });
                         }}
+                        onKeyDown={(e) => {
+                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                          if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         style={{
                           width: '100%',
                           padding: '0.5rem',
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
+                        disabled={formData.isUnlimited}
                         placeholder="e.g. 12"
                       />
                     </div>
                   </div>
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.isUnlimited}
+                        onChange={(e) => setFormData({ ...formData, isUnlimited: e.target.checked })}
+                      />
+                      <span style={{ fontSize: '0.875rem' }}>Unlimited Duration (effectively 100 years)</span>
+                    </label>
+                  </div>
                   <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
                     Specify duration. Values will automatically convert (24h → 1d, 365d → 1y).
-                    {editingPlan && editingPlan.name === 'Normal' && <span style={{ display: 'block', color: '#2563eb', marginTop: '0.25rem' }}>Normal plan duration is set to Unlimited automatically.</span>}
                   </small>
                 </div>
 
@@ -1010,15 +1034,9 @@ export default function SubscriptionPlansTab({ auth }) {
                       type="checkbox"
                       checked={formData.isPremium}
                       onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
-                      disabled={editingPlan && (editingPlan.name === 'Normal' || (editingPlan.name === 'Premium' && editingPlan.role === 'premium'))}
                     />
                     <span>Grant Premium Access (unlocks premium cases)</span>
                   </label>
-                  {editingPlan && (editingPlan.name === 'Normal' || (editingPlan.name === 'Premium' && editingPlan.role === 'premium')) && (
-                    <small style={{ color: '#6b7280', marginLeft: '1.5rem' }}>
-                      Access level for core '{editingPlan.name}' plan cannot be changed.
-                    </small>
-                  )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>

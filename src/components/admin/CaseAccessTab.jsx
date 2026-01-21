@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
+import { useToast } from '../../context/ToastContext'
 import './CasesTab.css' // Reuse table styles
 
 export default function CaseAccessTab({ auth }) {
+  const { toast } = useToast()
   const [cases, setCases] = useState([])
   const [categories, setCategories] = useState([])
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
-  const [toast, setToast] = useState(null)
   const [updating, setUpdating] = useState(null)
 
   // Filters
@@ -29,7 +30,7 @@ export default function CaseAccessTab({ auth }) {
       const data = await res.json()
       if (res.ok) setCases(data)
     } catch (e) {
-      showToast('error', 'Failed to load cases')
+      toast.error('Failed to load cases')
     } finally {
       setLoading(false)
     }
@@ -61,11 +62,6 @@ export default function CaseAccessTab({ auth }) {
       .catch(e => console.error(e))
   }, [])
 
-  // Toast Helper
-  const showToast = (type, message) => {
-    setToast({ type, message })
-    setTimeout(() => setToast(null), 3000)
-  }
 
   // Update case access - Refactored for Plan-based Access
   const handleAccessUpdate = async (caseId, updates) => {
@@ -74,13 +70,26 @@ export default function CaseAccessTab({ auth }) {
       const caseData = cases.find(c => c.id === caseId)
       if (!caseData) throw new Error('Case not found')
 
-      // Validate plan is active
+      // Validate plan and constraints
       if (updates.requiredPlanId) {
-        // Since 'plans' only contains active plans (due to loadPlans filter),
-        // we can check if the ID exists in 'plans'.
         const selectedPlan = plans.find(p => p.id === updates.requiredPlanId)
         if (!selectedPlan) {
           throw new Error('Cannot assign case to deactivated plan. Please select an active plan.')
+        }
+
+        // Limit Check: Ensure plan doesn't exceed its maxFreeCases limit
+        if (selectedPlan.maxFreeCases !== null && selectedPlan.maxFreeCases !== undefined && selectedPlan.maxFreeCases !== '') {
+          const limit = parseInt(selectedPlan.maxFreeCases);
+
+          // Count cases currently assigned to THIS plan ID
+          const currentUsage = cases.filter(c => c.requiredPlanId === selectedPlan.id).length;
+
+          // If current case is NOT already assigned to this plan, check if we'd exceed the limit
+          if (caseData.requiredPlanId !== selectedPlan.id) {
+            if (currentUsage >= limit) {
+              throw new Error(`Limit reached: The plan "${selectedPlan.name}" only allows a maximum of ${limit} assigned cases.`)
+            }
+          }
         }
       }
 
@@ -100,7 +109,7 @@ export default function CaseAccessTab({ auth }) {
       })
 
       if (res.ok) {
-        showToast('success', 'Case access updated successfully')
+        toast.success('Case access updated successfully')
         setCases(cases.map(c =>
           c.id === caseId ? { ...c, ...updateData } : c
         ))
@@ -109,7 +118,7 @@ export default function CaseAccessTab({ auth }) {
         throw new Error(error.message || 'Failed to update')
       }
     } catch (e) {
-      showToast('error', e.message || 'Failed to update case access')
+      toast.error(e.message || 'Failed to update case access')
     } finally {
       setUpdating(null)
     }
@@ -138,7 +147,7 @@ export default function CaseAccessTab({ auth }) {
   const getAccessBadge = (caseData) => {
     // Try to find in plans
     const planId = caseData.requiredPlanId;
-    if (!planId) return <span className="badge" style={{ background: '#f3f4f6', color: '#6b7280' }}>Normal</span>;
+    if (!planId) return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a' }}>Normal (Free)</span>;
 
     const plan = plans.find(p => p.id === planId) || {
       name: caseData.requiredPlanName || 'Unknown Plan',
@@ -157,30 +166,30 @@ export default function CaseAccessTab({ auth }) {
     return <span className="badge" style={{ background: '#f3f4f6', ...styleDeactivated }}>{name}</span>
   }
 
-  // Check if a plan can access a case based on accessLevel
+  // Check if a plan can access a case based on accessLevel and hierarchy
   const canPlanAccessCase = (plan, caseData) => {
-    // 1. Plan-specific assignment (Specific cases assigned to this plan)
+    // 1. Cases with no requiredPlanId are accessible to all users
+    if (!caseData.requiredPlanId) {
+      return true
+    }
+
+    // 2. Specific cases assigned to this plan
     if (caseData.requiredPlanId === plan.id) {
       return true
     }
 
-    // 2. All Users cases - accessible to everyone
-    if (caseData.accessLevel === 'all') {
-      return true
+    // 3. Plan hierarchy check (Mirroring backend logic)
+    const planHierarchy = {
+      'normal': 1,
+      'premium': 2,
+      'ultra': 3,
+      'custom': 1 // Default custom plans to normal level
     }
 
-    // 3. Free cases - accessible to all plans
-    // (Both Normal and Custom/Premium plans inherit access to Free cases)
-    if (caseData.accessLevel === 'free' || caseData.isFree) {
-      return true
-    }
+    const userPlanLevel = planHierarchy[plan.role] || 1
+    const requiredPlanLevel = planHierarchy[caseData.requiredPlanRole] || 1
 
-    // 4. Premium cases - only accessible to premium role plans
-    if (caseData.accessLevel === 'premium' || caseData.isPremiumOnly) {
-      return plan.role === 'premium'
-    }
-
-    return false
+    return userPlanLevel >= requiredPlanLevel
   }
 
   return (
@@ -265,10 +274,18 @@ export default function CaseAccessTab({ auth }) {
                     <div style={{ marginTop: '0.25rem' }}>
                       {(() => {
                         const accessibleCases = cases.filter(c => canPlanAccessCase(plan, c));
-                        const count = accessibleCases.length;
+                        let count = accessibleCases.length;
+
+                        // Apply Max Free Cases cap if defined
+                        if (plan.maxFreeCases !== null && plan.maxFreeCases !== undefined && plan.maxFreeCases !== '') {
+                          const limit = parseInt(plan.maxFreeCases);
+                          if (!isNaN(limit) && count > limit) {
+                            count = limit;
+                          }
+                        }
 
                         // Display Logic
-                        if (plan.role === 'normal') {
+                        if (plan.role === 'normal' || plan.name === 'Normal') {
                           return `${count} Free Cases`;
                         } else if (plan.role === 'premium') {
                           return `${count} Cases (All Access)`;
@@ -317,6 +334,7 @@ export default function CaseAccessTab({ auth }) {
               <th>Category</th>
               <th>Current Access</th>
               <th>Access Level</th>
+              <th>Status</th>
               <th>Quick Actions</th>
             </tr>
           </thead>
@@ -360,7 +378,7 @@ export default function CaseAccessTab({ auth }) {
                       })()
                     }}
                   >
-                    {!c.requiredPlanId && <option value="">Select Plan...</option>}
+                    {!c.requiredPlanId && <option value="">-- No Plan Assigned --</option>}
 
                     {plans.filter(p => p.isActive || p.id === c.requiredPlanId).map(p => (
                       <option key={p.id} value={p.id} disabled={!p.isActive}>
@@ -375,7 +393,49 @@ export default function CaseAccessTab({ auth }) {
                   )}
                 </td>
                 <td>
-                  {/* Actions replaced by direct dropdown */}
+                  <span className="badge" style={{
+                    background: c.status === 'published' ? '#dcfce7' : '#fef3c7',
+                    color: c.status === 'published' ? '#166534' : '#92400e',
+                    fontSize: '0.75rem'
+                  }}>
+                    {c.status === 'published' ? 'Active' : 'Draft'}
+                  </span>
+                </td>
+                <td>
+                  {c.status !== 'published' ? (
+                    <button
+                      onClick={() => handleAccessUpdate(c.id, { status: 'published' })}
+                      disabled={updating === c.id}
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: updating === c.id ? 'not-allowed' : 'pointer',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {updating === c.id ? '...' : 'Activate'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAccessUpdate(c.id, { status: 'draft' })}
+                      disabled={updating === c.id}
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        background: '#f3f4f6',
+                        color: '#6b7280',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: updating === c.id ? 'not-allowed' : 'pointer',
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      {updating === c.id ? '...' : 'Set to Draft'}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -390,15 +450,6 @@ export default function CaseAccessTab({ auth }) {
 
 
 
-      {/* Toast Notification */}
-      {toast && (
-        <div className="toast-container">
-          <div className={`toast ${toast.type}`}>
-            <span>{toast.type === 'success' ? '✅' : '❌'}</span>
-            <span>{toast.message}</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
