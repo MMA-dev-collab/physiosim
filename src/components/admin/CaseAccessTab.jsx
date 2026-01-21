@@ -259,7 +259,7 @@ export default function CaseAccessTab({ auth }) {
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
                   <div>Price: ${parseFloat(plan.price || 0).toFixed(2)}</div>
-                  <div>Max Cases: {plan.maxFreeCases === null ? 'Unlimited' : plan.maxFreeCases}</div>
+                  {/* <div>Max Cases: {plan.maxFreeCases === null ? 'Unlimited' : plan.maxFreeCases}</div> */}
                   <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
                     <strong>Can Access:</strong>
                     <div style={{ marginTop: '0.25rem' }}>
@@ -269,12 +269,12 @@ export default function CaseAccessTab({ auth }) {
 
                         // Display Logic
                         if (plan.role === 'normal') {
-                          return `Can Access: ${count} Free Cases`;
+                          return `${count} Free Cases`;
                         } else if (plan.role === 'premium') {
-                          return `Can Access: ${count} Cases (All Access)`;
+                          return `${count} Cases (All Access)`;
                         } else {
                           // Custom Plans
-                          return `Can Access: ${count} Cases (Includes Free Cases)`;
+                          return `${count} Cases (Includes Free Cases)`;
                         }
                       })()}
                     </div>

@@ -21,7 +21,7 @@ function MembershipPage() {
             </div>
             <h2 className="membership-title">Normal Plan</h2>
             <div className="membership-price">
-              <span className="price-amount">$0</span>
+              <span className="price-amount">0 <span style={{ fontSize: '1rem' }}>EGP</span></span>
               <span className="price-period">/forever</span>
             </div>
           </div>
@@ -62,11 +62,11 @@ function MembershipPage() {
           <div className="membership-badge">Most Popular</div>
           <div className="membership-header">
             <div className="pill pill-premium">
-              <span>PREMIUM</span>
+              <span>Semi-annual</span>
             </div>
             <h2 className="membership-title">Clinical Reasoning Track</h2>
             <div className="membership-price">
-              <span className="price-amount">$29</span>
+              <span className="price-amount">1400 <span style={{ fontSize: '1rem' }}>EGP</span></span>
               <span className="price-period">/month</span>
             </div>
           </div>
@@ -108,22 +108,22 @@ function MembershipPage() {
               <span>Email support</span>
             </li>
           </ul>
-          <Link to="/cases" style={{ width: '100%', display: 'block' }}>
+          <a href="https://ipn.eg/S/mazenelfar1/instapay/5ZkTBk" target="_blank" rel="noopener noreferrer" style={{ width: '100%', display: 'block' }}>
             <button className="btn-primary" style={{ width: '100%' }}>
               Start Premium Trial
             </button>
-          </Link>
+          </a>
         </div>
 
         <div className="membership-card">
           <div className="membership-header">
             <div className="pill">
-              <span>STUDENT</span>
+              <span>Annual</span>
             </div>
             <h2 className="membership-title">Institutional Access</h2>
             <div className="membership-price">
-              <span className="price-amount">Custom</span>
-              <span className="price-period">pricing</span>
+              <span className="price-amount">2400 <span style={{ fontSize: '1rem' }}>EGP</span></span>
+              <span className="price-period">/year</span>
             </div>
           </div>
           <p className="membership-description">
@@ -156,9 +156,11 @@ function MembershipPage() {
               <span>Dedicated support</span>
             </li>
           </ul>
-          <button className="btn-secondary" style={{ width: '100%' }}>
-            Contact Sales
-          </button>
+          <a href="https://ipn.eg/S/mazenelfar1/instapay/5ZkTBk" target="_blank" rel="noopener noreferrer" style={{ width: '100%', display: 'block' }}>
+            <button className="btn-secondary" style={{ width: '100%' }}>
+              Contact Sales
+            </button>
+          </a>
         </div>
       </div>
 

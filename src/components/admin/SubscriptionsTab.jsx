@@ -110,12 +110,14 @@ export default function SubscriptionsTab({ auth }) {
         return
       }
 
-      // Calculate end date if not provided
+      // Calculate end date if not provided (safety fallback)
       let endDate = formData.endDate
       if (!endDate && selectedPlan.durationDays) {
         const start = new Date(formData.startDate)
-        start.setDate(start.getDate() + selectedPlan.durationDays)
-        endDate = start.toISOString().split('T')[0]
+        // Use time-based calculation for precision
+        const msToAdd = selectedPlan.durationDays * 24 * 60 * 60 * 1000
+        const end = new Date(start.getTime() + msToAdd)
+        endDate = end.toISOString().split('T')[0]
       }
 
       if (!endDate) {
@@ -317,31 +319,50 @@ export default function SubscriptionsTab({ auth }) {
     <div className="admin-subscriptions">
       <div className="section-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0 }}>Subscription Management</h2>
-        <button
-          onClick={() => {
-            if (users.length === 0) {
-              toast.warning('No users found. Please ensure users exist in the system.')
-              return
-            }
-            if (plans.length === 0) {
-              toast.warning('No subscription plans found. Please run the database migration.')
-              return
-            }
-            setHasAttemptedSubmit(false)
-            setShowModal(true)
-          }}
-          style={{
-            padding: '0.5rem 1rem',
-            background: 'var(--primary-color, #2563eb)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}
-        >
-          + Create Subscription
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => loadData()}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#f3f4f6',
+              border: '1px solid #e2e8f0',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '500'
+            }}
+          >
+            <span>🔄</span> Refresh
+          </button>
+          <button
+            onClick={() => {
+              if (users.length === 0) {
+                toast.warning('No users found. Please ensure users exist in the system.')
+                return
+              }
+              if (plans.length === 0) {
+                toast.warning('No subscription plans found. Please run the database migration.')
+                return
+              }
+              setHasAttemptedSubmit(false)
+              setShowModal(true)
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              background: 'var(--primary-color, #2563eb)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            + Create Subscription
+          </button>
+        </div>
       </div>
 
       <div className="cases-table-container">
@@ -523,15 +544,16 @@ export default function SubscriptionsTab({ auth }) {
                   }
                   const plan = plans.find(p => p.id === parseInt(e.target.value))
                   if (plan) {
-                    const today = new Date()
-                    const startDate = today.toISOString().split('T')[0]
-                    const end = new Date(today)
-                    end.setDate(end.getDate() + plan.durationDays)
-                    const calculatedEndDate = end.toISOString().split('T')[0]
+                    const baseDateStr = formData.startDate || new Date().toISOString().split('T')[0];
+                    const start = new Date(baseDateStr);
+                    // Use time-based calculation for precision (handles hours)
+                    const msToAdd = plan.durationDays * 24 * 60 * 60 * 1000;
+                    const end = new Date(start.getTime() + msToAdd);
+                    const calculatedEndDate = end.toISOString().split('T')[0];
                     setFormData({
                       ...formData,
                       planId: e.target.value,
-                      startDate: startDate,
+                      startDate: baseDateStr,
                       endDate: calculatedEndDate
                     })
                   } else {
@@ -567,38 +589,81 @@ export default function SubscriptionsTab({ auth }) {
               <input
                 type="date"
                 value={formData.startDate}
-                disabled
-                readOnly
+                onChange={(e) => {
+                  const newStart = e.target.value;
+                  const planIdInt = parseInt(formData.planId);
+                  const plan = plans.find(p => p.id === planIdInt);
+                  let newEnd = formData.endDate;
+
+                  if (plan && newStart) {
+                    const start = new Date(newStart);
+                    // Use time-based calculation for precision (handles hours)
+                    const msToAdd = plan.durationDays * 24 * 60 * 60 * 1000;
+                    const end = new Date(start.getTime() + msToAdd);
+                    newEnd = end.toISOString().split('T')[0];
+                  }
+
+                  setFormData({ ...formData, startDate: newStart, endDate: newEnd });
+                }}
                 style={{
                   width: '100%',
                   padding: '0.5rem',
                   borderRadius: '4px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: '#f3f4f6',
-                  cursor: 'not-allowed'
+                  border: '1px solid #e2e8f0'
                 }}
               />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                 End Date
               </label>
               <input
                 type="date"
                 value={formData.endDate}
-                disabled
-                readOnly
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 style={{
                   width: '100%',
                   padding: '0.5rem',
                   borderRadius: '4px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: '#f3f4f6',
-                  cursor: 'not-allowed'
+                  border: '1px solid #e2e8f0'
                 }}
               />
             </div>
+
+            {formData.startDate && formData.endDate && (
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '0.75rem',
+                background: '#f8fafc',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '0.9rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
+                  <span>Calculated Duration:</span>
+                  <span style={{ fontWeight: '600', color: '#2563eb' }}>
+                    {(() => {
+                      const start = new Date(formData.startDate);
+                      const end = new Date(formData.endDate);
+                      const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+
+                      const years = Math.floor(diffDays / 365);
+                      const dayRemainder = diffDays % 365;
+                      const days = Math.floor(dayRemainder);
+                      const hours = Math.round((dayRemainder - days) * 24);
+
+                      const parts = [];
+                      if (years > 0) parts.push(`${years}y`);
+                      if (days > 0) parts.push(`${days}d`);
+                      if (hours > 0) parts.push(`${hours}h`);
+
+                      return parts.length > 0 ? parts.join(' + ') : `${diffDays.toFixed(1)} days`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
               <button

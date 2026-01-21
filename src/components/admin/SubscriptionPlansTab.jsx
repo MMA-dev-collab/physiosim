@@ -71,17 +71,16 @@ export default function SubscriptionPlansTab({ auth }) {
         // Parse existing duration into years, days, hours
         const totalDays = plan.durationDays || 0
         const years = Math.floor(totalDays / 365)
-        const remainingDays = totalDays % 365
-        const days = Math.floor(remainingDays) // Assuming integer days in DB
-        // Hours not typically stored separately in durationDays if it's an int, but if we wanted to support it we'd need more precision or a different field.
-        // For now, assuming durationDays is day-granular or we just map back to days.
+        const dayRemainder = totalDays % 365
+        const days = Math.floor(dayRemainder)
+        const hours = Math.round((dayRemainder - days) * 24)
 
         setFormData({
           name: plan.name || '',
           price: plan.price || '',
           durationYears: years > 0 ? years.toString() : '',
           durationDays: days > 0 ? days.toString() : '',
-          durationHours: '', // Reset hours as we store in days
+          durationHours: hours > 0 ? hours.toString() : '', // Accurately parse hours
 
           maxFreeCases: plan.maxFreeCases === null || plan.maxFreeCases === undefined ? '' : plan.maxFreeCases.toString(),
           description: plan.description || '',
@@ -191,6 +190,8 @@ export default function SubscriptionPlansTab({ auth }) {
     }
 
     // Validate Constraints
+    // Removed strict limits to allow automatic conversion (e.g. 365 days -> 1 year, 24 hours -> 1 day)
+    /* 
     if (years > 10) {
       toast.error('Years cannot exceed 10')
       setLoading(false)
@@ -206,6 +207,7 @@ export default function SubscriptionPlansTab({ auth }) {
       setLoading(false)
       return
     }
+    */
 
     // Validate numeric fields
     const price = parseFloat(formData.price)
@@ -227,7 +229,7 @@ export default function SubscriptionPlansTab({ auth }) {
       finalDays = 36500;
     } else {
       totalDays = (years * 365) + days + (hours / 24)
-      finalDays = Math.ceil(totalDays)
+      finalDays = parseFloat(totalDays.toFixed(4)); // Keep precision for hours
     }
 
     // Backend likely expects integer or float. If using 'durationDays' column (integer usually or float), we might round up?
@@ -560,13 +562,18 @@ export default function SubscriptionPlansTab({ auth }) {
                 <td>
                   <span className="badge">
                     {(() => {
-                      const totalDays = plan.durationDays || 0
-                      const years = Math.floor(totalDays / 365)
-                      const days = totalDays % 365
-                      const parts = []
-                      if (years > 0) parts.push(`${years}y`)
-                      if (days > 0) parts.push(`${days}d`)
-                      return parts.length > 0 ? parts.join(' + ') : `${totalDays}d`
+                      const totalDays = plan.durationDays || 0;
+                      const years = Math.floor(totalDays / 365);
+                      const dayRemainder = totalDays % 365;
+                      const days = Math.floor(dayRemainder);
+                      const hours = Math.round((dayRemainder - days) * 24);
+
+                      const parts = [];
+                      if (years > 0) parts.push(`${years}y`);
+                      if (days > 0) parts.push(`${days}d`);
+                      if (hours > 0) parts.push(`${hours}h`);
+
+                      return parts.length > 0 ? parts.join(' + ') : `${totalDays}d`;
                     })()}
                   </span>
                 </td>
@@ -599,13 +606,6 @@ export default function SubscriptionPlansTab({ auth }) {
                       Custom ({plan.role || 'custom'})
                     </span>
                   )}
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                    {plan.role === 'premium'
-                      ? 'Can access premium cases'
-                      : plan.role === 'normal'
-                        ? 'Can access free cases (limited)'
-                        : 'Access depends on plan settings'}
-                  </div>
                 </td>
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxWidth: '300px' }}>
@@ -769,16 +769,20 @@ export default function SubscriptionPlansTab({ auth }) {
                       <input
                         type="number"
                         min="0"
-                        max="10"
                         value={formData.durationYears}
-                        onChange={(e) => setFormData({ ...formData, durationYears: e.target.value })}
+                        onChange={(e) => {
+                          let val = parseInt(e.target.value) || 0;
+                          if (val > 10) val = 10;
+                          if (val < 0) val = 0;
+                          setFormData({ ...formData, durationYears: val.toString() });
+                        }}
                         style={{
                           width: '100%',
                           padding: '0.5rem',
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
-                        placeholder="Max 10"
+                        placeholder="e.g. 1"
                       />
                     </div>
                     <div>
@@ -788,16 +792,36 @@ export default function SubscriptionPlansTab({ auth }) {
                       <input
                         type="number"
                         min="0"
-                        max="31"
                         value={formData.durationDays}
-                        onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+                        onChange={(e) => {
+                          let days = parseInt(e.target.value) || 0;
+                          let years = parseInt(formData.durationYears) || 0;
+
+                          if (days >= 365) {
+                            years += Math.floor(days / 365);
+                            days = days % 365;
+                          }
+
+                          if (years > 10) {
+                            years = 10;
+                            days = 0; // or 365? usually capping at 10y 0d is cleaner
+                          }
+                          if (years < 0) years = 0;
+                          if (days < 0) days = 0;
+
+                          setFormData({
+                            ...formData,
+                            durationDays: days.toString(),
+                            durationYears: years.toString()
+                          });
+                        }}
                         style={{
                           width: '100%',
                           padding: '0.5rem',
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
-                        placeholder="Max 31"
+                        placeholder="e.g. 30"
                       />
                     </div>
                     <div>
@@ -807,21 +831,51 @@ export default function SubscriptionPlansTab({ auth }) {
                       <input
                         type="number"
                         min="0"
-                        max="24"
                         value={formData.durationHours}
-                        onChange={(e) => setFormData({ ...formData, durationHours: e.target.value })}
+                        onChange={(e) => {
+                          let hours = parseInt(e.target.value) || 0;
+                          let days = parseInt(formData.durationDays) || 0;
+                          let years = parseInt(formData.durationYears) || 0;
+
+                          if (hours >= 24) {
+                            const extraDays = Math.floor(hours / 24);
+                            hours = hours % 24;
+                            days += extraDays;
+
+                            if (days >= 365) {
+                              years += Math.floor(days / 365);
+                              days = days % 365;
+                            }
+                          }
+
+                          if (years > 10) {
+                            years = 10;
+                            days = 0;
+                            hours = 0;
+                          }
+                          if (years < 0) years = 0;
+                          if (days < 0) days = 0;
+                          if (hours < 0) hours = 0;
+
+                          setFormData({
+                            ...formData,
+                            durationHours: hours.toString(),
+                            durationDays: days.toString(),
+                            durationYears: years.toString()
+                          });
+                        }}
                         style={{
                           width: '100%',
                           padding: '0.5rem',
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
-                        placeholder="Max 24"
+                        placeholder="e.g. 12"
                       />
                     </div>
                   </div>
                   <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                    Specify duration: Years (Max 10), Days (Max 31), Hours (Max 24).
+                    Specify duration. Values will automatically convert (24h → 1d, 365d → 1y).
                     {editingPlan && editingPlan.name === 'Normal' && <span style={{ display: 'block', color: '#2563eb', marginTop: '0.25rem' }}>Normal plan duration is set to Unlimited automatically.</span>}
                   </small>
                 </div>
