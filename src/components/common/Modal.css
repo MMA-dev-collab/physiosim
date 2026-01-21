@@ -5,84 +5,150 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-content {
     background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
     width: 90%;
-    max-width: 450px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    animation: slideIn 0.2s ease-out;
+    max-width: 440px;
+    box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    /* Subtle border */
+    animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .modal-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
 }
 
 .modal-title {
     margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.35rem;
+    font-weight: 700;
     color: #111827;
+    letter-spacing: -0.015em;
+    line-height: 1.4;
 }
 
 .modal-body {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     color: #4b5563;
-    line-height: 1.5;
+    line-height: 1.6;
+    text-align: center;
+    font-size: 1rem;
+    padding: 0 1rem;
 }
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
 }
 
 .btn-modal {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-modal:active {
+    transform: scale(0.97);
 }
 
 .btn-cancel {
     background: white;
-    border-color: #d1d5db;
+    border: 1px solid #e5e7eb;
     color: #374151;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .btn-cancel:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #111827;
 }
 
 .btn-confirm {
     background: #2563eb;
     color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
 }
 
 .btn-confirm:hover {
     background: #1d4ed8;
+    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-confirm:active {
+    transform: translateY(0) scale(0.97);
 }
 
 .btn-danger {
     background: #ef4444;
     color: white;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
 }
 
 .btn-danger:hover {
     background: #dc2626;
+    box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-danger:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* Icons */
+.modal-icon-container {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+/* Soft backgrounds for icons */
+.icon-danger {
+    background: #fef2f2;
+    color: #ef4444;
+    box-shadow: 0 0 0 8px #fef2f2;
+    /* Creating a double ring effect */
+}
+
+.icon-info {
+    background: #eff6ff;
+    color: #2563eb;
+    box-shadow: 0 0 0 8px #eff6ff;
 }
 
 @keyframes fadeIn {
@@ -95,14 +161,14 @@
     }
 }
 
-@keyframes slideIn {
+@keyframes scaleIn {
     from {
-        transform: translateY(20px);
         opacity: 0;
+        transform: scale(0.95) translateY(10px);
     }
 
     to {
-        transform: translateY(0);
         opacity: 1;
+        transform: scale(1) translateY(0);
     }
 }

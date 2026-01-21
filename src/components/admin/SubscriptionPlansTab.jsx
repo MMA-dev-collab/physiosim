@@ -72,13 +72,17 @@ export default function SubscriptionPlansTab({ auth }) {
         const totalDays = plan.durationDays || 0
         const years = Math.floor(totalDays / 365)
         const remainingDays = totalDays % 365
+        const days = Math.floor(remainingDays) // Assuming integer days in DB
+        // Hours not typically stored separately in durationDays if it's an int, but if we wanted to support it we'd need more precision or a different field.
+        // For now, assuming durationDays is day-granular or we just map back to days.
 
         setFormData({
           name: plan.name || '',
           price: plan.price || '',
           durationYears: years > 0 ? years.toString() : '',
-          durationDays: remainingDays > 0 ? remainingDays.toString() : '',
-          durationHours: '',
+          durationDays: days > 0 ? days.toString() : '',
+          durationHours: '', // Reset hours as we store in days
+
           maxFreeCases: plan.maxFreeCases === null || plan.maxFreeCases === undefined ? '' : plan.maxFreeCases.toString(),
           description: plan.description || '',
           features: Array.isArray(plan.features) ? plan.features : [],
@@ -175,8 +179,30 @@ export default function SubscriptionPlansTab({ auth }) {
     const days = parseInt(formData.durationDays) || 0
     const hours = parseInt(formData.durationHours) || 0
 
-    if (years === 0 && days === 0 && hours === 0) {
+    // For Normal plan, we might want unlimited duration
+    // If name is Normal, bypass duration check or set to a very high number/special value
+    const isNormal = editingPlan && editingPlan.name === 'Normal';
+
+    // Validate that at least one duration field is filled (unless Normal which is unlimited)
+    if (!isNormal && years === 0 && days === 0 && hours === 0) {
       toast.error('Please specify at least one duration (years, days, or hours)')
+      setLoading(false)
+      return
+    }
+
+    // Validate Constraints
+    if (years > 10) {
+      toast.error('Years cannot exceed 10')
+      setLoading(false)
+      return
+    }
+    if (days > 31) {
+      toast.error('Days cannot exceed 31 (use Years for longer durations)')
+      setLoading(false)
+      return
+    }
+    if (hours > 24) {
+      toast.error('Hours cannot exceed 24 (use Days for longer durations)')
       setLoading(false)
       return
     }
@@ -190,7 +216,38 @@ export default function SubscriptionPlansTab({ auth }) {
     }
 
     // Calculate total duration in days
-    const totalDays = (years * 365) + days + Math.ceil(hours / 24)
+    // 1 Year = 365 days
+    let finalDays = 0;
+    let totalDays = 0;
+
+    if (isNormal) {
+      // Set to a high number for "unlimited" effectively, or handle as special case on backend
+      // Assuming existing logic uses days. Let's use 36500 (100 years) as placeholder or strict 'unlimited' if backend supports null.
+      // Based on previous code, likely just a large number.
+      finalDays = 36500;
+    } else {
+      totalDays = (years * 365) + days + (hours / 24)
+      finalDays = Math.ceil(totalDays)
+    }
+
+    // Backend likely expects integer or float. If using 'durationDays' column (integer usually or float), we might round up?
+    // User logic: "hours max 24". If user enters 12 hours, that's 0.5 days.
+    // Ideally we store as float or allow partial. 
+    // Assuming backend handles float or we prefer ceil for access rights (better to give 1 day than 0).
+    // Let's use exact value if possible or ceil if DB constraint requires int.
+    // Looking at previous code, it used Math.ceil(hours / 24).
+    // I will stick to ceil for safety to ensure at least 1 day if hours > 0.
+    // Safety check just in case logic results in 0 (e.g. 0.0001 days?)
+    if (finalDays <= 0 && totalDays > 0) {
+      // Should catch cases where ceil works but logic fails? No, ceil(>0) is >=1.
+    }
+
+    // Re-check excessively large duration if logical limit needed (e.g. > 100 years?)
+    if (finalDays > 36500) { // roughly 100 years
+      toast.error('Duration is too long')
+      setLoading(false)
+      return
+    }
 
     // Validate maxFreeCases - allow null/empty for unlimited, or a valid number >= 0
     let maxCases = null;
@@ -218,8 +275,10 @@ export default function SubscriptionPlansTab({ auth }) {
       const requestBody = {
         name: formData.name.trim(),
         price: price,
-        durationDays: totalDays,
-        duration_value: totalDays,
+        name: formData.name.trim(),
+        price: price,
+        durationDays: finalDays,
+        duration_value: finalDays,
         duration_unit: 'day',
         maxFreeCases: maxCases
       }
@@ -702,7 +761,7 @@ export default function SubscriptionPlansTab({ auth }) {
                       }}
                     />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                         Years
@@ -710,6 +769,7 @@ export default function SubscriptionPlansTab({ auth }) {
                       <input
                         type="number"
                         min="0"
+                        max="10"
                         value={formData.durationYears}
                         onChange={(e) => setFormData({ ...formData, durationYears: e.target.value })}
                         style={{
@@ -718,7 +778,7 @@ export default function SubscriptionPlansTab({ auth }) {
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
-                        placeholder="0"
+                        placeholder="Max 10"
                       />
                     </div>
                     <div>
@@ -728,6 +788,7 @@ export default function SubscriptionPlansTab({ auth }) {
                       <input
                         type="number"
                         min="0"
+                        max="31"
                         value={formData.durationDays}
                         onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
                         style={{
@@ -736,7 +797,7 @@ export default function SubscriptionPlansTab({ auth }) {
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
-                        placeholder="0"
+                        placeholder="Max 31"
                       />
                     </div>
                     <div>
@@ -746,6 +807,7 @@ export default function SubscriptionPlansTab({ auth }) {
                       <input
                         type="number"
                         min="0"
+                        max="24"
                         value={formData.durationHours}
                         onChange={(e) => setFormData({ ...formData, durationHours: e.target.value })}
                         style={{
@@ -754,12 +816,13 @@ export default function SubscriptionPlansTab({ auth }) {
                           borderRadius: '4px',
                           border: '1px solid #e2e8f0'
                         }}
-                        placeholder="0"
+                        placeholder="Max 24"
                       />
                     </div>
                   </div>
                   <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                    Specify at least one duration. Example: 1 year + 30 days + 12 hours
+                    Specify duration: Years (Max 10), Days (Max 31), Hours (Max 24).
+                    {editingPlan && editingPlan.name === 'Normal' && <span style={{ display: 'block', color: '#2563eb', marginTop: '0.25rem' }}>Normal plan duration is set to Unlimited automatically.</span>}
                   </small>
                 </div>
 

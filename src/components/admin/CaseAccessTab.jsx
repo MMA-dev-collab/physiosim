@@ -74,6 +74,16 @@ export default function CaseAccessTab({ auth }) {
       const caseData = cases.find(c => c.id === caseId)
       if (!caseData) throw new Error('Case not found')
 
+      // Validate plan is active
+      if (updates.requiredPlanId) {
+        // Since 'plans' only contains active plans (due to loadPlans filter),
+        // we can check if the ID exists in 'plans'.
+        const selectedPlan = plans.find(p => p.id === updates.requiredPlanId)
+        if (!selectedPlan) {
+          throw new Error('Cannot assign case to deactivated plan. Please select an active plan.')
+        }
+      }
+
       const updateData = {
         ...caseData,
         ...updates
@@ -126,29 +136,46 @@ export default function CaseAccessTab({ auth }) {
   })
 
   const getAccessBadge = (caseData) => {
-    const plan = plans.find(p => p.id === caseData.requiredPlanId);
-    if (!plan) return <span className="badge" style={{ background: '#f3f4f6', color: '#6b7280' }}>Unknown</span>;
+    // Try to find in plans
+    const planId = caseData.requiredPlanId;
+    if (!planId) return <span className="badge" style={{ background: '#f3f4f6', color: '#6b7280' }}>Normal</span>;
 
-    if (plan.role === 'premium') return <span className="badge" style={{ background: '#eff6ff', color: '#2563eb' }}>🔒 {plan.name}</span>;
-    if (plan.role === 'normal') return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a' }}>🆓 {plan.name}</span>;
-    if (plan.role === 'ultra') return <span className="badge" style={{ background: '#fef3c7', color: '#d97706' }}>⭐ {plan.name}</span>;
+    const plan = plans.find(p => p.id === planId) || {
+      name: caseData.requiredPlanName || 'Unknown Plan',
+      role: caseData.requiredPlanRole || 'custom',
+      isActive: false
+    };
 
-    return <span className="badge" style={{ background: '#f3f4f6' }}>{plan.name}</span>
+    const isDeactivated = !plan.isActive;
+    const name = isDeactivated ? `${plan.name} (Inactive)` : plan.name;
+    const styleDeactivated = isDeactivated ? { opacity: 0.7, border: '1px dashed #999' } : {};
+
+    if (plan.role === 'premium') return <span className="badge" style={{ background: '#eff6ff', color: '#2563eb', ...styleDeactivated }}>🔒 {name}</span>;
+    if (plan.role === 'normal') return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a', ...styleDeactivated }}>🆓 {name}</span>;
+    if (plan.role === 'ultra') return <span className="badge" style={{ background: '#fef3c7', color: '#d97706', ...styleDeactivated }}>⭐ {name}</span>;
+
+    return <span className="badge" style={{ background: '#f3f4f6', ...styleDeactivated }}>{name}</span>
   }
 
   // Check if a plan can access a case based on accessLevel
   const canPlanAccessCase = (plan, caseData) => {
-    // All Users cases - accessible to everyone
+    // 1. Plan-specific assignment (Specific cases assigned to this plan)
+    if (caseData.requiredPlanId === plan.id) {
+      return true
+    }
+
+    // 2. All Users cases - accessible to everyone
     if (caseData.accessLevel === 'all') {
       return true
     }
 
-    // Free cases - accessible to all plans (but may have limits)
+    // 3. Free cases - accessible to all plans
+    // (Both Normal and Custom/Premium plans inherit access to Free cases)
     if (caseData.accessLevel === 'free' || caseData.isFree) {
       return true
     }
 
-    // Premium cases - only accessible to premium role plans
+    // 4. Premium cases - only accessible to premium role plans
     if (caseData.accessLevel === 'premium' || caseData.isPremiumOnly) {
       return plan.role === 'premium'
     }
@@ -192,7 +219,7 @@ export default function CaseAccessTab({ auth }) {
         >
           <option value="all">All Plans</option>
           <option value="none">No Plan (Public)</option>
-          {plans.map(p => (
+          {plans.filter(p => p.isActive).map(p => (
             <option key={p.id} value={p.id}>
               {p.role === 'premium' ? '🔒' : p.role === 'normal' ? '🆓' : '⭐'} {p.name}
             </option>
@@ -237,13 +264,17 @@ export default function CaseAccessTab({ auth }) {
                     <strong>Can Access:</strong>
                     <div style={{ marginTop: '0.25rem' }}>
                       {(() => {
-                        const accessibleCases = cases.filter(c => canPlanAccessCase(plan, c))
-                        if (plan.role === 'premium') {
-                          return `All cases (${cases.length} total)`
+                        const accessibleCases = cases.filter(c => canPlanAccessCase(plan, c));
+                        const count = accessibleCases.length;
+
+                        // Display Logic
+                        if (plan.role === 'normal') {
+                          return `Can Access: ${count} Free Cases`;
+                        } else if (plan.role === 'premium') {
+                          return `Can Access: ${count} Cases (All Access)`;
                         } else {
-                          const freeCases = cases.filter(c => (c.accessLevel === 'free' || c.isFree) && c.accessLevel !== 'all').length
-                          const allCases = cases.filter(c => c.accessLevel === 'all').length
-                          return `Free cases (${freeCases}) + All Users (${allCases}) = ${accessibleCases.length} total`
+                          // Custom Plans
+                          return `Can Access: ${count} Cases (Includes Free Cases)`;
                         }
                       })()}
                     </div>
@@ -307,25 +338,6 @@ export default function CaseAccessTab({ auth }) {
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {getAccessBadge(c)}
-                    {/* Show which plans can access this case */}
-                    {plans.length > 0 && (
-                      <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                        <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Accessible by:</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                          {plans.filter(p => p.isActive && canPlanAccessCase(p, c)).map(plan => (
-                            <span key={plan.id} style={{
-                              background: plan.role === 'premium' ? '#eff6ff' : plan.role === 'normal' ? '#f0fdf4' : '#f3f4f6',
-                              color: plan.role === 'premium' ? '#2563eb' : plan.role === 'normal' ? '#16a34a' : '#6b7280',
-                              padding: '0.125rem 0.375rem',
-                              borderRadius: '4px',
-                              fontSize: '0.65rem'
-                            }}>
-                              {plan.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </td>
                 <td>
@@ -340,13 +352,19 @@ export default function CaseAccessTab({ auth }) {
                       fontSize: '0.875rem',
                       cursor: updating === c.id ? 'not-allowed' : 'pointer',
                       minWidth: '150px',
-                      background: updating === c.id ? '#f3f4f6' : 'white'
+                      background: updating === c.id ? '#f3f4f6' : 'white',
+                      // Highlight if current plan is inactive
+                      color: c.requiredPlanId && (() => {
+                        const p = plans.find(pl => pl.id === c.requiredPlanId);
+                        return p && !p.isActive ? '#ef4444' : 'inherit';
+                      })()
                     }}
                   >
                     {!c.requiredPlanId && <option value="">Select Plan...</option>}
-                    {plans.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.role === 'normal' ? '🆓' : p.role === 'premium' ? '🔒' : '⭐'} {p.name}
+
+                    {plans.filter(p => p.isActive || p.id === c.requiredPlanId).map(p => (
+                      <option key={p.id} value={p.id} disabled={!p.isActive}>
+                        {p.role === 'normal' ? '🆓' : p.role === 'premium' ? '🔒' : '⭐'} {p.name} {!p.isActive ? '(Inactive)' : ''}
                       </option>
                     ))}
                   </select>

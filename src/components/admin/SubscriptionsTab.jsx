@@ -429,11 +429,14 @@ export default function SubscriptionsTab({ auth }) {
                             borderRadius: '4px',
                             border: '1px solid #e2e8f0',
                             fontSize: '0.75rem',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            maxWidth: '120px'
                           }}
                         >
-                          {plans.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
+                          {plans.filter(p => p.isActive || p.id === sub.planId).map(p => (
+                            <option key={p.id} value={p.id} disabled={!p.isActive}>
+                              {p.name} {!p.isActive ? '(Inactive)' : ''}
+                            </option>
                           ))}
                         </select>
                         {sub.planName !== 'Normal' && (
@@ -488,7 +491,7 @@ export default function SubscriptionsTab({ auth }) {
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                User
+                User <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <select
                 value={formData.userId}
@@ -544,7 +547,7 @@ export default function SubscriptionsTab({ auth }) {
                 required
               >
                 <option value="">-- Select plan (required) --</option>
-                {plans.map(p => (
+                {plans.filter(p => p.isActive).map(p => (
                   <option key={p.id} value={p.id}>
                     {p.name} - ${p.price} ({p.durationDays} days)
                   </option>
