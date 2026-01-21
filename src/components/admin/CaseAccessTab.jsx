@@ -70,6 +70,11 @@ export default function CaseAccessTab({ auth }) {
       const caseData = cases.find(c => c.id === caseId)
       if (!caseData) throw new Error('Case not found')
 
+      // Step count validation for activation
+      if (updates.status === 'published' && (caseData.stepCount || 0) < 3) {
+        throw new Error('the case is drafted')
+      }
+
       // Validate plan and constraints
       if (updates.requiredPlanId) {
         const selectedPlan = plans.find(p => p.id === updates.requiredPlanId)
@@ -81,11 +86,15 @@ export default function CaseAccessTab({ auth }) {
         if (selectedPlan.maxFreeCases !== null && selectedPlan.maxFreeCases !== undefined && selectedPlan.maxFreeCases !== '') {
           const limit = parseInt(selectedPlan.maxFreeCases);
 
-          // Count cases currently assigned to THIS plan ID
-          const currentUsage = cases.filter(c => c.requiredPlanId === selectedPlan.id).length;
+          // Count ONLY PUBLISHED cases currently assigned to THIS plan ID
+          const currentUsage = cases.filter(c => c.requiredPlanId === selectedPlan.id && c.status === 'published').length;
 
-          // If current case is NOT already assigned to this plan, check if we'd exceed the limit
-          if (caseData.requiredPlanId !== selectedPlan.id) {
+          // If current case is becoming 'published' (or is already) and we're assigning it to this plan, check limit
+          // Note: If we are just changing a case to 'draft', we don't need to check the limit as it reduces usage.
+          // If we are changing a case to 'published', we check the limit.
+          const isActivating = (updates.status === 'published' || (updates.status === undefined && caseData.status === 'published'));
+
+          if (isActivating && (caseData.requiredPlanId !== selectedPlan.id || caseData.status !== 'published')) {
             if (currentUsage >= limit) {
               throw new Error(`Limit reached: The plan "${selectedPlan.name}" only allows a maximum of ${limit} assigned cases.`)
             }
@@ -109,7 +118,13 @@ export default function CaseAccessTab({ auth }) {
       })
 
       if (res.ok) {
-        toast.success('Case access updated successfully')
+        if (updates.status === 'published') {
+          toast.success('the case is puplished')
+        } else if (updates.status === 'draft') {
+          toast.success('the case is drafted')
+        } else {
+          toast.success('Case updated successfully')
+        }
         setCases(cases.map(c =>
           c.id === caseId ? { ...c, ...updateData } : c
         ))
@@ -118,7 +133,12 @@ export default function CaseAccessTab({ auth }) {
         throw new Error(error.message || 'Failed to update')
       }
     } catch (e) {
-      toast.error(e.message || 'Failed to update case access')
+      // If the error is about step count, use the user's wording
+      if (e.message.toLowerCase().includes('steps') || e.message.toLowerCase().includes('drafted')) {
+        toast.error('the case is drafted')
+      } else {
+        toast.error(e.message || 'Failed to update case access')
+      }
     } finally {
       setUpdating(null)
     }
@@ -147,7 +167,7 @@ export default function CaseAccessTab({ auth }) {
   const getAccessBadge = (caseData) => {
     // Try to find in plans
     const planId = caseData.requiredPlanId;
-    if (!planId) return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a' }}>Normal (Free)</span>;
+    if (!planId) return <span className="badge" style={{ background: '#f0fdf4', color: '#16a34a' }}>🆓 Normal</span>;
 
     const plan = plans.find(p => p.id === planId) || {
       name: caseData.requiredPlanName || 'Unknown Plan',
@@ -181,15 +201,24 @@ export default function CaseAccessTab({ auth }) {
     // 3. Plan hierarchy check (Mirroring backend logic)
     const planHierarchy = {
       'normal': 1,
+      'custom': 1.5,
       'premium': 2,
-      'ultra': 3,
-      'custom': 1 // Default custom plans to normal level
+      'ultra': 3
     }
 
     const userPlanLevel = planHierarchy[plan.role] || 1
     const requiredPlanLevel = planHierarchy[caseData.requiredPlanRole] || 1
 
-    return userPlanLevel >= requiredPlanLevel
+    // Hierarchical inheritance for Systemic Premium roles
+    if (plan.role === 'premium' || plan.role === 'ultra') {
+      return userPlanLevel >= requiredPlanLevel
+    }
+
+    // Strict match for others (Custom)
+    if (plan.role === caseData.requiredPlanRole) return true;
+
+    // Finally, if it requires normal access, everyone can see it
+    return caseData.requiredPlanRole === 'normal';
   }
 
   return (
@@ -273,8 +302,8 @@ export default function CaseAccessTab({ auth }) {
                     <strong>Can Access:</strong>
                     <div style={{ marginTop: '0.25rem' }}>
                       {(() => {
-                        const accessibleCases = cases.filter(c => canPlanAccessCase(plan, c));
-                        let count = accessibleCases.length;
+                        const accessibleCasesCounted = cases.filter(c => canPlanAccessCase(plan, c) && c.status === 'published');
+                        let count = accessibleCasesCounted.length;
 
                         // Apply Max Free Cases cap if defined
                         if (plan.maxFreeCases !== null && plan.maxFreeCases !== undefined && plan.maxFreeCases !== '') {
@@ -345,7 +374,7 @@ export default function CaseAccessTab({ auth }) {
                 <td>
                   <div style={{ fontWeight: '500' }}>{c.title}</div>
                   <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                    {c.difficulty} • {c.duration} min
+                    {c.difficulty} • {c.duration} min • <b>{c.stepCount || 0} steps</b>
                   </div>
                 </td>
                 <td>
@@ -360,7 +389,7 @@ export default function CaseAccessTab({ auth }) {
                 </td>
                 <td>
                   <select
-                    value={c.requiredPlanId || ''}
+                    value={c.requiredPlanId || (plans.find(p => p.role === 'normal' || p.name === 'Normal')?.id || '')}
                     onChange={(e) => handleAccessUpdate(c.id, { requiredPlanId: e.target.value ? Number(e.target.value) : null })}
                     disabled={updating === c.id}
                     style={{
@@ -378,8 +407,6 @@ export default function CaseAccessTab({ auth }) {
                       })()
                     }}
                   >
-                    {!c.requiredPlanId && <option value="">-- No Plan Assigned --</option>}
-
                     {plans.filter(p => p.isActive || p.id === c.requiredPlanId).map(p => (
                       <option key={p.id} value={p.id} disabled={!p.isActive}>
                         {p.role === 'normal' ? '🆓' : p.role === 'premium' ? '🔒' : '⭐'} {p.name} {!p.isActive ? '(Inactive)' : ''}
@@ -405,14 +432,15 @@ export default function CaseAccessTab({ auth }) {
                   {c.status !== 'published' ? (
                     <button
                       onClick={() => handleAccessUpdate(c.id, { status: 'published' })}
-                      disabled={updating === c.id}
+                      disabled={updating === c.id || (c.stepCount || 0) < 3}
+                      title={(c.stepCount || 0) < 3 ? 'Need at least 3 steps to activate' : ''}
                       style={{
                         padding: '0.25rem 0.75rem',
-                        background: '#10b981',
+                        background: (c.stepCount || 0) < 3 ? '#9ca3af' : '#10b981',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
-                        cursor: updating === c.id ? 'not-allowed' : 'pointer',
+                        cursor: updating === c.id || (c.stepCount || 0) < 3 ? 'not-allowed' : 'pointer',
                         fontSize: '0.75rem',
                         fontWeight: '500'
                       }}

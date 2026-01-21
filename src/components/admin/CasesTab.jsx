@@ -131,7 +131,9 @@ export default function CasesTab({ auth }) {
               <tr key={c.id}>
                 <td>
                   <div style={{ fontWeight: '500' }}>{c.title}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{c.metadata?.brief?.substring(0, 50)}...</div>
+                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                    {c.difficulty} • {c.duration} min • {c.stepCount || 0} steps
+                  </div>
                 </td>
                 <td>
                   <span className="badge badge-category">

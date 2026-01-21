@@ -161,6 +161,38 @@ export default function CaseEditorPage({ auth }) {
         }
     }
 
+    const handleSaveDraftAndExit = async () => {
+        // Validation
+        if (Object.keys(errors).length > 0) {
+            setTouched({ title: true, categoryId: true, duration: true, brief: true })
+            toast.error('Please fix the errors before saving.')
+            return
+        }
+
+        try {
+            const url = isEdit ? `${API_BASE_URL}/api/admin/cases/${id}` : `${API_BASE_URL}/api/admin/cases`
+            const method = isEdit ? 'PUT' : 'POST'
+
+            // Force status to draft when saving via this button
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.token}`,
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: JSON.stringify({ ...caseData, status: 'draft' }),
+            })
+
+            if (!res.ok) throw new Error('Failed to save draft')
+
+            toast.success('the case is drafted')
+            navigate('/admin')
+        } catch (e) {
+            toast.error(e.message)
+        }
+    }
+
     // Step Management (Simplified for now)
     const handleUpdateStep = async (editedStep) => {
         try {
@@ -192,6 +224,10 @@ export default function CaseEditorPage({ auth }) {
     }
 
     const handlePublish = async () => {
+        if (steps.length < 3) {
+            toast.error('the case is drafted')
+            return
+        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}`, {
@@ -210,9 +246,10 @@ export default function CaseEditorPage({ auth }) {
             }
 
             setCaseData({ ...caseData, status: 'published' })
-            toast.success('Case published successfully!')
+            toast.success('the case is puplished')
         } catch (e) {
-            toast.error(e.message)
+            console.error('[Publish Error]', e);
+            toast.error(e.message || 'Failed to publish case due to plan limits or other error.')
         }
     }
 
@@ -331,9 +368,10 @@ export default function CaseEditorPage({ auth }) {
                             <button
                                 className="btn-primary"
                                 onClick={handlePublish}
-                                style={{ fontSize: '0.875rem' }}
+                                disabled={steps.length < 3}
+                                title={steps.length < 3 ? 'Need at least 3 steps to publish' : ''}
                             >
-                                Publish Case
+                                🚀 Publish Case
                             </button>
                         ) : (
                             <button
@@ -443,9 +481,12 @@ export default function CaseEditorPage({ auth }) {
                                 {touched.brief && errors.brief && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.brief}</span>}
                             </label>
                         </div>
-                        <div className="form-actions">
+                        <div className="form-actions" style={{ display: 'flex', gap: '1rem' }}>
                             <button className="btn-primary" onClick={handleSaveBasic}>
                                 {isEdit ? 'Update Case Info' : 'Create Case & Continue'}
+                            </button>
+                            <button className="btn-secondary" onClick={handleSaveDraftAndExit}>
+                                Save as Draft & Exit
                             </button>
                         </div>
                     </div>

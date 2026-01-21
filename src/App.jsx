@@ -90,7 +90,7 @@ function App() {
           <main className="app-main">
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/membership" element={<MembershipPage />} />
+              <Route path="/membership" element={<MembershipPage auth={auth} />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/login" element={auth ? <Navigate to="/cases" /> : <LoginPage setAuth={setAuth} />} />
               <Route path="/register" element={auth ? <Navigate to="/cases" /> : <RegisterPage setAuth={setAuth} />} />

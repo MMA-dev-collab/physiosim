@@ -1,7 +1,41 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 
-function MembershipPage() {
+function MembershipPage({ auth }) {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [showComingSoon, setShowComingSoon] = useState(false)
+
+  useEffect(() => {
+    if (auth?.token) {
+      setLoading(true)
+      fetch(`${API_BASE_URL}/api/profile/stats`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          'ngrok-skip-browser-warning': 'true'
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setStats(data)
+          setLoading(false)
+        })
+        .catch(() => setLoading(false))
+    }
+  }, [auth])
+
+  const currentPlan = stats?.membershipType || 'Normal'
+  const isPremiumOrUltra = currentPlan !== 'Normal'
+
+  const handleSubscribeClick = (e, planName) => {
+    e.preventDefault()
+    if (planName === currentPlan || (planName === 'Normal Plan' && currentPlan === 'Normal')) {
+      return
+    }
+    setShowComingSoon(true)
+  }
+
   return (
     <div className="page">
       <div className="page-header">
@@ -14,49 +48,51 @@ function MembershipPage() {
       </div>
 
       <div className="membership-grid">
-        <div className="membership-card">
-          <div className="membership-header">
-            <div className="pill">
-              <span>NORMAL</span>
+        {!isPremiumOrUltra && (
+          <div className="membership-card">
+            <div className="membership-header">
+              <div className="pill">
+                <span>NORMAL</span>
+              </div>
+              <h2 className="membership-title">Normal Plan</h2>
+              <div className="membership-price">
+                <span className="price-amount">0 <span style={{ fontSize: '1rem' }}>EGP</span></span>
+                <span className="price-period">/forever</span>
+              </div>
             </div>
-            <h2 className="membership-title">Normal Plan</h2>
-            <div className="membership-price">
-              <span className="price-amount">0 <span style={{ fontSize: '1rem' }}>EGP</span></span>
-              <span className="price-period">/forever</span>
-            </div>
+            <p className="membership-description">
+              Perfect for trying out the platform or focusing on specific concepts.
+              Get a taste of our interactive case format with full feedback.
+            </p>
+            <ul className="membership-features">
+              <li className="feature-item">
+                <span className="feature-icon">✓</span>
+                <span>1–2 unlocked cases</span>
+              </li>
+              <li className="feature-item">
+                <span className="feature-icon">✓</span>
+                <span>Full multi-step case flow</span>
+              </li>
+              <li className="feature-item">
+                <span className="feature-icon">✓</span>
+                <span>Instant feedback on answers</span>
+              </li>
+              <li className="feature-item">
+                <span className="feature-icon">✓</span>
+                <span>Basic score per case</span>
+              </li>
+              <li className="feature-item">
+                <span className="feature-icon">✓</span>
+                <span>Access to all core features</span>
+              </li>
+            </ul>
+            <Link to="/cases" style={{ width: '100%', display: 'block' }}>
+              <button className="btn-secondary" style={{ width: '100%', opacity: currentPlan === 'Normal' ? 0.7 : 1 }}>
+                {currentPlan === 'Normal' ? 'Current Plan' : 'Start Normal'}
+              </button>
+            </Link>
           </div>
-          <p className="membership-description">
-            Perfect for trying out the platform or focusing on specific concepts.
-            Get a taste of our interactive case format with full feedback.
-          </p>
-          <ul className="membership-features">
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>1–2 unlocked cases</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Full multi-step case flow</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Instant feedback on answers</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Basic score per case</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Access to all core features</span>
-            </li>
-          </ul>
-          <Link to="/cases" style={{ width: '100%', display: 'block' }}>
-            <button className="btn-secondary" style={{ width: '100%' }}>
-              Start Normal
-            </button>
-          </Link>
-        </div>
+        )}
 
         <div className="membership-card membership-card-featured">
           <div className="membership-badge">Most Popular</div>
@@ -108,11 +144,13 @@ function MembershipPage() {
               <span>Email support</span>
             </li>
           </ul>
-          <a href="https://ipn.eg/S/mazenelfar1/instapay/5ZkTBk" target="_blank" rel="noopener noreferrer" style={{ width: '100%', display: 'block' }}>
-            <button className="btn-primary" style={{ width: '100%' }}>
-              Start Premium Trial
-            </button>
-          </a>
+          <button
+            className={currentPlan === 'Clinical Reasoning Track' ? "btn-secondary" : "btn-primary"}
+            style={{ width: '100%', opacity: currentPlan === 'Clinical Reasoning Track' ? 0.7 : 1 }}
+            onClick={(e) => handleSubscribeClick(e, 'Clinical Reasoning Track')}
+          >
+            {currentPlan === 'Clinical Reasoning Track' ? 'Current Plan' : 'Subscribe Now'}
+          </button>
         </div>
 
         <div className="membership-card">
@@ -156,11 +194,13 @@ function MembershipPage() {
               <span>Dedicated support</span>
             </li>
           </ul>
-          <a href="https://ipn.eg/S/mazenelfar1/instapay/5ZkTBk" target="_blank" rel="noopener noreferrer" style={{ width: '100%', display: 'block' }}>
-            <button className="btn-secondary" style={{ width: '100%' }}>
-              Contact Sales
-            </button>
-          </a>
+          <button
+            className={currentPlan === 'Institutional Access' ? "btn-secondary" : "btn-primary"}
+            style={{ width: '100%', opacity: currentPlan === 'Institutional Access' ? 0.7 : 1 }}
+            onClick={(e) => handleSubscribeClick(e, 'Institutional Access')}
+          >
+            {currentPlan === 'Institutional Access' ? 'Current Plan' : 'Subscribe Now'}
+          </button>
         </div>
       </div>
 
@@ -199,6 +239,80 @@ function MembershipPage() {
           </div>
         </div>
       </div>
+
+      {showComingSoon && (
+        <div className="modal-overlay" onClick={() => setShowComingSoon(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Coming Soon!</h2>
+              <button className="modal-close" onClick={() => setShowComingSoon(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>Direct online subscription is coming soon. For now, please contact our support or use the current registration process.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-primary" onClick={() => setShowComingSoon(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          width: 100%;
+          maxWidth: 400px;
+          padding: 1.5rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+          animation: modalAppear 0.3s ease-out;
+        }
+        @keyframes modalAppear {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+        .modal-title {
+          margin: 0;
+          font-size: 1.5rem;
+          color: var(--primary-color);
+        }
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: #6b7280;
+        }
+        .modal-body {
+          margin-bottom: 1.5rem;
+          line-height: 1.5;
+          color: #374151;
+        }
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+        }
+      `}} />
     </div>
   )
 }
