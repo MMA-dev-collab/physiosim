@@ -46,10 +46,18 @@ export default function StepEditor({ step, onSave, onCancel }) {
             } else if (!/^[a-zA-Z\s\u0600-\u06FF]+$/.test(editedStep.content.patientName)) {
                 errors.patientName = 'Name must contain letters only'
             }
-            if (!editedStep.content?.age) errors.age = 'Age is required'
+            if (!editedStep.content?.age && editedStep.content?.age !== 0) {
+                errors.age = 'Age is required'
+            } else if (editedStep.content.age < 0) {
+                errors.age = 'Age cannot be negative'
+            }
             if (!editedStep.content?.gender) errors.gender = 'Gender is required'
             if (!editedStep.content?.description) errors.description = 'Description is required'
             if (!editedStep.content?.chiefComplaint) errors.chiefComplaint = 'Chief Complaint is required'
+
+            if (editedStep.content?.imageUrl && !isValidImageUrl(editedStep.content.imageUrl)) {
+                errors.imageUrl = 'Please enter a valid Image URL (http(s):// or data:image/)'
+            }
         }
 
         if (editedStep.type === 'history') {
@@ -64,6 +72,31 @@ export default function StepEditor({ step, onSave, onCancel }) {
             })
         }
 
+        if (editedStep.type === 'mcq') {
+            if (!editedStep.question && !editedStep.content?.prompt) {
+                errors.question = 'Question is required'
+            }
+            if (!editedStep.maxScore || editedStep.maxScore < 1 || editedStep.maxScore > 10) {
+                errors.maxScore = 'Max Score must be between 1 and 10'
+            }
+            if (!editedStep.explanationOnFail) {
+                errors.explanationOnFail = 'Explanation on fail is required'
+            }
+            const options = editedStep.options || []
+            if (options.length < 2) {
+                errors.options = 'At least 2 options are required'
+            }
+            options.forEach((opt, idx) => {
+                if (idx < 2 && !opt.label) {
+                    errors[`options[${idx}].label`] = `Option ${idx + 1} text is required`
+                }
+            })
+            const correctCount = options.filter(o => o.isCorrect).length
+            if (correctCount !== 1) {
+                errors.correctAnswer = `Exactly one correct answer is required (currently ${correctCount})`
+            }
+        }
+
         if (editedStep.type === 'investigation') {
             const investigations = editedStep.investigations || []
             const xrays = editedStep.xrays || []
@@ -75,6 +108,9 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 if (!inv.groupLabel) errors[`investigations[${idx}].groupLabel`] = 'Group Label is required'
                 if (!inv.testName) errors[`investigations[${idx}].testName`] = 'Test Name is required'
                 if (!inv.description) errors[`investigations[${idx}].description`] = 'Description is required'
+                if (inv.videoUrl && !isValidUrl(inv.videoUrl)) {
+                    errors[`investigations[${idx}].videoUrl`] = 'Please enter a valid Video URL (http:// or https://)'
+                }
             })
 
             // Validate X-ray image URLs (required)
@@ -89,6 +125,12 @@ export default function StepEditor({ step, onSave, onCancel }) {
         }
 
         return errors
+    }
+
+    const isValidUrl = (url) => {
+        if (!url) return false
+        const trimmed = url.trim()
+        return /^https?:\/\/.+/.test(trimmed)
     }
 
     const isValidImageUrl = (url) => {
@@ -163,7 +205,9 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
     return (
         <div className="form-grid">
             <label>
-                Patient Name <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Patient Name <span style={{ color: 'red' }}>*</span>
+                </div>
                 <input
                     value={editedStep.content?.patientName || ''}
                     onChange={(e) => updateContent('patientName', e.target.value)}
@@ -176,11 +220,14 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                 )}
             </label>
             <label>
-                Age <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Age <span style={{ color: 'red' }}>*</span>
+                </div>
                 <input
                     type="number"
+                    min="0"
                     value={editedStep.content?.age || ''}
-                    onChange={(e) => updateContent('age', parseInt(e.target.value))}
+                    onChange={(e) => updateContent('age', e.target.value === '' ? '' : parseInt(e.target.value))}
                     onBlur={() => handleBlur('age')}
                     placeholder="54"
                     style={{ borderColor: touched.age && errors.age ? 'red' : undefined }}
@@ -190,13 +237,16 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                 )}
             </label>
             <label>
-                Gender <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Gender <span style={{ color: 'red' }}>*</span>
+                </div>
                 <select
-                    value={editedStep.content?.gender || 'Female'}
+                    value={editedStep.content?.gender || ''}
                     onChange={(e) => updateContent('gender', e.target.value)}
                     onBlur={() => handleBlur('gender')}
                     style={{ borderColor: touched.gender && errors.gender ? 'red' : undefined }}
                 >
+                    <option value="" disabled>Select Gender</option>
                     <option value="Female">Female</option>
                     <option value="Male">Male</option>
                 </select>
@@ -209,11 +259,18 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                 <input
                     value={editedStep.content?.imageUrl || ''}
                     onChange={(e) => updateContent('imageUrl', e.target.value)}
+                    onBlur={() => handleBlur('imageUrl')}
                     placeholder="https://... or data:image/..."
+                    style={{ borderColor: touched.imageUrl && errors.imageUrl ? 'red' : undefined }}
                 />
+                {touched.imageUrl && errors.imageUrl && (
+                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.imageUrl}</span>
+                )}
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
-                Description <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Description <span style={{ color: 'red' }}>*</span>
+                </div>
                 <textarea
                     value={editedStep.content?.description || ''}
                     onChange={(e) => updateContent('description', e.target.value)}
@@ -227,7 +284,9 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                 )}
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
-                Chief Complaint (Arabic/Patient's words) <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Chief Complaint (Arabic/Patient's words) <span style={{ color: 'red' }}>*</span>
+                </div>
                 <textarea
                     value={editedStep.content?.chiefComplaint || ''}
                     onChange={(e) => updateContent('chiefComplaint', e.target.value)}
@@ -278,7 +337,9 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
     return (
         <div className="form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
-                Title <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Title <span style={{ color: 'red' }}>*</span>
+                </div>
                 <input
                     value={editedStep.content?.title || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, content: { ...editedStep.content, title: e.target.value } })}
@@ -318,7 +379,9 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                         </div>
                         <div className="form-grid">
                             <label style={{ gridColumn: '1 / 3' }}>
-                                Question Text <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Question Text <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <textarea
                                     value={q.question || ''}
                                     onChange={(e) => updateQuestion(idx, 'question', e.target.value)}
@@ -340,7 +403,9 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                                 />
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                Answer <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Answer <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <textarea
                                     value={q.answer || ''}
                                     onChange={(e) => updateQuestion(idx, 'answer', e.target.value)}
@@ -391,7 +456,9 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
     return (
         <div className="form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
-                Question/Prompt <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Question/Prompt <span style={{ color: 'red' }}>*</span>
+                </div>
                 <textarea
                     value={editedStep.content?.prompt || editedStep.question || ''}
                     onChange={(e) => {
@@ -401,43 +468,52 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                             content: { ...editedStep.content, prompt: e.target.value }
                         })
                     }}
+                    onBlur={() => setTouched(prev => ({ ...prev, question: true }))}
                     rows={2}
                     placeholder="What is the MOST appropriate next action?"
-                    style={{ borderColor: touched.all && errors.question ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.question) && errors.question ? 'red' : undefined }}
                 />
-                {touched.all && errors.question && (
+                {(touched.all || touched.question) && errors.question && (
                     <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.question}</span>
                 )}
             </label>
 
             <label>
-                Max Score <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Max Score <span style={{ color: 'red' }}>*</span>
+                </div>
                 <input
                     type="number"
                     value={editedStep.maxScore || 10}
                     onChange={(e) => {
                         const val = parseInt(e.target.value)
-                        if (!isNaN(val) && val >= 1 && val <= 10) {
-                            setEditedStep({ ...editedStep, maxScore: val })
-                        }
+                        setEditedStep({ ...editedStep, maxScore: isNaN(val) ? '' : val })
                     }}
+                    onBlur={() => setTouched(prev => ({ ...prev, maxScore: true }))}
                     min={1}
                     max={10}
                     placeholder="10"
-                    style={{ borderColor: touched.all && errors.maxScore ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.maxScore) && errors.maxScore ? 'red' : undefined }}
                 />
-                {touched.all && errors.maxScore && (
+                {(touched.all || touched.maxScore) && errors.maxScore && (
                     <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.maxScore}</span>
                 )}
             </label>
 
             <label style={{ gridColumn: '2 / -1' }}>
-                Explanation on Fail <span style={{ color: 'red' }}>*</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Explanation on Fail <span style={{ color: 'red' }}>*</span>
+                </div>
                 <input
                     value={editedStep.explanationOnFail || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, explanationOnFail: e.target.value })}
+                    onBlur={() => setTouched(prev => ({ ...prev, explanationOnFail: true }))}
                     placeholder="Remember that..."
+                    style={{ borderColor: (touched.all || touched.explanationOnFail) && errors.explanationOnFail ? 'red' : undefined }}
                 />
+                {(touched.all || touched.explanationOnFail) && errors.explanationOnFail && (
+                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.explanationOnFail}</span>
+                )}
             </label>
 
             <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
@@ -458,13 +534,20 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                         </div>
                         <div className="form-grid">
                             <label style={{ gridColumn: '1 / -1' }}>
-                                Option Text
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Option Text {idx < 2 && <span style={{ color: 'red' }}>*</span>}
+                                </div>
                                 <textarea
                                     value={opt.label || ''}
                                     onChange={(e) => updateOption(idx, 'label', e.target.value)}
+                                    onBlur={() => setTouched(prev => ({ ...prev, [`options[${idx}].label`]: true }))}
                                     rows={2}
                                     placeholder="Order MRI of the knee immediately"
+                                    style={{ borderColor: (touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] ? 'red' : undefined }}
                                 />
+                                {(touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] && (
+                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`options[${idx}].label`]}</span>
+                                )}
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <input
@@ -559,7 +642,9 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                         </div>
                         <div className="form-grid">
                             <label>
-                                Group Label <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Group Label <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <input
                                     value={inv.groupLabel || ''}
                                     onChange={(e) => updateInvestigation(idx, 'groupLabel', e.target.value)}
@@ -572,7 +657,9 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 )}
                             </label>
                             <label>
-                                Test Name <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Test Name <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <input
                                     value={inv.testName || ''}
                                     onChange={(e) => updateInvestigation(idx, 'testName', e.target.value)}
@@ -585,7 +672,9 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 )}
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                Description <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Description <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <textarea
                                     value={inv.description || ''}
                                     onChange={(e) => updateInvestigation(idx, 'description', e.target.value)}
@@ -615,8 +704,13 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 <input
                                     value={inv.videoUrl || ''}
                                     onChange={(e) => updateInvestigation(idx, 'videoUrl', e.target.value)}
+                                    onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].videoUrl`]: true }))}
                                     placeholder="https://youtube.com/watch?v=..."
+                                    style={{ borderColor: touched[`investigations[${idx}].videoUrl`] && errors[`investigations[${idx}].videoUrl`] ? 'red' : undefined }}
                                 />
+                                {touched[`investigations[${idx}].videoUrl`] && errors[`investigations[${idx}].videoUrl`] && (
+                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].videoUrl`]}</span>
+                                )}
                             </label>
                         </div>
                     </div>
@@ -644,7 +738,9 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                         </div>
                         <div className="form-grid">
                             <label>
-                                Label <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Label <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <input
                                     value={xray.label || ''}
                                     onChange={(e) => updateXray(idx, 'label', e.target.value)}
@@ -665,7 +761,9 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 />
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                Image URL (base64 or URL) <span style={{ color: 'red' }}>*</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Image URL (base64 or URL) <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <textarea
                                     value={xray.imageUrl || ''}
                                     onChange={(e) => updateXray(idx, 'imageUrl', e.target.value)}

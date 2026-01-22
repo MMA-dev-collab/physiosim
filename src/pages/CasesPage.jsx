@@ -1,28 +1,49 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 
 function CasesPage({ auth }) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [cases, setCases] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [categories, setCategories] = useState([])
-  const [search, setSearch] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [difficultyFilter, setDifficultyFilter] = useState('all')
-  const [durationFilter, setDurationFilter] = useState('all')
-  const [page, setPage] = useState(1)
+
+  // Get values from URL or defaults
+  const page = parseInt(searchParams.get('page')) || 1
+  const search = searchParams.get('search') || ''
+  const categoryFilter = searchParams.get('category') || 'all'
+  const difficultyFilter = searchParams.get('difficulty') || 'all'
+  const durationFilter = searchParams.get('duration') || 'all'
+
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const limit = 12
   const navigate = useNavigate()
+
+  // Helper to update specific params
+  const updateParams = (newParams) => {
+    const updated = new URLSearchParams(searchParams)
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === 'all' || value === '') {
+        updated.delete(key)
+      } else {
+        updated.set(key, value)
+      }
+    })
+    // Reset to page 1 if any filter changes
+    if (!newParams.page) {
+      updated.set('page', '1')
+    }
+    setSearchParams(updated)
+  }
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
       setError(null)
       try {
-        // Load cases with pagination
+        // Load cases with pagination and filters
         const headers = {
           'ngrok-skip-browser-warning': 'true'
         }
@@ -30,7 +51,16 @@ function CasesPage({ auth }) {
           headers.Authorization = `Bearer ${auth.token}`
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/cases?page=${page}&limit=${limit}`, { headers })
+        const queryParams = new URLSearchParams({
+          page,
+          limit,
+          search,
+          category: categoryFilter,
+          difficulty: difficultyFilter,
+          duration: durationFilter
+        }).toString();
+
+        const res = await fetch(`${API_BASE_URL}/api/cases?${queryParams}`, { headers })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
           throw new Error(data.message || 'Failed to load cases')
@@ -40,12 +70,14 @@ function CasesPage({ auth }) {
         setTotalPages(response.meta?.totalPages || 1)
         setTotal(response.meta?.total || 0)
 
-        // Load categories
-        const catRes = await fetch(`${API_BASE_URL}/api/categories`, {
-          headers: { 'ngrok-skip-browser-warning': 'true' }
-        })
-        const catData = await catRes.json()
-        if (catRes.ok) setCategories(catData)
+        // Load categories only if empty
+        if (categories.length === 0) {
+          const catRes = await fetch(`${API_BASE_URL}/api/categories`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+          })
+          const catData = await catRes.json()
+          if (catRes.ok) setCategories(catData)
+        }
 
       } catch (e) {
         setError(e.message)
@@ -54,29 +86,10 @@ function CasesPage({ auth }) {
       }
     }
     load()
-  }, [auth, page])
+  }, [auth, page, search, categoryFilter, difficultyFilter, durationFilter])
 
-  // Reset page to 1 when filters change
-  useEffect(() => {
-    setPage(1)
-  }, [search, categoryFilter, difficultyFilter, durationFilter])
-
-  const filteredCases = useMemo(() => {
-    return cases.filter((c) => {
-      const textMatch =
-        c.title.toLowerCase().includes(search.toLowerCase()) ||
-        (c.metadata?.brief || '').toLowerCase().includes(search.toLowerCase())
-      const catMatch = categoryFilter === 'all' ||
-        (c.categoryId && c.categoryId.toString() === categoryFilter) ||
-        (!c.categoryId && c.category === categoryFilter) // Fallback for legacy string match if needed
-      const diffMatch = difficultyFilter === 'all' || c.difficulty === difficultyFilter
-      const durMatch = durationFilter === 'all' ||
-        (durationFilter === 'short' && (c.duration || 10) <= 10) ||
-        (durationFilter === 'medium' && (c.duration || 10) > 10 && (c.duration || 10) <= 20) ||
-        (durationFilter === 'long' && (c.duration || 10) > 20)
-      return textMatch && catMatch && diffMatch && durMatch
-    })
-  }, [cases, search, categoryFilter, difficultyFilter, durationFilter])
+  // No client-side filtering needed now as it is handled by the API
+  const filteredCases = cases;
 
   return (
     <div className="cases-library-page">
@@ -88,7 +101,7 @@ function CasesPage({ auth }) {
               className="cases-search-input"
               placeholder="Search cases"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateParams({ search: e.target.value })}
             />
             <span className="search-icon">🔍</span>
           </div>
@@ -96,7 +109,7 @@ function CasesPage({ auth }) {
             <select
               className="filter-dropdown"
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => updateParams({ category: e.target.value })}
             >
               <option value="all">All Categories</option>
               {categories.map(c => (
@@ -106,7 +119,7 @@ function CasesPage({ auth }) {
             <select
               className="filter-dropdown"
               value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value)}
+              onChange={(e) => updateParams({ difficulty: e.target.value })}
             >
               <option value="all">Difficulty</option>
               <option value="Beginner">Beginner</option>
@@ -116,7 +129,7 @@ function CasesPage({ auth }) {
             <select
               className="filter-dropdown"
               value={durationFilter}
-              onChange={(e) => setDurationFilter(e.target.value)}
+              onChange={(e) => updateParams({ duration: e.target.value })}
             >
               <option value="all">Duration</option>
               <option value="short">Short (≤10 min)</option>
@@ -204,7 +217,7 @@ function CasesPage({ auth }) {
       )}
 
       {/* Pagination Controls */}
-      {!loading && !error && totalPages > 1 && (
+      {!loading && !error && total > limit && filteredCases.length > 0 && (
         <div style={{
           display: 'flex',
           justifyContent: 'center',
@@ -214,7 +227,7 @@ function CasesPage({ auth }) {
           paddingBottom: '2rem'
         }}>
           <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => updateParams({ page: Math.max(1, page - 1).toString() })}
             disabled={page === 1}
             style={{
               padding: '0.5rem 1rem',
@@ -231,7 +244,7 @@ function CasesPage({ auth }) {
             Page {page} of {totalPages} ({total} cases)
           </span>
           <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => updateParams({ page: Math.min(totalPages, page + 1).toString() })}
             disabled={page === totalPages}
             style={{
               padding: '0.5rem 1rem',
