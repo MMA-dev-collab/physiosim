@@ -108,8 +108,9 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 if (!inv.groupLabel) errors[`investigations[${idx}].groupLabel`] = 'Group Label is required'
                 if (!inv.testName) errors[`investigations[${idx}].testName`] = 'Test Name is required'
                 if (!inv.description) errors[`investigations[${idx}].description`] = 'Description is required'
-                if (inv.videoUrl && !isValidUrl(inv.videoUrl)) {
-                    errors[`investigations[${idx}].videoUrl`] = 'Please enter a valid Video URL (http:// or https://)'
+                if (!inv.result) errors[`investigations[${idx}].result`] = 'Result is required'
+                if (inv.videoUrl && !isValidYouTubeUrl(inv.videoUrl)) {
+                    errors[`investigations[${idx}].videoUrl`] = 'Please enter a valid Youtube Video URL (https://www.youtube.com/watch?v=...)'
                 }
             })
 
@@ -127,10 +128,10 @@ export default function StepEditor({ step, onSave, onCancel }) {
         return errors
     }
 
-    const isValidUrl = (url) => {
+    const isValidYouTubeUrl = (url) => {
         if (!url) return false
         const trimmed = url.trim()
-        return /^https?:\/\/.+/.test(trimmed)
+        return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(trimmed)
     }
 
     const isValidImageUrl = (url) => {
@@ -688,16 +689,23 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 )}
                             </label>
                             <label>
-                                Result
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Result <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <select
                                     value={inv.result || ''}
                                     onChange={(e) => updateInvestigation(idx, 'result', e.target.value)}
+                                    onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].result`]: true }))}
+                                    style={{ borderColor: touched[`investigations[${idx}].result`] && errors[`investigations[${idx}].result`] ? 'red' : undefined }}
                                 >
-                                    <option value="">Select Result</option>
+                                    <option value="" disabled>Select Result</option>
                                     <option value="Positive">Positive</option>
                                     <option value="Negative">Negative</option>
                                     <option value="Inconclusive">Inconclusive</option>
                                 </select>
+                                {touched[`investigations[${idx}].result`] && errors[`investigations[${idx}].result`] && (
+                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].result`]}</span>
+                                )}
                             </label>
                             <label>
                                 Video URL (optional)

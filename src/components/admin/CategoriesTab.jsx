@@ -139,7 +139,7 @@ export default function CategoriesTab({ auth }) {
             {/* Add/Edit Form */}
             <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem', borderRadius: '16px', boxShadow: 'var(--shadow-md)', background: 'white' }}>
                 <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>{editingId ? 'Edit Category' : 'Add New Category'}</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: '1rem', alignItems: 'start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr auto', gap: '1rem', alignItems: 'start' }}>
                     <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Name <span style={{ color: 'red' }}>*</span></span>
                         <input
@@ -148,7 +148,7 @@ export default function CategoriesTab({ auth }) {
                             onBlur={() => setTouched({ ...touched, name: true })}
                             placeholder="e.g. Pediatrics"
                             style={{
-                                padding: '0.5rem',
+                                padding: '0.8rem',
                                 borderRadius: '8px',
                                 border: '1px solid #e2e8f0',
                                 borderColor: touched.name && errors.name ? 'red' : '#e2e8f0'
@@ -156,7 +156,19 @@ export default function CategoriesTab({ auth }) {
                         />
                         {touched.name && errors.name && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.name}</span>}
                     </label>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Icon (Emoji)</span>
+                    
+                   
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Description</span>
+                        <input
+                            value={form.description}
+                            onChange={e => setForm({ ...form, description: e.target.value })}
+                            placeholder="Optional description"
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        />
+                    </label>
+                     <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                         <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Icon (Emoji)</span>
                     <div style={{ display: 'flex' }}>
                         <EmojiInput
                             value={form.icon}
@@ -167,14 +179,6 @@ export default function CategoriesTab({ auth }) {
                             placeholder="👶"
                         />
                     </div>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Description</span>
-                        <input
-                            value={form.description}
-                            onChange={e => setForm({ ...form, description: e.target.value })}
-                            placeholder="Optional description"
-                            style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                        />
                     </label>
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.8rem' }}>
                         <button className="btn-primary" onClick={handleSave}>
