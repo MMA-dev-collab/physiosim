@@ -41,11 +41,11 @@ export default function CategoriesTab({ auth }) {
         const errors = {}
         if (!form.name.trim()) errors.name = 'Category Name is required'
 
-        // Emoji validation: Allow only one emoji character
+        // Emoji validation: Allow valid emoji sequences
         if (form.icon) {
-            const emojiRegex = /^\p{Emoji}$/u
+            // Regex for Emoji (including sequences)
             if (!emojiRegex.test(form.icon)) {
-                errors.icon = 'Please enter a valid single emoji'
+                errors.icon = 'Please enter a valid emoji'
             }
         }
 

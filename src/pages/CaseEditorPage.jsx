@@ -162,34 +162,30 @@ export default function CaseEditorPage({ auth }) {
     }
 
     const handleSaveDraftAndExit = async () => {
-        // Validation
-        if (Object.keys(errors).length > 0) {
-            setTouched({ title: true, categoryId: true, duration: true, brief: true })
-            toast.error('Please fix the errors before saving.')
-            return
-        }
-
+        // NO VALIDATION IN DRAFT MODE - let user save and exit freely
         try {
-            const url = isEdit ? `${API_BASE_URL}/api/admin/cases/${id}` : `${API_BASE_URL}/api/admin/cases`
-            const method = isEdit ? 'PUT' : 'POST'
+            if (isEdit) {
+                // If editing, save current state as draft
+                const url = `${API_BASE_URL}/api/admin/cases/${id}`
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${auth.token}`,
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({ ...caseData, status: 'draft' }),
+                })
 
-            // Force status to draft when saving via this button
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${auth.token}`,
-                    'ngrok-skip-browser-warning': 'true'
-                },
-                body: JSON.stringify({ ...caseData, status: 'draft' }),
-            })
-
-            if (!res.ok) throw new Error('Failed to save draft')
-
-            toast.success('the case is drafted')
+                if (!res.ok) throw new Error('Failed to save draft')
+                toast.success('Case saved as draft')
+            }
+            // Navigate to admin dashboard
             navigate('/admin')
         } catch (e) {
             toast.error(e.message)
+            // Still navigate even if save fails
+            navigate('/admin')
         }
     }
 
@@ -224,9 +220,77 @@ export default function CaseEditorPage({ auth }) {
     }
 
     const handlePublish = async () => {
+        // PUBLISHING VALIDATION - strict rules enforced here
         if (steps.length < 3) {
-            toast.error('the case is drafted')
+            toast.error('Publishing requires at least 3 steps (1 Info + 2 others)')
             return
+        }
+
+        // Check if Info step exists and is the first step
+        const firstStep = steps.find(s => s.stepIndex === 0)
+        if (!firstStep || firstStep.type !== 'info') {
+            toast.error('The first step must be an "Info" step')
+            return
+        }
+
+        // DEEP VALIDATION - ensure all steps have content
+        for (const step of steps) {
+            if (step.type === 'info') {
+                const content = step.content || {}
+                if (!content.patientName || !content.age || !content.gender ||
+                    !content.description || !content.chiefComplaint) {
+                    toast.error(`Step ${step.stepIndex + 1} (Info): Missing required fields`)
+                    return
+                }
+            }
+
+            if (step.type === 'history') {
+                const questions = step.content?.questions || []
+                if (questions.length === 0) {
+                    toast.error(`Step ${step.stepIndex + 1} (History): No questions added`)
+                    return
+                }
+                for (const q of questions) {
+                    if (!q.question || !q.answer) {
+                        toast.error(`Step ${step.stepIndex + 1} (History): Question or answer is empty`)
+                        return
+                    }
+                }
+            }
+
+            if (step.type === 'mcq') {
+                const options = step.options || []
+                if (options.length < 2) {
+                    toast.error(`Step ${step.stepIndex + 1} (MCQ): At least 2 options required`)
+                    return
+                }
+                const correctCount = options.filter(o => o.isCorrect).length
+                if (correctCount !== 1) {
+                    toast.error(`Step ${step.stepIndex + 1} (MCQ): Exactly 1 correct answer required`)
+                    return
+                }
+            }
+
+            if (step.type === 'investigation') {
+                const investigations = step.investigations || []
+                const xrays = step.xrays || []
+                if (investigations.length === 0 && xrays.length === 0) {
+                    toast.error(`Step ${step.stepIndex + 1} (Investigation): No investigations or X-rays added`)
+                    return
+                }
+                for (const inv of investigations) {
+                    if (!inv.groupLabel || !inv.testName || !inv.description) {
+                        toast.error(`Step ${step.stepIndex + 1} (Investigation): Missing required fields`)
+                        return
+                    }
+                }
+                for (const xray of xrays) {
+                    if (!xray.label || !xray.imageUrl) {
+                        toast.error(`Step ${step.stepIndex + 1} (X-Ray): Missing label or image URL`)
+                        return
+                    }
+                }
+            }
         }
 
         try {
@@ -246,7 +310,7 @@ export default function CaseEditorPage({ auth }) {
             }
 
             setCaseData({ ...caseData, status: 'published' })
-            toast.success('the case is puplished')
+            toast.success('Case published successfully!')
         } catch (e) {
             console.error('[Publish Error]', e);
             toast.error(e.message || 'Failed to publish case due to plan limits or other error.')
@@ -344,9 +408,7 @@ export default function CaseEditorPage({ auth }) {
     return (
         <div className="case-editor-page">
             <div className="editor-header">
-                <button className="back-btn" onClick={() => {
-                    navigate('/admin')
-                }}>← Back to Dashboard</button>
+                <button className="back-btn" onClick={handleSaveDraftAndExit}>← Back to Dashboard</button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <h1>{isEdit ? `Edit Case: ${caseData.title}` : 'Create New Case'}</h1>
                     {isEdit && (
