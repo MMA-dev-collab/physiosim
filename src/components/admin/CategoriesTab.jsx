@@ -132,7 +132,7 @@ export default function CategoriesTab({ auth }) {
 
     return (
         <div className="admin-categories">
-            <div className="section-header" style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
                 <h2 style={{ margin: 0 }}>Category Management</h2>
             </div>
 
@@ -233,3 +233,4 @@ export default function CategoriesTab({ auth }) {
         </div>
     )
 }
+
