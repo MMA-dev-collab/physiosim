@@ -90,6 +90,9 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 if (idx < 2 && !opt.label) {
                     errors[`options[${idx}].label`] = `Option ${idx + 1} text is required`
                 }
+                if (!opt.feedback) {
+                    errors[`options[${idx}].feedback`] = `Feedback for Option ${idx + 1} is required`
+                }
             })
             const correctCount = options.filter(o => o.isCorrect).length
             if (correctCount !== 1) {
@@ -551,20 +554,30 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                 )}
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={opt.isCorrect || false}
-                                    onChange={(e) => updateOption(idx, 'isCorrect', e.target.checked)}
-                                />
-                                Is Correct Answer
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    Is Correct Answer
+                                    <input
+                                        type="checkbox"
+                                        checked={opt.isCorrect || false}
+                                        onChange={(e) => updateOption(idx, 'isCorrect', e.target.checked)}
+                                    />
+                                   
+                                </span>
                             </label>
                             <label style={{ gridColumn: '2 / -1' }}>
-                                Feedback
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    Feedback <span style={{ color: 'red' }}>*</span>
+                                </div>
                                 <input
                                     value={opt.feedback || ''}
                                     onChange={(e) => updateOption(idx, 'feedback', e.target.value)}
+                                    onBlur={() => setTouched(prev => ({ ...prev, [`options[${idx}].feedback`]: true }))}
                                     placeholder="Jumping to advanced imaging without..."
+                                    style={{ borderColor: (touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] ? 'red' : undefined }}
                                 />
+                                {(touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] && (
+                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`options[${idx}].feedback`]}</span>
+                                )}
                             </label>
                         </div>
                     </div>
