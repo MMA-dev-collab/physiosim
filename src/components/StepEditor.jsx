@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useToast } from '../context/ToastContext'
 import './StepEditor.css'
+import EmojiInput from './common/EmojiInput'
 
 export default function StepEditor({ step, onSave, onCancel }) {
     const [editedStep, setEditedStep] = useState({ ...step })
@@ -96,10 +97,7 @@ export default function StepEditor({ step, onSave, onCancel }) {
         return /^https?:\/\/.+/.test(trimmed) || /^data:image\/.+/.test(trimmed)
     }
 
-    const isValidVideoUrl = (url) => {
-        if (!url) return true // Optional field
-        return /^https?:\/\/.+/.test(url.trim())
-    }
+
 
     const errors = validate()
     const hasErrors = Object.keys(errors).length > 0
@@ -135,7 +133,7 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 {step.type === 'mcq' && <McqStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'investigation' && <InvestigationStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {(step.type === 'diagnosis' || step.type === 'treatment') && (
-                    <GenericStepEditor editedStep={editedStep} updateContent={updateContent} />
+                    <GenericStepEditor editedStep={editedStep} setEditedStep={setEditedStep} />
                 )}
             </div>
 
@@ -250,11 +248,7 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
 function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouched }) {
     const questions = editedStep.content?.questions || []
 
-    const isValidEmoji = (str) => {
-        if (!str) return true
-        // Regex for Emoji (including sequences)
-        return emojiRegex.test(str)
-    }
+
 
     const updateQuestion = (index, field, value) => {
         const newQuestions = [...questions]
@@ -339,21 +333,11 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                             </label>
                             <label>
                                 Icon (Emoji)
-                                <input
+                                <EmojiInput
                                     value={q.icon || ''}
-                                    onChange={(e) => {
-                                        const val = e.target.value
-                                        // Allow empty or valid emoji input (any length to support complex emojis)
-                                        if (val === '' || isValidEmoji(val)) {
-                                            updateQuestion(idx, 'icon', val)
-                                        }
-                                    }}
+                                    onChange={(val) => updateQuestion(idx, 'icon', val)}
                                     placeholder="❓"
-                                    style={{ borderColor: q.icon && !isValidEmoji(q.icon) ? 'red' : undefined }}
                                 />
-                                {q.icon && !isValidEmoji(q.icon) && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>Please enter a valid emoji</span>
-                                )}
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
                                 Answer <span style={{ color: 'red' }}>*</span>
@@ -521,17 +505,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
     const investigations = editedStep.investigations || []
     const xrays = editedStep.xrays || []
 
-    const isValidEmoji = (str) => {
-        if (!str) return true
-        // Regex for Emoji (including sequences)
-        return emojiRegex.test(str)
-    }
 
-    const isValidImageUrl = (url) => {
-        if (!url) return false
-        const trimmed = url.trim()
-        return /^https?:\/\/.+/.test(trimmed) || /^data:image\/.+/.test(trimmed)
-    }
 
     const addInvestigation = () => {
         const newInvestigations = [...investigations, { groupLabel: '', testName: '', description: '', result: '', videoUrl: '' }]
@@ -684,21 +658,11 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                             </label>
                             <label>
                                 Icon (Emoji)
-                                <input
+                                <EmojiInput
                                     value={xray.icon || ''}
-                                    onChange={(e) => {
-                                        const val = e.target.value
-                                        // Allow empty or valid emoji input (any length to support complex emojis)
-                                        if (val === '' || isValidEmoji(val)) {
-                                            updateXray(idx, 'icon', val)
-                                        }
-                                    }}
+                                    onChange={(val) => updateXray(idx, 'icon', val)}
                                     placeholder="🩻"
-                                    style={{ borderColor: xray.icon && !isValidEmoji(xray.icon) ? 'red' : undefined }}
                                 />
-                                {xray.icon && !isValidEmoji(xray.icon) && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>Please enter a valid emoji</span>
-                                )}
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
                                 Image URL (base64 or URL) <span style={{ color: 'red' }}>*</span>
@@ -723,7 +687,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
 }
 
 // Generic Step Editor (for diagnosis, treatment, etc.)
-function GenericStepEditor({ editedStep, updateContent }) {
+function GenericStepEditor({ editedStep, setEditedStep }) {
     return (
         <div className="form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
@@ -733,7 +697,7 @@ function GenericStepEditor({ editedStep, updateContent }) {
                     onChange={(e) => {
                         try {
                             const parsed = JSON.parse(e.target.value)
-                            updateContent('_all', parsed)
+                            setEditedStep({ ...editedStep, content: parsed })
                         } catch (err) {
                             // Invalid JSON, ignore for now
                         }

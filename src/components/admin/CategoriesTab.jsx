@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import { useToast } from '../../context/ToastContext'
 import ConfirmationModal from '../common/ConfirmationModal'
+import EmojiInput from '../common/EmojiInput'
 import './CasesTab.css' // Reuse table styles
 
 export default function CategoriesTab({ auth }) {
@@ -43,10 +44,7 @@ export default function CategoriesTab({ auth }) {
 
         // Emoji validation: Allow valid emoji sequences
         if (form.icon) {
-            // Regex for Emoji (including sequences)
-            if (!emojiRegex.test(form.icon)) {
-                errors.icon = 'Please enter a valid emoji'
-            }
+            // Picker guarantees valid emoji
         }
 
         return errors
@@ -158,22 +156,17 @@ export default function CategoriesTab({ auth }) {
                         />
                         {touched.name && errors.name && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.name}</span>}
                     </label>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Icon (Emoji)</span>
-                        <input
+                    <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Icon (Emoji)</span>
+                    <div style={{ display: 'flex' }}>
+                        <EmojiInput
                             value={form.icon}
-                            onChange={e => setForm({ ...form, icon: e.target.value })}
-                            onBlur={() => setTouched({ ...touched, icon: true })}
-                            placeholder="e.g. 👶"
-                            style={{
-                                padding: '0.5rem',
-                                borderRadius: '8px',
-                                border: '1px solid #e2e8f0',
-                                borderColor: touched.icon && errors.icon ? 'red' : '#e2e8f0'
+                            onChange={val => {
+                                setForm({ ...form, icon: val })
+                                if (touched.icon) setTouched({ ...touched, icon: false })
                             }}
+                            placeholder="👶"
                         />
-                        {touched.icon && errors.icon && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.icon}</span>}
-                    </label>
+                    </div>
                     <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Description</span>
                         <input
