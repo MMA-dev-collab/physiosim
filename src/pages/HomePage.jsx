@@ -1,215 +1,230 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import {
+  Activity,
+  Brain,
+  CheckCircle,
+  ChevronRight,
+  FileText,
+  BarChart2,
+  Play,
+  Users,
+  Twitter
+} from 'lucide-react'
+import TestimonialsSection from '../components/TestimonialsSection'
+import { Footer } from '../components/ui/footer'
+import './HomePage.css'
 
 function HomePage() {
   return (
-    <div className="landing-page">
+    <div className="home-page">
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="page-eyebrow">Physical Therapy Case Simulator</div>
-          <h1 className="hero-title">
-            Master Clinical Reasoning Through Interactive Case Simulations
-          </h1>
-          <p className="hero-subtitle">
-            Transform your physiotherapy education with step-by-step interactive cases. 
-            Practice real-world patient scenarios, make clinical decisions, and receive 
-            instant feedback—all before you step into the clinic.
-          </p>
-          <div className="hero-cta">
-            <Link to="/cases">
-              <button className="btn-primary btn-large">Start Your First Case</button>
-            </Link>
-            <Link to="/about">
-              <button className="btn-secondary btn-large">Learn More</button>
-            </Link>
+      <section className="hp-hero animate-fade-in">
+        <div className="hp-container">
+          <div className="hp-hero-content">
+            <span className="hp-eyebrow">Physical Therapy Case Simulator</span>
+            <h1 className="hp-hero-title">
+              Master Clinical Reasoning with AI-Powered Simulation
+            </h1>
+            <p className="hp-hero-subtitle">
+              Practice real-world cases, get instant feedback, and refine your diagnostic skills in a risk-free environment.
+            </p>
+            <div className="hp-hero-actions">
+              <Link to="/cases" className="hp-btn-primary">
+                Start Free Simulation <ChevronRight size={20} />
+              </Link>
+              <Link to="/about" className="hp-btn-secondary">
+                <Play size={18} fill="currentColor" /> View Demo
+              </Link>
+            </div>
           </div>
-          <div className="hero-stats">
-            <div className="hero-stat">
-              <div className="hero-stat-value">50+</div>
-              <div className="hero-stat-label">Interactive Cases</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-value">4-6</div>
-              <div className="hero-stat-label">Steps Per Case</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-value">100%</div>
-              <div className="hero-stat-label">Instant Feedback</div>
+
+          <div className="hp-hero-visual delay-200 animate-fade-in">
+            <div className="hp-card-stack">
+              <img
+                src="/hero_visual.png"
+                alt="PhysioSim Hero"
+                className="w-full h-full object-contain rounded-3xl"
+                style={{ boxShadow: '0 20px 50px rgba(15, 118, 110, 0.2)' }}
+              />
+
+              {/* Floating Card: Diagnosis */}
+              <div className="hp-glass-card" style={{ bottom: '10%', right: '-5%', zIndex: 10, width: '260px' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <CheckCircle color="#10b981" size={28} />
+                  <div>
+                    <div style={{ fontWeight: '800', fontSize: '0.9rem', color: '#065f46' }}>Diagnosis Correct</div>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Patellofemoral Pain</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features-section">
-        <div className="section-header">
-          <div className="page-eyebrow">Why Choose PhysioCaseLab</div>
-          <h2 className="section-title">Everything you need to excel in clinical practice</h2>
-        </div>
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">📋</div>
-            <h3 className="feature-title">Real Patient Scenarios</h3>
-            <p className="feature-description">
-              Work through authentic cases based on real MSK and sports clinic encounters. 
-              Each case includes bilingual chief complaints (Arabic/English) to prepare 
-              you for diverse patient populations.
-            </p>
+      <section className="hp-features">
+        <div className="hp-container">
+          <div className="hp-section-header">
+            <span className="hp-eyebrow">Why PhysioSim</span>
+            <h2 className="hp-section-title">Everything you need to excel</h2>
+            <p className="hp-section-desc">From patient history to final diagnosis, provide a complete clinical practice environment.</p>
           </div>
-          <div className="feature-card">
-            <div className="feature-icon">🎯</div>
-            <h3 className="feature-title">Step-by-Step Learning</h3>
-            <p className="feature-description">
-              Progress through structured steps: patient history, focused questioning, 
-              physical examination, investigations, and diagnosis. Learn at your own pace 
-              with clear guidance at every stage.
-            </p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">💡</div>
-            <h3 className="feature-title">Instant Feedback</h3>
-            <p className="feature-description">
-              Get immediate explanations when you make mistakes. Understand why an answer 
-              is wrong and learn the correct clinical reasoning before moving forward.
-            </p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">📊</div>
-            <h3 className="feature-title">Progress Tracking</h3>
-            <p className="feature-description">
-              Monitor your performance with detailed scoring and statistics. Track completed 
-              cases, unlock new scenarios as you progress, and build your clinical confidence.
-            </p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🔬</div>
-            <h3 className="feature-title">Physical Tests & Imaging</h3>
-            <p className="feature-description">
-              Practice interpreting physical examination tests, X-rays, and other investigations. 
-              Learn to correlate findings with clinical presentations.
-            </p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🔒</div>
-            <h3 className="feature-title">Progressive Difficulty</h3>
-            <p className="feature-description">
-              Start with beginner cases and unlock advanced scenarios as you master the 
-              fundamentals. Cases are designed to build on each other.
-            </p>
+
+          <div className="hp-features-grid">
+            <FeatureCard
+              icon={<FileText size={32} />}
+              title="Interactive Cases"
+              desc="Engage with diverse, realistic patient scenarios and case studies for hands-on learning."
+            />
+            <FeatureCard
+              icon={<Brain size={32} />}
+              title="Real-time Feedback"
+              desc="Receive instant, personalized performance analysis and guidance to improve decision-making."
+            />
+            <FeatureCard
+              icon={<BarChart2 size={32} />}
+              title="Progress Tracking"
+              desc="Monitor your clinical growth with detailed metrics and competency dashboards."
+            />
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="how-it-works-section">
-        <div className="section-header">
-          <div className="page-eyebrow">How It Works</div>
-          <h2 className="section-title">From patient story to diagnosis in 4 simple steps</h2>
-        </div>
-        <div className="steps-container">
-          <div className="step-item">
-            <div className="step-number">1</div>
-            <div className="step-content">
-              <h3 className="step-title">Patient Information</h3>
-              <p className="step-description">
-                Review the patient's demographics, chief complaint, and brief history. 
-                See real-world presentations including bilingual complaints.
-              </p>
-            </div>
+      {/* How It Works */}
+      <section className="hp-how-it-works">
+        <div className="hp-container">
+          <div className="hp-section-header">
+            <span className="hp-eyebrow">Our Process</span>
+            <h2 className="hp-section-title">How It Works</h2>
+            <p className="hp-section-desc">Go from theory to practice in three simple steps.</p>
           </div>
-          <div className="step-item">
-            <div className="step-number">2</div>
-            <div className="step-content">
-              <h3 className="step-title">History Taking</h3>
-              <p className="step-description">
-                Choose the right questions to ask. Learn which questions are most relevant 
-                and why, with feedback on your choices.
-              </p>
-            </div>
-          </div>
-          <div className="step-item">
-            <div className="step-number">3</div>
-            <div className="step-content">
-              <h3 className="step-title">Physical Examination</h3>
-              <p className="step-description">
-                Select appropriate tests, review test descriptions and results, watch 
-                demonstration videos, and interpret X-ray findings.
-              </p>
-            </div>
-          </div>
-          <div className="step-item">
-            <div className="step-number">4</div>
-            <div className="step-content">
-              <h3 className="step-title">Diagnosis & Feedback</h3>
-              <p className="step-description">
-                Make your final diagnosis. Receive comprehensive feedback, see your score, 
-                and unlock the next case in your learning journey.
-              </p>
-            </div>
+
+          <div className="hp-steps-container">
+            <StepRow
+              number="01"
+              title="Browse Cases"
+              desc="Choose from a diverse range of clinical scenarios categorized by specialty (MSK, Neuro, Cardiorespiratory) and difficulty level. Filter by body part or condition."
+              visualSrc="/step1_library.png"
+              visualLabel="Case Library"
+              isReversed={false}
+            />
+            <StepRow
+              number="02"
+              title="Practice Skills"
+              desc="Conduct subjective assessments, perform virtual physical exams, and request investigations just like in a real clinic. The interface mimics real patient interaction."
+              visualSrc="/step2_practice.png"
+              visualLabel="Examination Interface"
+              isReversed={true}
+            />
+            <StepRow
+              number="03"
+              title="Get Feedback"
+              desc="Receive immediate, evidence-based feedback on every decision you make. Understand what you missed and why, helping you refine your clinical reasoning."
+              visualSrc="/step3_feedback.png"
+              visualLabel="Performance Report"
+              isReversed={false}
+            />
           </div>
         </div>
       </section>
 
-      {/* Case Types Section */}
-      <section className="case-types-section">
-        <div className="section-header">
-          <div className="page-eyebrow">Case Library</div>
-          <h2 className="section-title">Practice with diverse knee conditions</h2>
-        </div>
-        <div className="case-types-grid">
-          <div className="case-type-card">
-            <h3 className="case-type-title">Patellofemoral Pain</h3>
-            <p className="case-type-description">
-              Learn to assess and diagnose anterior knee pain, including patellofemoral 
-              syndrome and related conditions.
-            </p>
-          </div>
-          <div className="case-type-card">
-            <h3 className="case-type-title">Ligament Injuries</h3>
-            <p className="case-type-description">
-              Master the assessment of ACL, PCL, MCL, and LCL injuries through 
-              comprehensive test batteries.
-            </p>
-          </div>
-          <div className="case-type-card">
-            <h3 className="case-type-title">Meniscal Pathology</h3>
-            <p className="case-type-description">
-              Practice diagnosing meniscal tears and degeneration using clinical 
-              tests and imaging interpretation.
-            </p>
-          </div>
-          <div className="case-type-card">
-            <h3 className="case-type-title">Chronic Knee Pain</h3>
-            <p className="case-type-description">
-              Develop skills in managing long-term conditions, including osteoarthritis 
-              and chronic inflammatory conditions.
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* Testimonials */}
+      <TestimonialsSection />
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="cta-card">
-          <h2 className="cta-title">Ready to enhance your clinical skills?</h2>
-          <p className="cta-description">
-            Join physiotherapy students who are building confidence through interactive 
-            case practice. Start with a free case today.
-          </p>
-          <div className="cta-buttons">
+      {/* Final CTA Strip (Full Width) */}
+      <section className="hp-cta-strip">
+        <div className="hp-container">
+          <div className="hp-cta-content">
+            <h2 className="hp-cta-title">Ready to elevate your clinical skills?</h2>
+            <p className="hp-cta-desc">Join thousands of physiotherapy students and professionals mastering their craft with PhysioSim.</p>
             <Link to="/cases">
-              <button className="btn-primary btn-large">Get Started Free</button>
-            </Link>
-            <Link to="/membership">
-              <button className="btn-secondary btn-large">View Plans</button>
+              <button className="hp-btn-white">
+                Get Started Today
+              </button>
             </Link>
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer
+        logo={<Activity className="h-8 w-8 text-teal-600" />}
+        brandName="PhysioCaseLab"
+        socialLinks={[
+          {
+            icon: <Twitter className="h-5 w-5" />,
+            href: "https://twitter.com",
+            label: "Twitter",
+          },
+          {
+            icon: <Users className="h-5 w-5" />,
+            href: "https://community.physiosim.com",
+            label: "Community",
+          },
+        ]}
+        mainLinks={[
+          { href: "/cases", label: "Case Library" },
+          { href: "/membership", label: "Membership" },
+          { href: "/about", label: "About Us" },
+          { href: "/leaderboard", label: "Leaderboard" },
+        ]}
+        legalLinks={[
+          { href: "/privacy", label: "Privacy Policy" },
+          { href: "/terms", label: "Terms of Service" },
+        ]}
+        copyright={{
+          text: `© ${new Date().getFullYear()} PhysioSim`,
+          license: "Advancing Clinical Excellence",
+        }}
+      />
     </div>
   )
 }
 
-export default HomePage
+function FeatureCard({ icon, title, desc }) {
+  return (
+    <div className="hp-feature-card">
+      <div className="hp-feature-icon-wrapper">{icon}</div>
+      <h3 className="hp-feature-title">{title}</h3>
+      <p className="hp-feature-text">{desc}</p>
+    </div>
+  )
+}
 
+function StepRow({ number, title, desc, visualSrc, visualLabel, isReversed }) {
+  return (
+    <div className={`hp-step-row ${isReversed ? 'reversed' : ''}`}>
+      <div className="hp-step-content">
+        <div className="hp-step-number">{number}</div>
+        <h3 className="hp-step-title">{title}</h3>
+        <p className="hp-step-desc">{desc}</p>
+      </div>
+      <div className="hp-step-visual" style={{ overflow: 'hidden', padding: 0, position: 'relative' }}>
+        <img
+          src={visualSrc}
+          alt={visualLabel}
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+        />
+        <div style={{
+          position: 'absolute',
+          bottom: '1rem',
+          right: '1rem',
+          background: 'rgba(255,255,255,0.9)',
+          padding: '0.5rem 1rem',
+          borderRadius: '99px',
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          color: '#0f766e',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        }}>
+          {visualLabel}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+export default HomePage
