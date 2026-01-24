@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
+import Loader from '@/components/ui/loader-12'
 
 function CasesPage({ auth }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -140,7 +141,12 @@ function CasesPage({ auth }) {
         </div>
       </div>
 
-      {loading && <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Loading cases…</div>}
+
+      {loading && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', width: '100%' }}>
+          <Loader />
+        </div>
+      )}
       {error && (
         <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444', fontWeight: 500 }}>{error}</div>
       )}

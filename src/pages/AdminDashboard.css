@@ -6,7 +6,7 @@
   /* Royal Blue */
   --primary-light: #eff6ff;
   --secondary-color: #64748b;
-  --bg-color: #f3f4f6;
+  --bg-color: #f9fafb;
   --card-bg: #ffffff;
   --text-main: #1e293b;
   --text-muted: #94a3b8;
@@ -20,6 +20,9 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
+body{
+  overflow-x: hidden;
+}
 
 .admin-dashboard-layout {
   display: flex;
@@ -27,6 +30,7 @@
   background-color: var(--bg-color);
   font-family: 'Outfit', sans-serif;
   color: var(--text-main);
+  padding: 2.5rem;
 }
 
 /* Sidebar */

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../config'
+import Loader from '@/components/ui/loader-12'
 
 export default function LeaderboardPage({ auth }) {
   const [leaderboard, setLeaderboard] = useState([])
@@ -23,7 +24,11 @@ export default function LeaderboardPage({ auth }) {
       .catch(() => setLoading(false))
   }, [auth])
 
-  if (loading) return <div className="page">Loading leaderboard...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   const getRankIcon = (rank) => {
     if (rank === 1) return '🥇'

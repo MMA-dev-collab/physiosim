@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
+import Loader from '@/components/ui/loader-12'
 
 function MembershipPage({ auth }) {
   const [stats, setStats] = useState(null)
@@ -35,6 +36,12 @@ function MembershipPage({ auth }) {
     }
     setShowComingSoon(true)
   }
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   return (
     <div className="page">

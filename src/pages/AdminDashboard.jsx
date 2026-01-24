@@ -8,6 +8,7 @@ import CaseAccessTab from '../components/admin/CaseAccessTab'
 import SubscriptionPlansTab from '../components/admin/SubscriptionPlansTab'
 import { API_BASE_URL } from '../config'
 import './AdminDashboard.css'
+import Loader from '@/components/ui/loader-12'
 
 function AdminDashboard({ auth }) {
   const [activeTab, setActiveTab] = useState('overview')
@@ -74,24 +75,6 @@ function AdminDashboard({ auth }) {
 
       {/* Main Content */}
       <main className="admin-main-content">
-        {/* Top Bar */}
-        <header className="top-bar">
-          <div className="search-bar">
-            <span>🔍</span>
-            <input type="text" placeholder="Search..." />
-          </div>
-          <div className="user-profile">
-            <button className="notification-btn">🔔</button>
-            <div className="profile-info">
-              <img src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" alt="Admin" className="avatar" />
-              <div className="profile-text">
-                <span className="profile-name">Admin User</span>
-                <span className="profile-role">Administrator</span>
-              </div>
-              <span>⌄</span>
-            </div>
-          </div>
-        </header>
 
         {/* Tab Content */}
         <div className="tab-content-container">
@@ -128,7 +111,11 @@ function OverviewTab({ auth }) {
       .catch(() => setLoading(false))
   }, [auth])
 
-  if (loading) return <div>Loading dashboard...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
   if (!stats) return <div>Error loading stats</div>
 
   return (

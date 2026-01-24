@@ -4,6 +4,7 @@ import { useToast } from '../../context/ToastContext'
 import ConfirmationModal from '../common/ConfirmationModal'
 import EmojiInput from '../common/EmojiInput'
 import './CasesTab.css' // Reuse table styles
+import Loader from '@/components/ui/loader-12'
 
 export default function CategoriesTab({ auth }) {
     const [categories, setCategories] = useState([])
@@ -156,8 +157,8 @@ export default function CategoriesTab({ auth }) {
                         />
                         {touched.name && errors.name && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.name}</span>}
                     </label>
-                    
-                   
+
+
                     <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Description</span>
                         <input
@@ -167,18 +168,18 @@ export default function CategoriesTab({ auth }) {
                             style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                         />
                     </label>
-                     <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                         <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Icon (Emoji)</span>
-                    <div style={{ display: 'flex' }}>
-                        <EmojiInput
-                            value={form.icon}
-                            onChange={val => {
-                                setForm({ ...form, icon: val })
-                                if (touched.icon) setTouched({ ...touched, icon: false })
-                            }}
-                            placeholder="👶"
-                        />
-                    </div>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Icon (Emoji)</span>
+                        <div style={{ display: 'flex' }}>
+                            <EmojiInput
+                                value={form.icon}
+                                onChange={val => {
+                                    setForm({ ...form, icon: val })
+                                    if (touched.icon) setTouched({ ...touched, icon: false })
+                                }}
+                                placeholder="👶"
+                            />
+                        </div>
                     </label>
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.8rem' }}>
                         <button className="btn-primary" onClick={handleSave}>
@@ -191,7 +192,11 @@ export default function CategoriesTab({ auth }) {
                 </div>
             </div>
 
-            {loading && <div>Loading...</div>}
+            {loading && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh', width: '100%' }}>
+                    <Loader />
+                </div>
+            )}
 
             <div className="cases-table-container">
                 <table className="cases-table">

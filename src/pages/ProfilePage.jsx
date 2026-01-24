@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
+import Loader from '@/components/ui/loader-12'
 import './ProfilePage.css'
 import { useToast } from '../context/ToastContext'
 
@@ -72,7 +73,11 @@ export default function ProfilePage({ auth, setAuth }) {
     }
   }
 
-  if (loading) return <div className="page">Loading...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
   if (!stats) return <div className="page">Error loading profile</div>
 
   const membershipExpired = stats.membershipExpiresAt && new Date(stats.membershipExpiresAt) < new Date()

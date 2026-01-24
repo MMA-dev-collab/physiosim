@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import { useToast } from '../../context/ToastContext'
 import ConfirmationModal from '../common/ConfirmationModal'
+import Loader from '@/components/ui/loader-12'
 
 export default function SubscriptionPlansTab({ auth }) {
   const { toast } = useToast()
@@ -426,7 +427,11 @@ export default function SubscriptionPlansTab({ auth }) {
     }
   }
 
-  if (loading) return <div>Loading subscription plans...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   if (plans.length === 0) {
     return (

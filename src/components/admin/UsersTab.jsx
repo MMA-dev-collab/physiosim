@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import './CasesTab.css' // Reuse table styles
+import Loader from '@/components/ui/loader-12'
 
 export default function UsersTab({ auth }) {
   const [users, setUsers] = useState([])
@@ -28,7 +29,11 @@ export default function UsersTab({ auth }) {
     loadUsers()
   }, [auth])
 
-  if (loading) return <div>Loading users...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   return (
     <div className="admin-users">

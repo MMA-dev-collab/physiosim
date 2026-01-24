@@ -4,6 +4,7 @@ import './CasesTab.css' // Reuse table styles
 import { useToast } from '../../context/ToastContext'
 import ConfirmationModal from '../common/ConfirmationModal'
 import InputModal from '../common/InputModal'
+import Loader from '@/components/ui/loader-12'
 
 export default function SubscriptionsTab({ auth }) {
   const { toast } = useToast()
@@ -307,7 +308,11 @@ export default function SubscriptionsTab({ auth }) {
     return '#6b7280'
   }
 
-  if (loading) return <div>Loading subscriptions...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   if (plans.length === 0) {
     return (

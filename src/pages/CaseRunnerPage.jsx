@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
+import Loader from '@/components/ui/loader-12'
 
 function CaseRunnerPage({ auth }) {
   const { id } = useParams()
@@ -108,7 +109,11 @@ function CaseRunnerPage({ auth }) {
     // Stay on current step to retry
   }
 
-  if (loading) return <div className="page"><div className="loading-text">Loading case…</div></div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
   if (error)
     return (
       <div className="page">

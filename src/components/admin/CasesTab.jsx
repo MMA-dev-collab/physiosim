@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../../config'
 import ConfirmationModal from '../common/ConfirmationModal'
 import './CasesTab.css'
+import Loader from '@/components/ui/loader-12'
 
 export default function CasesTab({ auth }) {
   const navigate = useNavigate()
@@ -84,6 +85,12 @@ export default function CasesTab({ auth }) {
       (!c.categoryId && c.category === categoryFilter)
     return matchesSearch && matchesCategory
   })
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   return (
     <div className="admin-cases">

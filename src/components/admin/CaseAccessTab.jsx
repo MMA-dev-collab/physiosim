@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import { useToast } from '../../context/ToastContext'
 import './CasesTab.css' // Reuse table styles
+import Loader from '@/components/ui/loader-12'
 
 export default function CaseAccessTab({ auth }) {
   const { toast } = useToast()
@@ -220,6 +221,12 @@ export default function CaseAccessTab({ auth }) {
     // Finally, if it requires normal access, everyone can see it
     return caseData.requiredPlanRole === 'normal';
   }
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
+      <Loader />
+    </div>
+  )
 
   return (
     <div className="admin-cases">
