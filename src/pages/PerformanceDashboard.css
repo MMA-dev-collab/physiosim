@@ -1,0 +1,251 @@
+.performance-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 12px;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-card {
+    padding: 1.5rem;
+}
+
+.chart-card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #334155;
+}
+
+/* Confidence Grid */
+.confidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.confidence-card {
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 2px solid;
+    transition: transform 0.2s;
+}
+
+.confidence-card:hover {
+    transform: translateY(-2px);
+}
+
+.confidence-card.strong {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #10b981;
+}
+
+.confidence-card.neutral {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #f59e0b;
+}
+
+.confidence-card.weak {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-color: #ef4444;
+}
+
+.confidence-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.confidence-tag {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1e293b;
+}
+
+.confidence-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.confidence-badge.strong {
+    background: #10b981;
+    color: white;
+}
+
+.confidence-badge.neutral {
+    background: #f59e0b;
+    color: white;
+}
+
+.confidence-badge.weak {
+    background: #ef4444;
+    color: white;
+}
+
+.confidence-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.confidence-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.confidence-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.confidence-stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.confidence-label {
+    font-size: 0.9rem;
+    color: #475569;
+    font-style: italic;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    color: #334155;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+/* Weak Points Card */
+.weak-points-card {
+    background: linear-gradient(135deg, #fef2f2 0%, #fff 50%);
+    border: 1px solid #fca5a5;
+}
+
+.weak-points-card h3 {
+    margin: 0 0 1rem 0;
+    color: #dc2626;
+}
+
+.weak-points-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.weak-point-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+}
+
+.weak-point-tag {
+    font-weight: 600;
+    color: #dc2626;
+    min-width: 100px;
+}
+
+.weak-point-reason {
+    flex: 1;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .confidence-stats {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .weak-point-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

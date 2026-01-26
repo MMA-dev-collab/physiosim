@@ -13,6 +13,7 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import PerformanceDashboard from './pages/PerformanceDashboard'
 
 import { API_BASE_URL } from './config'
 
@@ -46,6 +47,7 @@ function App() {
               <Link to="/membership">Membership</Link>
               <Link to="/about">About</Link>
               <Link to="/cases">Cases</Link>
+              {auth && <Link to="/performance">My Progress</Link>}
               {auth && <Link to="/leaderboard">Leaderboard</Link>}
               {isAdmin && <Link to="/admin">Admin</Link>}
             </nav>
@@ -122,6 +124,10 @@ function App() {
               <Route
                 path="/leaderboard"
                 element={auth ? <LeaderboardPage auth={auth} /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/performance"
+                element={auth ? <PerformanceDashboard auth={auth} /> : <Navigate to="/login" />}
               />
             </Routes>
           </main>

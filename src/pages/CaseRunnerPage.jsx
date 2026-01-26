@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import Loader from '@/components/ui/loader-12'
+import { useIdleTimer } from '../hooks/useIdleTimer'
+import HintModal from '@/components/common/HintModal'
 
 function CaseRunnerPage({ auth }) {
   const { id } = useParams()
@@ -14,6 +16,13 @@ function CaseRunnerPage({ auth }) {
   const [feedback, setFeedback] = useState(null)
   const [isCorrect, setIsCorrect] = useState(null)
   const [finalSummary, setFinalSummary] = useState(null)
+
+  // Adaptive feedback state
+  const [showHint, setShowHint] = useState(false)
+  const [currentHint, setCurrentHint] = useState(null)
+  const [hintShown, setHintShown] = useState(false)
+  const [attemptNumber, setAttemptNumber] = useState(1)
+  const stepStartTimeRef = useRef(Date.now())
 
   useEffect(() => {
     const load = async () => {
@@ -48,7 +57,71 @@ function CaseRunnerPage({ auth }) {
     setSelectedOption(null)
     setFeedback(null)
     setIsCorrect(null)
+    setShowHint(false)
+    setCurrentHint(null)
+    setHintShown(false)
+    setAttemptNumber(1)
+    stepStartTimeRef.current = Date.now()
   }, [currentStepIndex])
+
+  // Default expected times by step type (in ms)
+  const STEP_TYPE_IDLE_TIMES = {
+    'mcq': 45000,
+    'history': 90000,
+    'diagnosis': 120000,
+    'treatment': 90000,
+    'info': 30000,
+    'investigation': 60000
+  }
+
+  // Get idle timeout for current step
+  const getIdleTimeout = useCallback(() => {
+    const defaultTime = STEP_TYPE_IDLE_TIMES[currentStep?.type] || 60000
+    if (!currentStep) return defaultTime
+
+    // Defensive parsing: ensure it's a valid number and > 0
+    const customTime = Number(currentStep.expected_time)
+    const threshold = (customTime > 0) ? customTime * 1000 : defaultTime
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Hint System] Step: ${currentStepIndex + 1}, Threshold: ${threshold / 1000}s (Custom: ${currentStep.expected_time || 'none'})`)
+    }
+
+    return threshold
+  }, [currentStep, currentStepIndex])
+
+  // Fetch hint for current step
+  const fetchHint = useCallback(async () => {
+    if (!currentStep?.id || currentStep.type !== 'mcq') return
+    // Check if hints are enabled for this step
+    if (currentStep.hint_enabled === false) return
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/steps/${currentStep.id}/hint`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.hint) {
+          setCurrentHint(data.hint)
+          setShowHint(true)
+          setHintShown(true)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch hint:', err)
+    }
+  }, [currentStep, auth.token])
+
+  // Idle timer hook
+  const { resetTimer } = useIdleTimer({
+    idleTimeout: getIdleTimeout(),
+    onIdle: fetchHint,
+    enabled: currentStep?.type === 'mcq' && !isCorrect && !showHint && (currentStep?.hint_enabled !== false)
+  })
 
   const progressPercent = useMemo(() => {
     if (!steps.length) return 0
@@ -58,6 +131,10 @@ function CaseRunnerPage({ auth }) {
   const handleAnswer = async (optionId) => {
     if (!caseData || !currentStep || !optionId) return
     setSelectedOption(optionId)
+
+    // Calculate time spent on this step
+    const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+
     try {
       const isFinal = currentStepIndex === steps.length - 1
       const res = await fetch(
@@ -69,7 +146,13 @@ function CaseRunnerPage({ auth }) {
             Authorization: `Bearer ${auth.token}`,
             'ngrok-skip-browser-warning': 'true'
           },
-          body: JSON.stringify({ selectedOptionId: optionId, isFinalStep: isFinal }),
+          body: JSON.stringify({
+            selectedOptionId: optionId,
+            isFinalStep: isFinal,
+            timeSpent,
+            hintShown,
+            attemptNumber
+          }),
         }
       )
       const data = await res.json()
@@ -106,6 +189,9 @@ function CaseRunnerPage({ auth }) {
     setSelectedOption(null)
     setFeedback(null)
     setIsCorrect(null)
+    setAttemptNumber(prev => prev + 1)
+    stepStartTimeRef.current = Date.now()
+    resetTimer()
     // Stay on current step to retry
   }
 
@@ -124,6 +210,13 @@ function CaseRunnerPage({ auth }) {
 
   return (
     <div className="page">
+      {/* Hint Modal */}
+      <HintModal
+        isOpen={showHint}
+        hint={currentHint}
+        onClose={() => setShowHint(false)}
+      />
+
       <div className="page-header">
         <div className="page-eyebrow">Case</div>
         <h1 className="page-title">{caseData.title}</h1>

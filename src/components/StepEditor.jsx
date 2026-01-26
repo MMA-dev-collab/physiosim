@@ -30,10 +30,33 @@ export default function StepEditor({ step, onSave, onCancel }) {
             if (!editedStep.maxScore || editedStep.maxScore < 1 || editedStep.maxScore > 10) {
                 errors.maxScore = 'Max Score must be between 1 and 10'
             }
+            if (!editedStep.explanationOnFail) {
+                errors.explanationOnFail = 'Explanation on fail is required'
+            }
+
+            // Expected Time Validation
+            const et = editedStep.expected_time
+            if (et === undefined || et === null || et === '') {
+                errors.expected_time = 'Expected time is required'
+            } else {
+                const num = parseInt(et)
+                if (isNaN(num) || num < 1 || num > 600) {
+                    errors.expected_time = 'Expected time must be between 1 and 600 seconds'
+                }
+            }
+
             const options = editedStep.options || []
             if (options.length < 2) {
                 errors.options = 'At least 2 options are required'
             }
+            options.forEach((opt, idx) => {
+                if (!opt.label) {
+                    errors[`options[${idx}].label`] = `Option ${idx + 1} text is required`
+                }
+                if (!opt.feedback) {
+                    errors[`options[${idx}].feedback`] = `Feedback for Option ${idx + 1} is required`
+                }
+            })
             const correctCount = options.filter(o => o.isCorrect).length
             if (correctCount !== 1) {
                 errors.correctAnswer = `Exactly one correct answer is required (currently ${correctCount})`
@@ -48,8 +71,11 @@ export default function StepEditor({ step, onSave, onCancel }) {
             }
             if (!editedStep.content?.age && editedStep.content?.age !== 0) {
                 errors.age = 'Age is required'
-            } else if (editedStep.content.age < 0) {
-                errors.age = 'Age cannot be negative'
+            } else {
+                const age = parseInt(editedStep.content.age)
+                if (isNaN(age) || age < 1 || age > 110) {
+                    errors.age = 'Age must be between 1 and 110'
+                }
             }
             if (!editedStep.content?.gender) errors.gender = 'Gender is required'
             if (!editedStep.content?.description) errors.description = 'Description is required'
@@ -72,33 +98,6 @@ export default function StepEditor({ step, onSave, onCancel }) {
             })
         }
 
-        if (editedStep.type === 'mcq') {
-            if (!editedStep.question && !editedStep.content?.prompt) {
-                errors.question = 'Question is required'
-            }
-            if (!editedStep.maxScore || editedStep.maxScore < 1 || editedStep.maxScore > 10) {
-                errors.maxScore = 'Max Score must be between 1 and 10'
-            }
-            if (!editedStep.explanationOnFail) {
-                errors.explanationOnFail = 'Explanation on fail is required'
-            }
-            const options = editedStep.options || []
-            if (options.length < 2) {
-                errors.options = 'At least 2 options are required'
-            }
-            options.forEach((opt, idx) => {
-                if (idx < 2 && !opt.label) {
-                    errors[`options[${idx}].label`] = `Option ${idx + 1} text is required`
-                }
-                if (!opt.feedback) {
-                    errors[`options[${idx}].feedback`] = `Feedback for Option ${idx + 1} is required`
-                }
-            })
-            const correctCount = options.filter(o => o.isCorrect).length
-            if (correctCount !== 1) {
-                errors.correctAnswer = `Exactly one correct answer is required (currently ${correctCount})`
-            }
-        }
 
         if (editedStep.type === 'investigation') {
             const investigations = editedStep.investigations || []
@@ -229,12 +228,22 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                 </div>
                 <input
                     type="number"
-                    min="0"
-                    value={editedStep.content?.age || ''}
-                    onChange={(e) => updateContent('age', e.target.value === '' ? '' : parseInt(e.target.value))}
+                    min="1"
+                    max="110"
+                    value={editedStep.content?.age ?? ''}
+                    onChange={(e) => {
+                        const val = e.target.value
+                        if (val !== '' && !/^\d+$/.test(val)) return
+                        updateContent('age', val === '' ? '' : parseInt(val))
+                    }}
+                    onKeyDown={(e) => {
+                        if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+                            e.preventDefault()
+                        }
+                    }}
                     onBlur={() => handleBlur('age')}
                     placeholder="54"
-                    style={{ borderColor: touched.age && errors.age ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.age) && errors.age ? 'red' : undefined }}
                 />
                 {touched.age && errors.age && (
                     <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.age}</span>
@@ -520,6 +529,85 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                 )}
             </label>
 
+            {/* Adaptive Feedback Fields */}
+            <div style={{ gridColumn: '1 / -1', marginTop: '1.5rem', padding: '1.25rem', backgroundColor: '#f0f9ff', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h4 style={{ margin: 0, color: '#0369a1', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1.25rem' }}>💡</span> Adaptive Feedback Settings
+                    </h4>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0369a1' }}>Enable Hint</span>
+                        <input
+                            type="checkbox"
+                            checked={editedStep.hint_enabled !== false}
+                            onChange={(e) => setEditedStep({ ...editedStep, hint_enabled: e.target.checked })}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                    </label>
+                </div>
+
+                <div className="form-grid" style={{ opacity: editedStep.hint_enabled === false ? 0.6 : 1, pointerEvents: editedStep.hint_enabled === false ? 'none' : 'auto', transition: 'all 0.2s' }}>
+                    <label>
+                        Tag / Category
+                        <select
+                            value={editedStep.tag || ''}
+                            onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
+                            style={{ width: '100%' }}
+                        >
+                            <option value="">Select Tag</option>
+                            <option value="Anatomy">Anatomy</option>
+                            <option value="Diagnosis">Diagnosis</option>
+                            <option value="MSK">MSK</option>
+                            <option value="Imaging">Imaging</option>
+                            <option value="Treatment">Treatment</option>
+                            <option value="Physiology">Physiology</option>
+                        </select>
+                        <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Used for performance analysis</span>
+                    </label>
+                    <label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            Expected Time (seconds) <span style={{ color: 'red' }}>*</span>
+                        </div>
+                        <input
+                            type="number"
+                            value={editedStep.expected_time ?? ''}
+                            onChange={(e) => {
+                                const val = e.target.value
+                                // Block non-numeric characters and decimals
+                                if (val !== '' && !/^\d+$/.test(val)) return
+                                setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
+                            }}
+                            onKeyDown={(e) => {
+                                // Block -, +, e, .
+                                if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+                                    e.preventDefault()
+                                }
+                            }}
+                            onBlur={() => setTouched(prev => ({ ...prev, expected_time: true }))}
+                            min={1}
+                            max={600}
+                            placeholder="45"
+                            style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'red' : undefined }}
+                        />
+                        {(touched.all || touched.expected_time) && errors.expected_time ? (
+                            <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.expected_time}</span>
+                        ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Threshold for idle hint (1-600s)</span>
+                        )}
+                    </label>
+                    <label style={{ gridColumn: '1 / -1' }}>
+                        Hint Text
+                        <textarea
+                            value={editedStep.hint_text || ''}
+                            onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
+                            rows={2}
+                            placeholder="A contextual hint to show when the student is stuck..."
+                        />
+                        <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
+                    </label>
+                </div>
+            </div>
+
             <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <h4>Options (Min 2, Max 6)</h4>
@@ -561,7 +649,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                         checked={opt.isCorrect || false}
                                         onChange={(e) => updateOption(idx, 'isCorrect', e.target.checked)}
                                     />
-                                   
+
                                 </span>
                             </label>
                             <label style={{ gridColumn: '2 / -1' }}>
