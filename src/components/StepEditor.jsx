@@ -34,7 +34,8 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 errors.explanationOnFail = 'Explanation on fail is required'
             }
 
-            // Expected Time Validation
+            // Expected Time Validation - Moved inside hint_enabled check
+            /* 
             const et = editedStep.expected_time
             if (et === undefined || et === null || et === '') {
                 errors.expected_time = 'Expected time is required'
@@ -43,7 +44,8 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 if (isNaN(num) || num < 1 || num > 600) {
                     errors.expected_time = 'Expected time must be between 1 and 600 seconds'
                 }
-            }
+            } 
+            */
 
             const options = editedStep.options || []
             if (options.length < 2) {
@@ -62,12 +64,23 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 errors.correctAnswer = `Exactly one correct answer is required (currently ${correctCount})`
             }
 
+            // Hint Validation - Only run if hint is enabled
             if (editedStep.hint_enabled !== false) {
                 if (!editedStep.tag) {
                     errors.tag = 'Tag / Category is required'
                 }
                 if (!editedStep.hint_text) {
                     errors.hint_text = 'Hint text is required'
+                }
+                // Expected Time Validation
+                const et = editedStep.expected_time
+                if (et === undefined || et === null || et === '') {
+                    errors.expected_time = 'Expected time is required'
+                } else {
+                    const num = parseInt(et)
+                    if (isNaN(num) || num < 1 || num > 600) {
+                        errors.expected_time = 'Expected time must be between 1 and 600 seconds'
+                    }
                 }
             }
         }
@@ -552,84 +565,102 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                         <input
                             type="checkbox"
                             checked={editedStep.hint_enabled !== false}
-                            onChange={(e) => setEditedStep({ ...editedStep, hint_enabled: e.target.checked })}
+                            onChange={(e) => {
+                                const isEnabled = e.target.checked;
+                                if (!isEnabled) {
+                                    // RESET STATE: Clear all hint related fields and errors
+                                    setEditedStep({
+                                        ...editedStep,
+                                        hint_enabled: false,
+                                        hint_text: "",
+                                        tag: "",
+                                        expected_time: ""
+                                    });
+                                    // We can't directly clear errors here since they are derived from validate(), 
+                                    // but setting values to empty and hint_enabled to false ensures validate() skips them.
+                                } else {
+                                    setEditedStep({ ...editedStep, hint_enabled: true });
+                                }
+                            }}
                         />
                     </label>
                 </div>
 
-                <div className="form-grid" style={{ opacity: editedStep.hint_enabled === false ? 0.6 : 1, pointerEvents: editedStep.hint_enabled === false ? 'none' : 'auto', transition: 'all 0.3s ease' }}>
-                    <label>
-                        <div className="flex items-center gap-1">
-                            Tag / Category <span className="text-red-500">*</span>
-                        </div>
-                        <select
-                            value={editedStep.tag || ''}
-                            onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
-                            onBlur={() => setTouched(prev => ({ ...prev, tag: true }))}
-                            style={{ borderColor: (touched.all || touched.tag) && errors.tag ? 'var(--step-editor-danger)' : undefined }}
-                        >
-                            <option value="">Select Tag</option>
-                            <option value="Anatomy">Anatomy</option>
-                            <option value="Diagnosis">Diagnosis</option>
-                            <option value="MSK">MSK</option>
-                            <option value="Imaging">Imaging</option>
-                            <option value="Treatment">Treatment</option>
-                            <option value="Physiology">Physiology</option>
-                        </select>
-                        {(touched.all || touched.tag) && errors.tag ? (
-                            <span className="validation-error"><span>⚠️</span>{errors.tag}</span>
-                        ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Used for performance analysis</span>
-                        )}
-                    </label>
-                    <label>
-                        <div className="flex items-center gap-1">
-                            Expected Time (seconds) <span className="text-red-500">*</span>
-                        </div>
-                        <input
-                            type="number"
-                            value={editedStep.expected_time ?? ''}
-                            onChange={(e) => {
-                                const val = e.target.value
-                                if (val !== '' && !/^\d+$/.test(val)) return
-                                setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
-                            }}
-                            onKeyDown={(e) => {
-                                if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
-                                    e.preventDefault()
-                                }
-                            }}
-                            onBlur={() => setTouched(prev => ({ ...prev, expected_time: true }))}
-                            min={1}
-                            max={600}
-                            placeholder="45"
-                            style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'var(--step-editor-danger)' : undefined }}
-                        />
-                        {(touched.all || touched.expected_time) && errors.expected_time ? (
-                            <span className="validation-error"><span>⚠️</span>{errors.expected_time}</span>
-                        ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Threshold for idle hint (1-600s)</span>
-                        )}
-                    </label>
-                    <label style={{ gridColumn: '1 / -1' }}>
-                        <div className="flex items-center gap-1">
-                            Hint Text <span className="text-red-500">*</span>
-                        </div>
-                        <textarea
-                            value={editedStep.hint_text || ''}
-                            onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
-                            onBlur={() => setTouched(prev => ({ ...prev, hint_text: true }))}
-                            rows={2}
-                            placeholder="A contextual hint to show when the student is stuck..."
-                            style={{ borderColor: (touched.all || touched.hint_text) && errors.hint_text ? 'var(--step-editor-danger)' : undefined }}
-                        />
-                        {(touched.all || touched.hint_text) && errors.hint_text ? (
-                            <span className="validation-error"><span>⚠️</span>{errors.hint_text}</span>
-                        ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
-                        )}
-                    </label>
-                </div>
+                {editedStep.hint_enabled !== false && (
+                    <div className="form-grid" style={{ transition: 'all 0.3s ease' }}>
+                        <label>
+                            <div className="flex items-center gap-1">
+                                Tag / Category <span className="text-red-500">*</span>
+                            </div>
+                            <select
+                                value={editedStep.tag || ''}
+                                onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
+                                onBlur={() => setTouched(prev => ({ ...prev, tag: true }))}
+                                style={{ borderColor: (touched.all || touched.tag) && errors.tag ? 'var(--step-editor-danger)' : undefined }}
+                            >
+                                <option value="">Select Tag</option>
+                                <option value="Anatomy">Anatomy</option>
+                                <option value="Diagnosis">Diagnosis</option>
+                                <option value="MSK">MSK</option>
+                                <option value="Imaging">Imaging</option>
+                                <option value="Treatment">Treatment</option>
+                                <option value="Physiology">Physiology</option>
+                            </select>
+                            {(touched.all || touched.tag) && errors.tag ? (
+                                <span className="validation-error"><span>⚠️</span>{errors.tag}</span>
+                            ) : (
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Used for performance analysis</span>
+                            )}
+                        </label>
+                        <label>
+                            <div className="flex items-center gap-1">
+                                Expected Time (seconds) <span className="text-red-500">*</span>
+                            </div>
+                            <input
+                                type="number"
+                                value={editedStep.expected_time ?? ''}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    if (val !== '' && !/^\d+$/.test(val)) return
+                                    setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
+                                }}
+                                onKeyDown={(e) => {
+                                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+                                        e.preventDefault()
+                                    }
+                                }}
+                                onBlur={() => setTouched(prev => ({ ...prev, expected_time: true }))}
+                                min={1}
+                                max={600}
+                                placeholder="45"
+                                style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'var(--step-editor-danger)' : undefined }}
+                            />
+                            {(touched.all || touched.expected_time) && errors.expected_time ? (
+                                <span className="validation-error"><span>⚠️</span>{errors.expected_time}</span>
+                            ) : (
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Threshold for idle hint (1-600s)</span>
+                            )}
+                        </label>
+                        <label style={{ gridColumn: '1 / -1' }}>
+                            <div className="flex items-center gap-1">
+                                Hint Text <span className="text-red-500">*</span>
+                            </div>
+                            <textarea
+                                value={editedStep.hint_text || ''}
+                                onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
+                                onBlur={() => setTouched(prev => ({ ...prev, hint_text: true }))}
+                                rows={2}
+                                placeholder="A contextual hint to show when the student is stuck..."
+                                style={{ borderColor: (touched.all || touched.hint_text) && errors.hint_text ? 'var(--step-editor-danger)' : undefined }}
+                            />
+                            {(touched.all || touched.hint_text) && errors.hint_text ? (
+                                <span className="validation-error"><span>⚠️</span>{errors.hint_text}</span>
+                            ) : (
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
+                            )}
+                        </label>
+                    </div>
+                )}
             </div>
 
             <div style={{ gridColumn: '1 / -1', marginTop: '2rem' }}>
@@ -704,7 +735,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }
 

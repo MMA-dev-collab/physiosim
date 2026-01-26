@@ -234,6 +234,13 @@ export default function CaseEditorPage({ auth }) {
             return
         }
 
+        // Check if the Case ends with an MCQ step
+        const lastStep = steps[steps.length - 1];
+        if (lastStep.type !== 'mcq') {
+            toast.error('A case must end with an MCQ step to assess the student.');
+            return;
+        }
+
         // DEEP VALIDATION - ensure all steps have content
         for (const step of steps) {
             if (step.type === 'info') {
@@ -617,6 +624,22 @@ export default function CaseEditorPage({ auth }) {
                         </div>
 
                         <div className="add-step-controls">
+                            {steps.length > 0 && steps[steps.length - 1].type !== 'mcq' && (
+                                <div style={{
+                                    padding: '1rem',
+                                    marginBottom: '1rem',
+                                    background: '#fff7ed',
+                                    border: '1px solid #fed7aa',
+                                    borderRadius: '8px',
+                                    color: '#c2410c',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    <span>⚠️</span>
+                                    <strong>Requirement:</strong> Your case must end with an MCQ step. Please add one.
+                                </div>
+                            )}
                             <h3>Add New Step</h3>
                             <div className="step-buttons">
                                 <button className="btn-secondary" onClick={() => handleAddStep('info')}>+ Info Step</button>

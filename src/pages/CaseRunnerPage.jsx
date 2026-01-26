@@ -54,15 +54,36 @@ function CaseRunnerPage({ auth }) {
   const currentStep = steps[currentStepIndex]
 
   useEffect(() => {
-    setSelectedOption(null)
-    setFeedback(null)
-    setIsCorrect(null)
+    // Reset state first
     setShowHint(false)
     setCurrentHint(null)
     setHintShown(false)
     setAttemptNumber(1)
     stepStartTimeRef.current = Date.now()
-  }, [currentStepIndex])
+
+    // Load saved progress if available (Review Mode)
+    if (caseData?.userProgress && currentStep?.id) {
+      const progress = caseData.userProgress[currentStep.id]
+      if (progress) {
+        setSelectedOption(progress.selectedOptionId)
+        setIsCorrect(progress.isCorrect)
+
+        // Find feedback for the selected option
+        const selectedOpt = currentStep.options?.find(o => o.id === progress.selectedOptionId)
+        if (selectedOpt) {
+          setFeedback(selectedOpt.feedback)
+        }
+      } else {
+        setSelectedOption(null)
+        setIsCorrect(null)
+        setFeedback(null)
+      }
+    } else {
+      setSelectedOption(null)
+      setFeedback(null)
+      setIsCorrect(null)
+    }
+  }, [currentStepIndex, caseData])
 
   // Default expected times by step type (in ms)
   const STEP_TYPE_IDLE_TIMES = {
@@ -83,9 +104,7 @@ function CaseRunnerPage({ auth }) {
     const customTime = Number(currentStep.expected_time)
     const threshold = (customTime > 0) ? customTime * 1000 : defaultTime
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Hint System] Step: ${currentStepIndex + 1}, Threshold: ${threshold / 1000}s (Custom: ${currentStep.expected_time || 'none'})`)
-    }
+
 
     return threshold
   }, [currentStep, currentStepIndex])
@@ -218,6 +237,22 @@ function CaseRunnerPage({ auth }) {
       />
 
       <div className="page-header">
+        {caseData.isCompleted && (
+          <div style={{
+            background: '#fef9c3',
+            border: '1px solid #fde047',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            color: '#854d0e',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>👁️</span>
+            <strong>Review Mode:</strong> You are viewing your past attempt. Answers are read-only.
+          </div>
+        )}
         <div className="page-eyebrow">Case</div>
         <h1 className="page-title">{caseData.title}</h1>
         <p className="page-subtitle">
@@ -378,11 +413,13 @@ function McqStep({ step, selectedOption, feedback, isCorrect, onAnswer }) {
     }
   }
 
-  // Reset submission state when step changes or when retry happens (selectedOption becomes null)
+  // Reset submission state when step changes or when retry/load happens
   React.useEffect(() => {
     if (!selectedOption) {
       setIsSubmitted(false)
       setLocalSelection(null)
+    } else {
+      setIsSubmitted(true)
     }
   }, [step.id, selectedOption])
 
@@ -552,8 +589,7 @@ function InvestigationsStep({ step }) {
           <div className="xray-findings-grid">
             {step.xrays.map((x) => {
               const hasImage = x.imageUrl && x.imageUrl.trim() !== '';
-              console.log(step)
-              console.log('Rendering xray:', { id: x.id, image: x.imageUrl, label: x.label, hasImage, imageUrl: x.imageUrl?.substring(0, 100) });
+
               return (
                 <div key={x.id} className="xray-finding-card">
                   {hasImage ? (
@@ -569,7 +605,7 @@ function InvestigationsStep({ step }) {
                         });
                         e.target.style.display = 'none';
                       }}
-                      onLoad={() => console.log('X-ray image loaded successfully:', x.label)}
+
                     />
                   ) : (
                     <div style={{
