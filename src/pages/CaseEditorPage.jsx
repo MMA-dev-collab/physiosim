@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../config'
 import StepEditor from '../components/StepEditor'
 import { useToast } from '../context/ToastContext'
 import ConfirmationModal from '../components/common/ConfirmationModal'
+import Loader from '../components/ui/loader-12'
 import './CaseEditorPage.css'
 
 export default function CaseEditorPage({ auth }) {
@@ -403,7 +404,19 @@ export default function CaseEditorPage({ auth }) {
         }
     }
 
-    if (loading) return <div className="p-8">Loading...</div>
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '80vh',
+                width: '100%'
+            }}>
+                <Loader />
+            </div>
+        )
+    }
 
     return (
         <div className="case-editor-page">

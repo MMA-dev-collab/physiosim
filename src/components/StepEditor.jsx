@@ -61,6 +61,15 @@ export default function StepEditor({ step, onSave, onCancel }) {
             if (correctCount !== 1) {
                 errors.correctAnswer = `Exactly one correct answer is required (currently ${correctCount})`
             }
+
+            if (editedStep.hint_enabled !== false) {
+                if (!editedStep.tag) {
+                    errors.tag = 'Tag / Category is required'
+                }
+                if (!editedStep.hint_text) {
+                    errors.hint_text = 'Hint text is required'
+                }
+            }
         }
 
         if (editedStep.type === 'info') {
@@ -170,6 +179,9 @@ export default function StepEditor({ step, onSave, onCancel }) {
         <div className="step-editor">
             <div className="step-editor-header">
                 <h3>Edit {step.type.toUpperCase()} Step</h3>
+                <div className="header-actions">
+                    {/* Placeholder for future header-level buttons */}
+                </div>
             </div>
 
             <div className="step-editor-body">
@@ -179,6 +191,12 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 {step.type === 'investigation' && <InvestigationStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {(step.type === 'diagnosis' || step.type === 'treatment') && (
                     <GenericStepEditor editedStep={editedStep} setEditedStep={setEditedStep} />
+                )}
+
+                {touched.all && hasErrors && (
+                    <div className="validation-error" style={{ justifyContent: 'center', marginTop: '1.5rem', padding: '1rem', background: '#fef2f2', borderRadius: '8px' }}>
+                        <span>⚠️</span> Please fix the validation errors before saving.
+                    </div>
                 )}
             </div>
 
@@ -190,11 +208,6 @@ export default function StepEditor({ step, onSave, onCancel }) {
                     {saving ? 'Saving...' : 'Save Step'}
                 </button>
             </div>
-            {touched.all && hasErrors && (
-                <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem', textAlign: 'center' }}>
-                    Please fix the errors above before saving.
-                </div>
-            )}
         </div>
     )
 }
@@ -208,23 +221,23 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
     return (
         <div className="form-grid">
             <label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Patient Name <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Patient Name <span className="text-red-500">*</span>
                 </div>
                 <input
                     value={editedStep.content?.patientName || ''}
                     onChange={(e) => updateContent('patientName', e.target.value)}
                     onBlur={() => handleBlur('patientName')}
                     placeholder="Ms. A"
-                    style={{ borderColor: touched.patientName && errors.patientName ? 'red' : undefined }}
+                    style={{ borderColor: touched.patientName && errors.patientName ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.patientName && errors.patientName && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.patientName}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.patientName}</span>
                 )}
             </label>
             <label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Age <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Age <span className="text-red-500">*</span>
                 </div>
                 <input
                     type="number"
@@ -243,28 +256,28 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     }}
                     onBlur={() => handleBlur('age')}
                     placeholder="54"
-                    style={{ borderColor: (touched.all || touched.age) && errors.age ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.age) && errors.age ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.age && errors.age && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.age}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.age}</span>
                 )}
             </label>
             <label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Gender <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Gender <span className="text-red-500">*</span>
                 </div>
                 <select
                     value={editedStep.content?.gender || ''}
                     onChange={(e) => updateContent('gender', e.target.value)}
                     onBlur={() => handleBlur('gender')}
-                    style={{ borderColor: touched.gender && errors.gender ? 'red' : undefined }}
+                    style={{ borderColor: touched.gender && errors.gender ? 'var(--step-editor-danger)' : undefined }}
                 >
                     <option value="" disabled>Select Gender</option>
                     <option value="Female">Female</option>
                     <option value="Male">Male</option>
                 </select>
                 {touched.gender && errors.gender && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.gender}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.gender}</span>
                 )}
             </label>
             <label>
@@ -274,31 +287,31 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     onChange={(e) => updateContent('imageUrl', e.target.value)}
                     onBlur={() => handleBlur('imageUrl')}
                     placeholder="https://... or data:image/..."
-                    style={{ borderColor: touched.imageUrl && errors.imageUrl ? 'red' : undefined }}
+                    style={{ borderColor: touched.imageUrl && errors.imageUrl ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.imageUrl && errors.imageUrl && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.imageUrl}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.imageUrl}</span>
                 )}
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Description <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Description <span className="text-red-500">*</span>
                 </div>
                 <textarea
                     value={editedStep.content?.description || ''}
                     onChange={(e) => updateContent('description', e.target.value)}
                     onBlur={() => handleBlur('description')}
-                    rows={3}
+                    rows={4}
                     placeholder="I have had knee pain for a few months..."
-                    style={{ borderColor: touched.description && errors.description ? 'red' : undefined }}
+                    style={{ borderColor: touched.description && errors.description ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.description && errors.description && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.description}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.description}</span>
                 )}
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Chief Complaint (Arabic/Patient's words) <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Chief Complaint (Arabic/Patient's words) <span className="text-red-500">*</span>
                 </div>
                 <textarea
                     value={editedStep.content?.chiefComplaint || ''}
@@ -306,10 +319,10 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     onBlur={() => handleBlur('chiefComplaint')}
                     rows={2}
                     placeholder="طلوع ونزل السلم بيتعبوني..."
-                    style={{ borderColor: touched.chiefComplaint && errors.chiefComplaint ? 'red' : undefined }}
+                    style={{ borderColor: touched.chiefComplaint && errors.chiefComplaint ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.chiefComplaint && errors.chiefComplaint && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.chiefComplaint}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.chiefComplaint}</span>
                 )}
             </label>
         </div>
@@ -319,8 +332,6 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
 // History Step Editor
 function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouched }) {
     const questions = editedStep.content?.questions || []
-
-
 
     const updateQuestion = (index, field, value) => {
         const newQuestions = [...questions]
@@ -350,18 +361,18 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
     return (
         <div className="form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Title <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Title <span className="text-red-500">*</span>
                 </div>
                 <input
                     value={editedStep.content?.title || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, content: { ...editedStep.content, title: e.target.value } })}
                     onBlur={() => setTouched(prev => ({ ...prev, title: true }))}
                     placeholder="History of Pain"
-                    style={{ borderColor: touched.title && errors.title ? 'red' : undefined }}
+                    style={{ borderColor: touched.title && errors.title ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.title && errors.title && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.title}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.title}</span>
                 )}
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
@@ -374,9 +385,9 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                 />
             </label>
 
-            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4>Questions</h4>
+            <div style={{ gridColumn: '1 / -1', marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Questions</h4>
                     <button type="button" className="btn-secondary btn-small" onClick={addQuestion}>
                         + Add Question
                     </button>
@@ -392,8 +403,8 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                         </div>
                         <div className="form-grid">
                             <label style={{ gridColumn: '1 / 3' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Question Text <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Question Text <span className="text-red-500">*</span>
                                 </div>
                                 <textarea
                                     value={q.question || ''}
@@ -401,10 +412,10 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                                     onBlur={() => setTouched(prev => ({ ...prev, [`questions[${idx}].question`]: true }))}
                                     rows={2}
                                     placeholder="When did the pain start?"
-                                    style={{ borderColor: touched[`questions[${idx}].question`] && errors[`questions[${idx}].question`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`questions[${idx}].question`] && errors[`questions[${idx}].question`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`questions[${idx}].question`] && errors[`questions[${idx}].question`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`questions[${idx}].question`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`questions[${idx}].question`]}</span>
                                 )}
                             </label>
                             <label>
@@ -416,8 +427,8 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                                 />
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Answer <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Answer <span className="text-red-500">*</span>
                                 </div>
                                 <textarea
                                     value={q.answer || ''}
@@ -425,10 +436,10 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                                     onBlur={() => setTouched(prev => ({ ...prev, [`questions[${idx}].answer`]: true }))}
                                     rows={2}
                                     placeholder="It started about 3 months ago..."
-                                    style={{ borderColor: touched[`questions[${idx}].answer`] && errors[`questions[${idx}].answer`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`questions[${idx}].answer`] && errors[`questions[${idx}].answer`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`questions[${idx}].answer`] && errors[`questions[${idx}].answer`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`questions[${idx}].answer`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`questions[${idx}].answer`]}</span>
                                 )}
                             </label>
                         </div>
@@ -436,10 +447,12 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                 ))}
 
                 {questions.length === 0 && (
-                    <p style={{ color: '#6b7280', fontStyle: 'italic' }}>No questions added yet. Click "Add Question" to start.</p>
+                    <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0', color: '#64748b' }}>
+                        No questions added yet. Click "+ Add Question" to start.
+                    </div>
                 )}
                 {touched.all && errors.questions && (
-                    <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{errors.questions}</p>
+                    <p className="validation-error" style={{ marginTop: '1rem' }}><span>⚠️</span>{errors.questions}</p>
                 )}
             </div>
         </div>
@@ -469,8 +482,8 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
     return (
         <div className="form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Question/Prompt <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Question/Prompt <span className="text-red-500">*</span>
                 </div>
                 <textarea
                     value={editedStep.content?.prompt || editedStep.question || ''}
@@ -482,18 +495,18 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                         })
                     }}
                     onBlur={() => setTouched(prev => ({ ...prev, question: true }))}
-                    rows={2}
+                    rows={3}
                     placeholder="What is the MOST appropriate next action?"
-                    style={{ borderColor: (touched.all || touched.question) && errors.question ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.question) && errors.question ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {(touched.all || touched.question) && errors.question && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.question}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.question}</span>
                 )}
             </label>
 
             <label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Max Score <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Max Score <span className="text-red-500">*</span>
                 </div>
                 <input
                     type="number"
@@ -506,53 +519,54 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                     min={1}
                     max={10}
                     placeholder="10"
-                    style={{ borderColor: (touched.all || touched.maxScore) && errors.maxScore ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.maxScore) && errors.maxScore ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {(touched.all || touched.maxScore) && errors.maxScore && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.maxScore}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.maxScore}</span>
                 )}
             </label>
 
             <label style={{ gridColumn: '2 / -1' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Explanation on Fail <span style={{ color: 'red' }}>*</span>
+                <div className="flex items-center gap-1">
+                    Explanation on Fail <span className="text-red-500">*</span>
                 </div>
                 <input
                     value={editedStep.explanationOnFail || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, explanationOnFail: e.target.value })}
                     onBlur={() => setTouched(prev => ({ ...prev, explanationOnFail: true }))}
                     placeholder="Remember that..."
-                    style={{ borderColor: (touched.all || touched.explanationOnFail) && errors.explanationOnFail ? 'red' : undefined }}
+                    style={{ borderColor: (touched.all || touched.explanationOnFail) && errors.explanationOnFail ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {(touched.all || touched.explanationOnFail) && errors.explanationOnFail && (
-                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.explanationOnFail}</span>
+                    <span className="validation-error"><span>⚠️</span>{errors.explanationOnFail}</span>
                 )}
             </label>
 
-            {/* Adaptive Feedback Fields */}
-            <div style={{ gridColumn: '1 / -1', marginTop: '1.5rem', padding: '1.25rem', backgroundColor: '#f0f9ff', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4 style={{ margin: 0, color: '#0369a1', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '1.25rem' }}>💡</span> Adaptive Feedback Settings
+            <div className="adaptive-feedback-box" style={{ gridColumn: '1 / -1' }}>
+                <div className="adaptive-header">
+                    <h4 className="adaptive-title">
+                        <span>💡</span> Adaptive Feedback Settings
                     </h4>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0369a1' }}>Enable Hint</span>
+                    <label className="hint-toggle">
+                        <span>Enable Hint</span>
                         <input
                             type="checkbox"
                             checked={editedStep.hint_enabled !== false}
                             onChange={(e) => setEditedStep({ ...editedStep, hint_enabled: e.target.checked })}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         />
                     </label>
                 </div>
 
-                <div className="form-grid" style={{ opacity: editedStep.hint_enabled === false ? 0.6 : 1, pointerEvents: editedStep.hint_enabled === false ? 'none' : 'auto', transition: 'all 0.2s' }}>
+                <div className="form-grid" style={{ opacity: editedStep.hint_enabled === false ? 0.6 : 1, pointerEvents: editedStep.hint_enabled === false ? 'none' : 'auto', transition: 'all 0.3s ease' }}>
                     <label>
-                        Tag / Category
+                        <div className="flex items-center gap-1">
+                            Tag / Category <span className="text-red-500">*</span>
+                        </div>
                         <select
                             value={editedStep.tag || ''}
                             onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
-                            style={{ width: '100%' }}
+                            onBlur={() => setTouched(prev => ({ ...prev, tag: true }))}
+                            style={{ borderColor: (touched.all || touched.tag) && errors.tag ? 'var(--step-editor-danger)' : undefined }}
                         >
                             <option value="">Select Tag</option>
                             <option value="Anatomy">Anatomy</option>
@@ -562,23 +576,25 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                             <option value="Treatment">Treatment</option>
                             <option value="Physiology">Physiology</option>
                         </select>
-                        <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Used for performance analysis</span>
+                        {(touched.all || touched.tag) && errors.tag ? (
+                            <span className="validation-error"><span>⚠️</span>{errors.tag}</span>
+                        ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Used for performance analysis</span>
+                        )}
                     </label>
                     <label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            Expected Time (seconds) <span style={{ color: 'red' }}>*</span>
+                        <div className="flex items-center gap-1">
+                            Expected Time (seconds) <span className="text-red-500">*</span>
                         </div>
                         <input
                             type="number"
                             value={editedStep.expected_time ?? ''}
                             onChange={(e) => {
                                 const val = e.target.value
-                                // Block non-numeric characters and decimals
                                 if (val !== '' && !/^\d+$/.test(val)) return
                                 setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
                             }}
                             onKeyDown={(e) => {
-                                // Block -, +, e, .
                                 if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
                                     e.preventDefault()
                                 }
@@ -587,30 +603,38 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                             min={1}
                             max={600}
                             placeholder="45"
-                            style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'red' : undefined }}
+                            style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'var(--step-editor-danger)' : undefined }}
                         />
                         {(touched.all || touched.expected_time) && errors.expected_time ? (
-                            <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.expected_time}</span>
+                            <span className="validation-error"><span>⚠️</span>{errors.expected_time}</span>
                         ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Threshold for idle hint (1-600s)</span>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Threshold for idle hint (1-600s)</span>
                         )}
                     </label>
                     <label style={{ gridColumn: '1 / -1' }}>
-                        Hint Text
+                        <div className="flex items-center gap-1">
+                            Hint Text <span className="text-red-500">*</span>
+                        </div>
                         <textarea
                             value={editedStep.hint_text || ''}
                             onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
+                            onBlur={() => setTouched(prev => ({ ...prev, hint_text: true }))}
                             rows={2}
                             placeholder="A contextual hint to show when the student is stuck..."
+                            style={{ borderColor: (touched.all || touched.hint_text) && errors.hint_text ? 'var(--step-editor-danger)' : undefined }}
                         />
-                        <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
+                        {(touched.all || touched.hint_text) && errors.hint_text ? (
+                            <span className="validation-error"><span>⚠️</span>{errors.hint_text}</span>
+                        ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
+                        )}
                     </label>
                 </div>
             </div>
 
-            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4>Options (Min 2, Max 6)</h4>
+            <div style={{ gridColumn: '1 / -1', marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Options (Min 2, Max 6)</h4>
                     <button type="button" className="btn-secondary btn-small" onClick={addOption} disabled={options.length >= 6}>
                         + Add Option
                     </button>
@@ -626,8 +650,8 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                         </div>
                         <div className="form-grid">
                             <label style={{ gridColumn: '1 / -1' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Option Text {idx < 2 && <span style={{ color: 'red' }}>*</span>}
+                                <div className="flex items-center gap-1">
+                                    Option Text {idx < 2 && <span className="text-red-500">*</span>}
                                 </div>
                                 <textarea
                                     value={opt.label || ''}
@@ -635,36 +659,34 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                     onBlur={() => setTouched(prev => ({ ...prev, [`options[${idx}].label`]: true }))}
                                     rows={2}
                                     placeholder="Order MRI of the knee immediately"
-                                    style={{ borderColor: (touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] ? 'red' : undefined }}
+                                    style={{ borderColor: (touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {(touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`options[${idx}].label`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`options[${idx}].label`]}</span>
                                 )}
                             </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    Is Correct Answer
-                                    <input
-                                        type="checkbox"
-                                        checked={opt.isCorrect || false}
-                                        onChange={(e) => updateOption(idx, 'isCorrect', e.target.checked)}
-                                    />
-
-                                </span>
+                            <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={opt.isCorrect || false}
+                                    onChange={(e) => updateOption(idx, 'isCorrect', e.target.checked)}
+                                    style={{ width: '18px', height: '18px' }}
+                                />
+                                <span style={{ fontWeight: 600 }}>Is Correct Answer</span>
                             </label>
-                            <label style={{ gridColumn: '2 / -1' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Feedback <span style={{ color: 'red' }}>*</span>
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Feedback <span className="text-red-500">*</span>
                                 </div>
                                 <input
                                     value={opt.feedback || ''}
                                     onChange={(e) => updateOption(idx, 'feedback', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`options[${idx}].feedback`]: true }))}
                                     placeholder="Jumping to advanced imaging without..."
-                                    style={{ borderColor: (touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] ? 'red' : undefined }}
+                                    style={{ borderColor: (touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {(touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`options[${idx}].feedback`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`options[${idx}].feedback`]}</span>
                                 )}
                             </label>
                         </div>
@@ -672,13 +694,14 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                 ))}
 
                 {options.length < 2 && (
-                    <p style={{ color: '#ef4444', fontSize: '0.9rem' }}>⚠ At least 2 options are required for an MCQ step.</p>
+                    <div style={{ padding: '1rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fee2e2', color: '#ef4444', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>⚠️</span> At least 2 options are required for an MCQ step.
+                    </div>
                 )}
-                {touched.all && errors.options && (
-                    <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{errors.options}</p>
-                )}
-                {touched.all && errors.correctAnswer && (
-                    <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{errors.correctAnswer}</p>
+                {touched.all && (errors.options || errors.correctAnswer) && (
+                    <div className="validation-error" style={{ marginTop: '1rem' }}>
+                        <span>⚠️</span> {errors.options || errors.correctAnswer}
+                    </div>
                 )}
             </div>
         </div>
@@ -689,8 +712,6 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
 function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, setTouched }) {
     const investigations = editedStep.investigations || []
     const xrays = editedStep.xrays || []
-
-
 
     const addInvestigation = () => {
         const newInvestigations = [...investigations, { groupLabel: '', testName: '', description: '', result: '', videoUrl: '' }]
@@ -726,9 +747,9 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
 
     return (
         <div className="form-grid">
-            <div style={{ gridColumn: '1 / -1', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4>Investigations/Tests</h4>
+            <div style={{ gridColumn: '1 / -1', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Investigations/Tests</h4>
                     <button type="button" className="btn-secondary btn-small" onClick={addInvestigation}>
                         + Add Investigation
                     </button>
@@ -744,38 +765,38 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                         </div>
                         <div className="form-grid">
                             <label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Group Label <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Group Label <span className="text-red-500">*</span>
                                 </div>
                                 <input
                                     value={inv.groupLabel || ''}
                                     onChange={(e) => updateInvestigation(idx, 'groupLabel', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].groupLabel`]: true }))}
                                     placeholder="Physical Examination"
-                                    style={{ borderColor: touched[`investigations[${idx}].groupLabel`] && errors[`investigations[${idx}].groupLabel`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`investigations[${idx}].groupLabel`] && errors[`investigations[${idx}].groupLabel`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].groupLabel`] && errors[`investigations[${idx}].groupLabel`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].groupLabel`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`investigations[${idx}].groupLabel`]}</span>
                                 )}
                             </label>
                             <label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Test Name <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Test Name <span className="text-red-500">*</span>
                                 </div>
                                 <input
                                     value={inv.testName || ''}
                                     onChange={(e) => updateInvestigation(idx, 'testName', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].testName`]: true }))}
                                     placeholder="Lachman Test"
-                                    style={{ borderColor: touched[`investigations[${idx}].testName`] && errors[`investigations[${idx}].testName`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`investigations[${idx}].testName`] && errors[`investigations[${idx}].testName`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].testName`] && errors[`investigations[${idx}].testName`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].testName`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`investigations[${idx}].testName`]}</span>
                                 )}
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Description <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Description <span className="text-red-500">*</span>
                                 </div>
                                 <textarea
                                     value={inv.description || ''}
@@ -783,21 +804,21 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].description`]: true }))}
                                     rows={2}
                                     placeholder="Test to assess ACL integrity..."
-                                    style={{ borderColor: touched[`investigations[${idx}].description`] && errors[`investigations[${idx}].description`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`investigations[${idx}].description`] && errors[`investigations[${idx}].description`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].description`] && errors[`investigations[${idx}].description`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].description`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`investigations[${idx}].description`]}</span>
                                 )}
                             </label>
                             <label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Result <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Result <span className="text-red-500">*</span>
                                 </div>
                                 <select
                                     value={inv.result || ''}
                                     onChange={(e) => updateInvestigation(idx, 'result', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].result`]: true }))}
-                                    style={{ borderColor: touched[`investigations[${idx}].result`] && errors[`investigations[${idx}].result`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`investigations[${idx}].result`] && errors[`investigations[${idx}].result`] ? 'var(--step-editor-danger)' : undefined }}
                                 >
                                     <option value="" disabled>Select Result</option>
                                     <option value="Positive">Positive</option>
@@ -805,7 +826,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     <option value="Inconclusive">Inconclusive</option>
                                 </select>
                                 {touched[`investigations[${idx}].result`] && errors[`investigations[${idx}].result`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].result`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`investigations[${idx}].result`]}</span>
                                 )}
                             </label>
                             <label>
@@ -815,23 +836,20 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     onChange={(e) => updateInvestigation(idx, 'videoUrl', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].videoUrl`]: true }))}
                                     placeholder="https://youtube.com/watch?v=..."
-                                    style={{ borderColor: touched[`investigations[${idx}].videoUrl`] && errors[`investigations[${idx}].videoUrl`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`investigations[${idx}].videoUrl`] && errors[`investigations[${idx}].videoUrl`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].videoUrl`] && errors[`investigations[${idx}].videoUrl`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`investigations[${idx}].videoUrl`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`investigations[${idx}].videoUrl`]}</span>
                                 )}
                             </label>
                         </div>
                     </div>
                 ))}
-                {touched.all && errors.investigations && (
-                    <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{errors.investigations}</p>
-                )}
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4>X-rays/Imaging</h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>X-rays/Imaging</h4>
                     <button type="button" className="btn-secondary btn-small" onClick={addXray}>
                         + Add X-ray
                     </button>
@@ -847,18 +865,18 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                         </div>
                         <div className="form-grid">
                             <label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Label <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Label <span className="text-red-500">*</span>
                                 </div>
                                 <input
                                     value={xray.label || ''}
                                     onChange={(e) => updateXray(idx, 'label', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`xrays[${idx}].label`]: true }))}
                                     placeholder="AP View"
-                                    style={{ borderColor: touched[`xrays[${idx}].label`] && errors[`xrays[${idx}].label`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`xrays[${idx}].label`] && errors[`xrays[${idx}].label`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`xrays[${idx}].label`] && errors[`xrays[${idx}].label`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`xrays[${idx}].label`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`xrays[${idx}].label`]}</span>
                                 )}
                             </label>
                             <label>
@@ -870,8 +888,8 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 />
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    Image URL (base64 or URL) <span style={{ color: 'red' }}>*</span>
+                                <div className="flex items-center gap-1">
+                                    Image URL (base64 or URL) <span className="text-red-500">*</span>
                                 </div>
                                 <textarea
                                     value={xray.imageUrl || ''}
@@ -879,16 +897,22 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     onBlur={() => setTouched(prev => ({ ...prev, [`xray_${idx}_image`]: true }))}
                                     rows={3}
                                     placeholder="data:image/png;base64,... or https://..."
-                                    style={{ borderColor: touched[`xray_${idx}_image`] && errors[`xray_${idx}_image`] ? 'red' : undefined }}
+                                    style={{ borderColor: touched[`xray_${idx}_image`] && errors[`xray_${idx}_image`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`xray_${idx}_image`] && errors[`xray_${idx}_image`] && (
-                                    <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors[`xray_${idx}_image`]}</span>
+                                    <span className="validation-error"><span>⚠️</span>{errors[`xray_${idx}_image`]}</span>
                                 )}
                             </label>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {touched.all && errors.investigations && (
+                <div className="validation-error" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                    <span>⚠️</span> {errors.investigations}
+                </div>
+            )}
         </div>
     )
 }
@@ -898,7 +922,9 @@ function GenericStepEditor({ editedStep, setEditedStep }) {
     return (
         <div className="form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
-                Content (JSON)
+                <div className="flex items-center gap-1 mb-2">
+                    Advanced Content (JSON)
+                </div>
                 <textarea
                     value={JSON.stringify(editedStep.content || {}, null, 2)}
                     onChange={(e) => {
@@ -909,9 +935,11 @@ function GenericStepEditor({ editedStep, setEditedStep }) {
                             // Invalid JSON, ignore for now
                         }
                     }}
-                    rows={10}
+                    rows={12}
+                    style={{ fontFamily: 'monospace', fontSize: '0.875rem', background: '#f8fafc' }}
                     placeholder='{}'
                 />
+                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>⚠️ Manual JSON editing is for advanced users only.</span>
             </label>
         </div>
     )
