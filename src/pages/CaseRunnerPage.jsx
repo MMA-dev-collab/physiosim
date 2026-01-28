@@ -196,7 +196,7 @@ function CaseRunnerPage({ auth }) {
   // For MCQ steps, can go next only after answer is submitted AND Correct
   // For non-MCQ steps, can always go next
   const canGoNext =
-    currentStep?.type !== 'mcq' || (selectedOption !== null && isCorrect === true)
+    caseData?.isCompleted || currentStep?.type !== 'mcq' || (selectedOption !== null && isCorrect === true)
 
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {
@@ -325,6 +325,11 @@ function CaseRunnerPage({ auth }) {
                 onClick={handleNext}
               >
                 Next step
+              </button>
+            )}
+            {currentStepIndex === steps.length - 1 && caseData.isCompleted && !finalSummary && (
+              <button className="btn-primary" type="button" onClick={() => navigate('/cases')}>
+                Done – back to cases
               </button>
             )}
           </div>
