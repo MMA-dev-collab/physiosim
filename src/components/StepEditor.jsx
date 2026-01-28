@@ -72,11 +72,9 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 if (!editedStep.hint_text) {
                     errors.hint_text = 'Hint text is required'
                 }
-                // Expected Time Validation
+                // Expected Time Validation - Optional (has default)
                 const et = editedStep.expected_time
-                if (et === undefined || et === null || et === '') {
-                    errors.expected_time = 'Expected time is required'
-                } else {
+                if (et !== undefined && et !== null && et !== '') {
                     const num = parseInt(et)
                     if (isNaN(num) || num < 1 || num > 600) {
                         errors.expected_time = 'Expected time must be between 1 and 600 seconds'
@@ -576,8 +574,14 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                         tag: "",
                                         expected_time: ""
                                     });
-                                    // We can't directly clear errors here since they are derived from validate(), 
-                                    // but setting values to empty and hint_enabled to false ensures validate() skips them.
+                                    // Clear touched state for hint-related fields
+                                    setTouched(prev => {
+                                        const newTouched = { ...prev };
+                                        delete newTouched.hint_text;
+                                        delete newTouched.tag;
+                                        delete newTouched.expected_time;
+                                        return newTouched;
+                                    });
                                 } else {
                                     setEditedStep({ ...editedStep, hint_enabled: true });
                                 }
@@ -614,7 +618,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                         </label>
                         <label>
                             <div className="flex items-center gap-1">
-                                Expected Time (seconds) <span className="text-red-500">*</span>
+                                Expected Time (seconds)
                             </div>
                             <input
                                 type="number"
