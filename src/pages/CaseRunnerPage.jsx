@@ -16,6 +16,9 @@ function CaseRunnerPage({ auth }) {
   const [feedback, setFeedback] = useState(null)
   const [isCorrect, setIsCorrect] = useState(null)
   const [finalSummary, setFinalSummary] = useState(null)
+  const [essayAnswer, setEssayAnswer] = useState('')
+  const [essayFeedback, setEssayFeedback] = useState(null)
+  const [essayScore, setEssayScore] = useState(null)
 
   // Adaptive feedback state
   const [showHint, setShowHint] = useState(false)
@@ -83,6 +86,10 @@ function CaseRunnerPage({ auth }) {
       setFeedback(null)
       setIsCorrect(null)
     }
+    // Reset essay state
+    setEssayAnswer('')
+    setEssayFeedback(null)
+    setEssayScore(null)
   }, [currentStepIndex, caseData])
 
   // Default expected times by step type (in ms)
@@ -194,9 +201,13 @@ function CaseRunnerPage({ auth }) {
   }
 
   // For MCQ steps, can go next only after answer is submitted AND Correct
-  // For non-MCQ steps, can always go next
+  // For essay steps, can go next only after answer is submitted
+  // For non-MCQ/essay steps, can always go next
   const canGoNext =
-    caseData?.isCompleted || currentStep?.type !== 'mcq' || (selectedOption !== null && isCorrect === true)
+    caseData?.isCompleted ||
+    (currentStep?.type === 'mcq' && selectedOption !== null && isCorrect === true) ||
+    (currentStep?.type === 'essay' && essayScore !== null) ||
+    (currentStep?.type !== 'mcq' && currentStep?.type !== 'essay')
 
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {
@@ -300,6 +311,53 @@ function CaseRunnerPage({ auth }) {
 
         {currentStep?.type === 'investigation' && (
           <InvestigationsStep step={currentStep} />
+        )}
+
+        {currentStep?.type === 'essay' && (
+          <EssayStep
+            step={currentStep}
+            essayAnswer={essayAnswer}
+            setEssayAnswer={setEssayAnswer}
+            essayFeedback={essayFeedback}
+            essayScore={essayScore}
+            onSubmit={async () => {
+              const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+              try {
+                const isFinal = currentStepIndex === steps.length - 1
+                const res = await fetch(
+                  `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStep.id}/answer-essay`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${auth.token}`,
+                      'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                      essayAnswer,
+                      isFinalStep: isFinal,
+                      timeSpent,
+                      hintShown,
+                      attemptNumber
+                    }),
+                  }
+                )
+                const data = await res.json()
+                if (!res.ok) {
+                  throw new Error(data.message || 'Failed to submit answer')
+                }
+
+                setEssayScore(data.score)
+                setEssayFeedback(data.feedback)
+                setIsCorrect(data.correct)
+                if (data.final) {
+                  setFinalSummary(data)
+                }
+              } catch (e) {
+                setEssayFeedback(e.message)
+              }
+            }}
+          />
         )}
 
         <div className="step-actions">
@@ -635,6 +693,164 @@ function InvestigationsStep({ step }) {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit }) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    await onSubmit()
+    setIsSubmitting(false)
+  }
+
+  const essayQuestions = step.essayQuestions || []
+
+  return (
+    <div className="essay-step">
+      <div className="section-title" style={{ marginBottom: '1rem' }}>
+        Essay Questions
+      </div>
+      <p className="section-description" style={{ marginBottom: '1.5rem' }}>
+        Please provide a detailed answer to the following question(s). Your answer will be automatically scored based on key concepts.
+      </p>
+
+      {essayQuestions.map((eq, idx) => (
+        <div key={idx} style={{ marginBottom: '2rem' }}>
+          <div style={{
+            background: '#f8fafc',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '1rem',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ fontWeight: 600, fontSize: '1.05rem', marginBottom: '0.5rem', color: '#1e293b' }}>
+              Question {idx + 1}
+            </div>
+            <div style={{ color: '#475569', lineHeight: '1.6' }}>
+              {eq.question_text}
+            </div>
+          </div>
+
+          <textarea
+            value={essayAnswer}
+            onChange={(e) => setEssayAnswer(e.target.value)}
+            rows={10}
+            placeholder="Type your answer here... (Maximum 1000 characters)"
+            maxLength={1000}
+            disabled={essayScore !== null}
+            style={{
+              width: '100%',
+              padding: '1rem',
+              borderRadius: '8px',
+              border: '2px solid #e2e8f0',
+              fontSize: '1rem',
+              fontFamily: 'inherit',
+              lineHeight: '1.6',
+              resize: 'vertical',
+              minHeight: '200px',
+              opacity: essayScore !== null ? 0.6 : 1,
+              cursor: essayScore !== null ? 'not-allowed' : 'text'
+            }}
+          />
+          <div style={{
+            textAlign: 'right',
+            fontSize: '0.875rem',
+            color: '#64748b',
+            marginTop: '0.5rem'
+          }}>
+            {essayAnswer.length} / 1000 characters
+          </div>
+        </div>
+      ))}
+
+      {essayScore === null && (
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+          <button
+            className="btn-primary"
+            style={{ minWidth: '200px' }}
+            onClick={handleSubmit}
+            disabled={!essayAnswer || essayAnswer.trim().length === 0 || isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Answer'}
+          </button>
+        </div>
+      )}
+
+      {essayFeedback && (
+        <div style={{
+          marginTop: '1.5rem',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          background: essayScore >= (step.maxScore * 0.6) ? '#f0fdf4' : '#fef2f2',
+          border: `2px solid ${essayScore >= (step.maxScore * 0.6) ? '#86efac' : '#fca5a5'}`,
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+            fontSize: '1.1rem',
+            fontWeight: 600,
+            color: essayScore >= (step.maxScore * 0.6) ? '#166534' : '#991b1b'
+          }}>
+            <span style={{ fontSize: '1.5rem' }}>
+              {essayScore >= (step.maxScore * 0.6) ? '✓' : '⚠️'}
+            </span>
+            Score: {essayScore} / {step.maxScore}
+          </div>
+          <div style={{
+            color: essayScore >= (step.maxScore * 0.6) ? '#166534' : '#991b1b',
+            lineHeight: '1.6'
+          }}>
+            {essayFeedback}
+          </div>
+        </div>
+      )}
+
+      {essayScore !== null && essayQuestions.length > 0 && essayQuestions[0].perfect_answer && (
+        <div style={{
+          marginTop: '1.5rem',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          background: '#f8fafc',
+          border: '2px solid #e2e8f0',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+            fontSize: '1.05rem',
+            fontWeight: 600,
+            color: '#1e293b'
+          }}>
+            <span style={{ fontSize: '1.3rem' }}>📝</span>
+            Perfect Answer
+          </div>
+          <div style={{
+            color: '#475569',
+            lineHeight: '1.7',
+            whiteSpace: 'pre-wrap',
+            fontSize: '0.95rem'
+          }}>
+            {essayQuestions[0].perfect_answer}
+          </div>
+          <div style={{
+            marginTop: '1rem',
+            padding: '0.75rem',
+            background: '#e0e7ff',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            color: '#3730a3',
+            fontStyle: 'italic'
+          }}>
+            💡 Compare your answer with this model answer to identify areas for improvement.
           </div>
         </div>
       )}

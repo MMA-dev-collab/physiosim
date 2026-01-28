@@ -147,6 +147,21 @@ export default function StepEditor({ step, onSave, onCancel }) {
             })
         }
 
+        if (editedStep.type === 'essay') {
+            const essayQuestions = editedStep.essayQuestions || [];
+            if (essayQuestions.length === 0) {
+                errors.essayQuestions = 'At least 1 essay question is required';
+            }
+            essayQuestions.forEach((eq, idx) => {
+                if (!eq.question_text) {
+                    errors[`essayQuestions[${idx}].question_text`] = 'Question text is required';
+                }
+                if (!eq.keywords || eq.keywords.length === 0) {
+                    errors[`essayQuestions[${idx}].keywords`] = 'At least 1 keyword is required';
+                }
+            });
+        }
+
         return errors
     }
 
@@ -200,6 +215,7 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 {step.type === 'history' && <HistoryStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'mcq' && <McqStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'investigation' && <InvestigationStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
+                {step.type === 'essay' && <EssayStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {(step.type === 'diagnosis' || step.type === 'treatment') && (
                     <GenericStepEditor editedStep={editedStep} setEditedStep={setEditedStep} />
                 )}
@@ -978,4 +994,375 @@ function GenericStepEditor({ editedStep, setEditedStep }) {
             </label>
         </div>
     )
+}
+
+// Essay Step Editor
+function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouched }) {
+    const essayQuestions = editedStep.essayQuestions || [];
+
+    const addEssayQuestion = () => {
+        const newQuestions = [...essayQuestions, {
+            question_text: '',
+            keywords: [],
+            synonyms: [],
+            max_score: editedStep.maxScore || 10,
+            perfect_answer: ''
+        }];
+        setEditedStep({
+            ...editedStep,
+            essayQuestions: newQuestions
+        });
+    };
+
+    const removeEssayQuestion = (index) => {
+        const newQuestions = essayQuestions.filter((_, i) => i !== index);
+        setEditedStep({
+            ...editedStep,
+            essayQuestions: newQuestions
+        });
+    };
+
+    const updateEssayQuestion = (index, field, value) => {
+        const newQuestions = [...essayQuestions];
+        newQuestions[index] = { ...newQuestions[index], [field]: value };
+        setEditedStep({
+            ...editedStep,
+            essayQuestions: newQuestions
+        });
+    };
+
+    const addKeyword = (questionIndex, keyword) => {
+        if (!keyword.trim()) return;
+        const newQuestions = [...essayQuestions];
+        const keywords = newQuestions[questionIndex].keywords || [];
+        if (!keywords.includes(keyword.trim())) {
+            newQuestions[questionIndex].keywords = [...keywords, keyword.trim()];
+            setEditedStep({ ...editedStep, essayQuestions: newQuestions });
+        }
+    };
+
+    const removeKeyword = (questionIndex, keywordIndex) => {
+        const newQuestions = [...essayQuestions];
+        newQuestions[questionIndex].keywords = newQuestions[questionIndex].keywords.filter((_, i) => i !== keywordIndex);
+        setEditedStep({ ...editedStep, essayQuestions: newQuestions });
+    };
+
+    const addSynonym = (questionIndex, synonym) => {
+        if (!synonym.trim()) return;
+        const newQuestions = [...essayQuestions];
+        const synonyms = newQuestions[questionIndex].synonyms || [];
+        if (!synonyms.includes(synonym.trim())) {
+            newQuestions[questionIndex].synonyms = [...synonyms, synonym.trim()];
+            setEditedStep({ ...editedStep, essayQuestions: newQuestions });
+        }
+    };
+
+    const removeSynonym = (questionIndex, synonymIndex) => {
+        const newQuestions = [...essayQuestions];
+        newQuestions[questionIndex].synonyms = newQuestions[questionIndex].synonyms.filter((_, i) => i !== synonymIndex);
+        setEditedStep({ ...editedStep, essayQuestions: newQuestions });
+    };
+
+    return (
+        <div className="form-grid">
+            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Essay Questions</h4>
+                    <button type="button" className="btn-secondary btn-small" onClick={addEssayQuestion}>
+                        + Add Essay Question
+                    </button>
+                </div>
+
+                {essayQuestions.map((eq, idx) => (
+                    <div key={idx} className="array-item">
+                        <div className="array-item-header">
+                            <span>Essay Question {idx + 1}</span>
+                            <button type="button" className="btn-delete-small" onClick={() => removeEssayQuestion(idx)}>
+                                🗑
+                            </button>
+                        </div>
+                        <div className="form-grid">
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Question Text <span className="text-red-500">*</span>
+                                </div>
+                                <textarea
+                                    value={eq.question_text || ''}
+                                    onChange={(e) => updateEssayQuestion(idx, 'question_text', e.target.value)}
+                                    onBlur={() => setTouched(prev => ({ ...prev, [`essayQuestions[${idx}].question_text`]: true }))}
+                                    rows={3}
+                                    placeholder="Describe the pathophysiology of the patient's condition..."
+                                    style={{
+                                        borderColor: touched[`essayQuestions[${idx}].question_text`] && errors[`essayQuestions[${idx}].question_text`]
+                                            ? 'var(--step-editor-danger)'
+                                            : undefined
+                                    }}
+                                />
+                                {touched[`essayQuestions[${idx}].question_text`] && errors[`essayQuestions[${idx}].question_text`] && (
+                                    <span className="validation-error"><span>⚠️</span>{errors[`essayQuestions[${idx}].question_text`]}</span>
+                                )}
+                            </label>
+
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Keywords <span className="text-red-500">*</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+                                        (Press Enter to add)
+                                    </span>
+                                </div>
+                                <TagInput
+                                    tags={eq.keywords || []}
+                                    onAdd={(keyword) => addKeyword(idx, keyword)}
+                                    onRemove={(keywordIdx) => removeKeyword(idx, keywordIdx)}
+                                    placeholder="Type keyword and press Enter..."
+                                />
+                                {touched[`essayQuestions[${idx}].keywords`] && errors[`essayQuestions[${idx}].keywords`] && (
+                                    <span className="validation-error"><span>⚠️</span>{errors[`essayQuestions[${idx}].keywords`]}</span>
+                                )}
+                            </label>
+
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Synonyms (Optional)
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+                                        (Press Enter to add)
+                                    </span>
+                                </div>
+                                <TagInput
+                                    tags={eq.synonyms || []}
+                                    onAdd={(synonym) => addSynonym(idx, synonym)}
+                                    onRemove={(synonymIdx) => removeSynonym(idx, synonymIdx)}
+                                    placeholder="Type synonym and press Enter..."
+                                />
+                            </label>
+
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Perfect Answer (Optional)
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+                                        (Model answer for students to compare)
+                                    </span>
+                                </div>
+                                <textarea
+                                    value={eq.perfect_answer || ''}
+                                    onChange={(e) => updateEssayQuestion(idx, 'perfect_answer', e.target.value)}
+                                    rows={5}
+                                    placeholder="Enter the ideal answer that students can view after submission..."
+                                    style={{
+                                        fontFamily: 'inherit',
+                                        fontSize: '0.95rem'
+                                    }}
+                                />
+                            </label>
+
+                            <label>
+                                Max Score (Optional)
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={eq.max_score || editedStep.maxScore || 10}
+                                    onChange={(e) => updateEssayQuestion(idx, 'max_score', parseInt(e.target.value))}
+                                    placeholder="10"
+                                />
+                            </label>
+                        </div>
+                    </div>
+                ))}
+
+                {essayQuestions.length === 0 && (
+                    <div style={{
+                        padding: '2rem',
+                        textAlign: 'center',
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        border: '2px dashed #e2e8f0',
+                        color: '#64748b'
+                    }}>
+                        No essay questions added yet. Click "+ Add Essay Question" to start.
+                    </div>
+                )}
+                {touched.all && errors.essayQuestions && (
+                    <p className="validation-error" style={{ marginTop: '1rem' }}>
+                        <span>⚠️</span>{errors.essayQuestions}
+                    </p>
+                )}
+            </div>
+
+            <div className="adaptive-feedback-box" style={{ gridColumn: '1 / -1' }}>
+                <div className="adaptive-header">
+                    <h4 className="adaptive-title">
+                        <span>💡</span> Adaptive Feedback Settings
+                    </h4>
+                    <label className="hint-toggle">
+                        <span>Enable Hint</span>
+                        <input
+                            type="checkbox"
+                            checked={editedStep.hint_enabled !== false}
+                            onChange={(e) => {
+                                const isEnabled = e.target.checked;
+                                if (!isEnabled) {
+                                    // RESET STATE: Clear all hint related fields and errors
+                                    setEditedStep({
+                                        ...editedStep,
+                                        hint_enabled: false,
+                                        hint_text: "",
+                                        tag: "",
+                                        expected_time: ""
+                                    });
+                                    // Clear touched state for hint-related fields
+                                    setTouched(prev => {
+                                        const newTouched = { ...prev };
+                                        delete newTouched.hint_text;
+                                        delete newTouched.tag;
+                                        delete newTouched.expected_time;
+                                        return newTouched;
+                                    });
+                                } else {
+                                    setEditedStep({ ...editedStep, hint_enabled: true });
+                                }
+                            }}
+                        />
+                    </label>
+                </div>
+
+                {editedStep.hint_enabled !== false && (
+                    <div className="form-grid" style={{ transition: 'all 0.3s ease' }}>
+                        <label>
+                            <div className="flex items-center gap-1">
+                                Tag / Category <span className="text-red-500">*</span>
+                            </div>
+                            <select
+                                value={editedStep.tag || ''}
+                                onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
+                                onBlur={() => setTouched(prev => ({ ...prev, tag: true }))}
+                                style={{ borderColor: (touched.all || touched.tag) && errors.tag ? 'var(--step-editor-danger)' : undefined }}
+                            >
+                                <option value="">Select Tag</option>
+                                <option value="Anatomy">Anatomy</option>
+                                <option value="Diagnosis">Diagnosis</option>
+                                <option value="MSK">MSK</option>
+                                <option value="Imaging">Imaging</option>
+                                <option value="Treatment">Treatment</option>
+                                <option value="Physiology">Physiology</option>
+                            </select>
+                            {(touched.all || touched.tag) && errors.tag ? (
+                                <span className="validation-error"><span>⚠️</span>{errors.tag}</span>
+                            ) : (
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Used for performance analysis</span>
+                            )}
+                        </label>
+                        <label>
+                            <div className="flex items-center gap-1">
+                                Expected Time (seconds)
+                            </div>
+                            <input
+                                type="number"
+                                value={editedStep.expected_time ?? ''}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    if (val !== '' && !/^\d+$/.test(val)) return
+                                    setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
+                                }}
+                                onKeyDown={(e) => {
+                                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+                                        e.preventDefault()
+                                    }
+                                }}
+                                onBlur={() => setTouched(prev => ({ ...prev, expected_time: true }))}
+                                min={1}
+                                max={600}
+                                placeholder="45"
+                                style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'var(--step-editor-danger)' : undefined }}
+                            />
+                            {(touched.all || touched.expected_time) && errors.expected_time ? (
+                                <span className="validation-error"><span>⚠️</span>{errors.expected_time}</span>
+                            ) : (
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Threshold for idle hint (1-600s)</span>
+                            )}
+                        </label>
+                        <label style={{ gridColumn: '1 / -1' }}>
+                            <div className="flex items-center gap-1">
+                                Hint Text <span className="text-red-500">*</span>
+                            </div>
+                            <textarea
+                                value={editedStep.hint_text || ''}
+                                onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
+                                onBlur={() => setTouched(prev => ({ ...prev, hint_text: true }))}
+                                rows={2}
+                                placeholder="A contextual hint to show when the student is stuck..."
+                                style={{ borderColor: (touched.all || touched.hint_text) && errors.hint_text ? 'var(--step-editor-danger)' : undefined }}
+                            />
+                            {(touched.all || touched.hint_text) && errors.hint_text ? (
+                                <span className="validation-error"><span>⚠️</span>{errors.hint_text}</span>
+                            ) : (
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
+                            )}
+                        </label>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Tag Input Component for Keywords/Synonyms
+function TagInput({ tags, onAdd, onRemove, placeholder }) {
+    const [inputValue, setInputValue] = React.useState('');
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (inputValue.trim()) {
+                onAdd(inputValue.trim());
+                setInputValue('');
+            }
+        }
+    };
+
+    return (
+        <div>
+            <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {tags.map((tag, idx) => (
+                    <span
+                        key={idx}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.25rem 0.5rem',
+                            background: '#e0e7ff',
+                            color: '#3730a3',
+                            borderRadius: '4px',
+                            fontSize: '0.875rem'
+                        }}
+                    >
+                        {tag}
+                        <button
+                            type="button"
+                            onClick={() => onRemove(idx)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#3730a3',
+                                cursor: 'pointer',
+                                padding: '0',
+                                fontSize: '1rem',
+                                lineHeight: '1'
+                            }}
+                        >
+                            ×
+                        </button>
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
 }

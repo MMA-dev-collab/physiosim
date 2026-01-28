@@ -577,7 +577,7 @@ export default function CaseEditorPage({ auth }) {
                 {activeTab === 'steps' && (
                     <div className="steps-section">
                         <div className="steps-list">
-                            {steps.map((step, idx) => (
+                            {(Array.isArray(steps) ? steps : []).map((step, idx) => (
                                 <div key={step.id} className="step-card">
                                     <div className="step-header">
                                         <span className="step-number">Step {idx + 1}</span>
@@ -614,6 +614,9 @@ export default function CaseEditorPage({ auth }) {
                                             {step.type === 'investigation' && (
                                                 <p>{step.investigations?.length || 0} investigations, {step.xrays?.length || 0} x-rays</p>
                                             )}
+                                            {step.type === 'essay' && (
+                                                <p>{step.essayQuestions?.length || 0} essay questions</p>
+                                            )}
                                             {(step.type === 'diagnosis' || step.type === 'treatment') && (
                                                 <p>{step.type} step</p>
                                             )}
@@ -648,6 +651,7 @@ export default function CaseEditorPage({ auth }) {
                                 <button className="btn-secondary" onClick={() => handleAddStep('investigation')}>+ Investigation</button>
                                 <button className="btn-secondary" onClick={() => handleAddStep('diagnosis')}>+ Diagnosis</button>
                                 <button className="btn-secondary" onClick={() => handleAddStep('treatment')}>+ Treatment</button>
+                                <button className="btn-secondary" onClick={() => handleAddStep('essay')}>+ Essay Questions</button>
                             </div>
                         </div>
                         <p style={{ marginTop: '1rem', color: '#3b82f6', fontSize: '0.9rem' }}>
