@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import Loader from '@/components/ui/loader-12'
+import './MembershipPage.css'
 
 function MembershipPage({ auth }) {
   const [stats, setStats] = useState(null)
@@ -26,195 +27,301 @@ function MembershipPage({ auth }) {
     }
   }, [auth])
 
+  // Get current plan info from backend
   const currentPlan = stats?.membershipType || 'Normal'
+  const currentPlanRole = stats?.planRole || 'normal'
   const isPremiumOrUltra = currentPlan !== 'Normal'
 
-  const handleSubscribeClick = (e, planName) => {
+  // Helper function to check if a plan is the user's current active plan
+  const isCurrentPlan = (planIdentifier) => {
+    // Support both plan name and role matching
+    if (planIdentifier === 'Normal' && currentPlan === 'Normal') return true
+    if (planIdentifier === 'Premium' && (currentPlan === 'Premium' || currentPlanRole === 'premium')) return true
+    if (planIdentifier === 'Ultra' && (currentPlan === 'Ultra' || currentPlanRole === 'ultra')) return true
+    if (planIdentifier === 'Institutional' && (currentPlan === 'Institutional' || currentPlan === 'Institutional Access')) return true
+    return false
+  }
+
+  const handleSubscribeClick = (e, planIdentifier) => {
     e.preventDefault()
-    if (planName === currentPlan || (planName === 'Normal Plan' && currentPlan === 'Normal')) {
+    if (isCurrentPlan(planIdentifier)) {
       return
     }
     setShowComingSoon(true)
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', width: '100%' }}>
+    <div className="membership-loading">
       <Loader />
     </div>
   )
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <div className="page-eyebrow">Membership</div>
-        <h1 className="page-title">Choose the plan that fits your learning journey</h1>
-        <p className="page-subtitle">
+    <div className="membership-page">
+      {/* Hero Section */}
+      <div className="membership-hero">
+        <div className="membership-hero-badge">Pricing</div>
+        <h1 className="membership-hero-title">
+          Choose the plan that fits your learning journey
+        </h1>
+        <p className="membership-hero-subtitle">
           Start free with sample cases, then unlock a comprehensive library of interactive
           physiotherapy scenarios with progress tracking and detailed scoring.
         </p>
       </div>
 
-      <div className="membership-grid">
-        {!isPremiumOrUltra && (
-          <div className="membership-card">
-            <div className="membership-header">
-              <div className="pill">
-                <span>NORMAL</span>
+      {/* Pricing Cards */}
+      <div className="pricing-container">
+        <div className="pricing-grid">
+
+          {/* Normal Plan */}
+          <div className={`pricing-card ${isCurrentPlan('Normal') ? 'pricing-card-current' : ''}`}>
+            {isCurrentPlan('Normal') && (
+              <div className="current-plan-badge">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Current Plan
               </div>
-              <h2 className="membership-title">Normal Plan</h2>
-              <div className="membership-price">
-                <span className="price-amount">0 <span style={{ fontSize: '1rem' }}>EGP</span></span>
-                <span className="price-period">/forever</span>
+            )}
+
+            <div className="pricing-card-header">
+              <div className="pricing-plan-badge">Basic</div>
+              <h3 className="pricing-plan-name">Normal Plan</h3>
+              <div className="pricing-price">
+                <span className="pricing-currency">EGP</span>
+                <span className="pricing-amount">0</span>
+                <span className="pricing-period">/forever</span>
               </div>
+              <p className="pricing-description">
+                Perfect for trying out the platform or focusing on specific concepts
+              </p>
             </div>
-            <p className="membership-description">
-              Perfect for trying out the platform or focusing on specific concepts.
-              Get a taste of our interactive case format with full feedback.
-            </p>
-            <ul className="membership-features">
-              <li className="feature-item">
-                <span className="feature-icon">✓</span>
+
+            <ul className="pricing-features">
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span>1–2 unlocked cases</span>
               </li>
-              <li className="feature-item">
-                <span className="feature-icon">✓</span>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span>Full multi-step case flow</span>
               </li>
-              <li className="feature-item">
-                <span className="feature-icon">✓</span>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span>Instant feedback on answers</span>
               </li>
-              <li className="feature-item">
-                <span className="feature-icon">✓</span>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span>Basic score per case</span>
               </li>
-              <li className="feature-item">
-                <span className="feature-icon">✓</span>
-                <span>Access to all core features</span>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Community support</span>
               </li>
             </ul>
-            <Link to="/cases" style={{ width: '100%', display: 'block' }}>
-              <button className="btn-secondary" style={{ width: '100%', opacity: currentPlan === 'Normal' ? 0.7 : 1 }}>
-                {currentPlan === 'Normal' ? 'Current Plan' : 'Start Normal'}
+
+            <Link to="/cases" className="pricing-button-link">
+              <button
+                className={`pricing-button ${isCurrentPlan('Normal') ? 'pricing-button-current' : 'pricing-button-secondary'}`}
+                disabled={isCurrentPlan('Normal')}
+              >
+                {isCurrentPlan('Normal') ? 'Current Plan' : (isPremiumOrUltra ? 'Downgrade to Basic' : 'Get Started')}
               </button>
             </Link>
           </div>
-        )}
 
-        <div className="membership-card membership-card-featured">
-          <div className="membership-badge">Most Popular</div>
-          <div className="membership-header">
-            <div className="pill pill-premium">
-              <span>Semi-annual</span>
+          {/* Premium Plan */}
+          <div className={`pricing-card pricing-card-featured ${isCurrentPlan('Premium') ? 'pricing-card-current' : ''}`}>
+            <div className="popular-badge">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L9.5 6H14L10.5 9L12 13L8 10L4 13L5.5 9L2 6H6.5L8 2Z" fill="currentColor" />
+              </svg>
+              Most Popular
             </div>
-            <h2 className="membership-title">Clinical Reasoning Track</h2>
-            <div className="membership-price">
-              <span className="price-amount">1400 <span style={{ fontSize: '1rem' }}>EGP</span></span>
-              <span className="price-period">/month</span>
-            </div>
-          </div>
-          <p className="membership-description">
-            For serious students who want comprehensive practice with progressive
-            difficulty. Build your clinical reasoning systematically.
-          </p>
-          <ul className="membership-features">
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Unlimited access to all cases</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Progressive case series (Beginner → Advanced)</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Case locking system (unlock as you progress)</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Detailed scoring with cumulative statistics</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Performance analytics dashboard</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Priority access to new cases</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Advanced case filters and search</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Email support</span>
-            </li>
-          </ul>
-          <button
-            className={currentPlan === 'Clinical Reasoning Track' ? "btn-secondary" : "btn-primary"}
-            style={{ width: '100%', opacity: currentPlan === 'Clinical Reasoning Track' ? 0.7 : 1 }}
-            onClick={(e) => handleSubscribeClick(e, 'Clinical Reasoning Track')}
-          >
-            {currentPlan === 'Clinical Reasoning Track' ? 'Current Plan' : 'Subscribe Now'}
-          </button>
-        </div>
 
-        <div className="membership-card">
-          <div className="membership-header">
-            <div className="pill">
-              <span>Annual</span>
+            {isCurrentPlan('Premium') && (
+              <div className="current-plan-badge current-plan-badge-premium">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Current Plan
+              </div>
+            )}
+
+            <div className="pricing-card-header">
+              <div className="pricing-plan-badge pricing-plan-badge-premium">Premium</div>
+              <h3 className="pricing-plan-name">Clinical Reasoning Track</h3>
+              <div className="pricing-price">
+                <span className="pricing-currency">EGP</span>
+                <span className="pricing-amount">1,400</span>
+                <span className="pricing-period">/6 months</span>
+              </div>
+              <p className="pricing-description">
+                For serious students who want comprehensive practice with progressive difficulty
+              </p>
             </div>
-            <h2 className="membership-title">Institutional Access</h2>
-            <div className="membership-price">
-              <span className="price-amount">2400 <span style={{ fontSize: '1rem' }}>EGP</span></span>
-              <span className="price-period">/year</span>
-            </div>
+
+            <ul className="pricing-features">
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span><strong>Unlimited access</strong> to all cases</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Progressive case series (Beginner → Advanced)</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Case unlocking system</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Detailed scoring with cumulative statistics</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Performance analytics dashboard</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Priority access to new cases</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check feature-check-premium" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#3b82f6" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Email support</span>
+              </li>
+            </ul>
+
+            <button
+              className={`pricing-button ${isCurrentPlan('Premium') ? 'pricing-button-current' : 'pricing-button-primary'}`}
+              onClick={(e) => handleSubscribeClick(e, 'Premium')}
+              disabled={isCurrentPlan('Premium')}
+            >
+              {isCurrentPlan('Premium') ? 'Current Plan' : 'Upgrade to Premium'}
+            </button>
           </div>
-          <p className="membership-description">
-            For universities and institutions. Bulk licensing with admin dashboard
-            and custom case creation tools.
-          </p>
-          <ul className="membership-features">
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Everything in Premium</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Bulk student licenses</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Admin dashboard for instructors</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Custom case creation</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Student progress reports</span>
-            </li>
-            <li className="feature-item">
-              <span className="feature-icon">✓</span>
-              <span>Dedicated support</span>
-            </li>
-          </ul>
-          <button
-            className={currentPlan === 'Institutional Access' ? "btn-secondary" : "btn-primary"}
-            style={{ width: '100%', opacity: currentPlan === 'Institutional Access' ? 0.7 : 1 }}
-            onClick={(e) => handleSubscribeClick(e, 'Institutional Access')}
-          >
-            {currentPlan === 'Institutional Access' ? 'Current Plan' : 'Subscribe Now'}
-          </button>
+
+          {/* Institutional Plan */}
+          <div className={`pricing-card ${isCurrentPlan('Institutional') ? 'pricing-card-current' : ''}`}>
+            {isCurrentPlan('Institutional') && (
+              <div className="current-plan-badge">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Current Plan
+              </div>
+            )}
+
+            <div className="pricing-card-header">
+              <div className="pricing-plan-badge">Enterprise</div>
+              <h3 className="pricing-plan-name">Institutional Access</h3>
+              <div className="pricing-price">
+                <span className="pricing-currency">EGP</span>
+                <span className="pricing-amount">2,400</span>
+                <span className="pricing-period">/year</span>
+              </div>
+              <p className="pricing-description">
+                For universities and institutions with bulk licensing needs
+              </p>
+            </div>
+
+            <ul className="pricing-features">
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span><strong>Everything in Premium</strong></span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Bulk student licenses</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Admin dashboard for instructors</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Custom case creation</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Student progress reports</span>
+              </li>
+              <li className="pricing-feature">
+                <svg className="feature-check" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="10" fill="#10b981" fillOpacity="0.1" />
+                  <path d="M14 7L8.5 12.5L6 10" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Dedicated support</span>
+              </li>
+            </ul>
+
+            <button
+              className={`pricing-button ${isCurrentPlan('Institutional') ? 'pricing-button-current' : 'pricing-button-secondary'}`}
+              onClick={(e) => handleSubscribeClick(e, 'Institutional')}
+              disabled={isCurrentPlan('Institutional')}
+            >
+              {isCurrentPlan('Institutional') ? 'Current Plan' : 'Contact Sales'}
+            </button>
+          </div>
+
         </div>
       </div>
 
+      {/* FAQ Section */}
       <div className="membership-faq">
-        <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          Frequently Asked Questions
-        </h2>
+        <h2 className="faq-title">Frequently Asked Questions</h2>
         <div className="faq-grid">
           <div className="faq-item">
             <h3 className="faq-question">Can I switch plans later?</h3>
@@ -247,6 +354,7 @@ function MembershipPage({ auth }) {
         </div>
       </div>
 
+      {/* Coming Soon Modal */}
       {showComingSoon && (
         <div className="modal-overlay" onClick={() => setShowComingSoon(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -263,63 +371,6 @@ function MembershipPage({ auth }) {
           </div>
         </div>
       )}
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 1rem;
-        }
-        .modal-content {
-          background: white;
-          border-radius: 12px;
-          width: 100%;
-          maxWidth: 400px;
-          padding: 1.5rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-          animation: modalAppear 0.3s ease-out;
-        }
-        @keyframes modalAppear {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-        .modal-title {
-          margin: 0;
-          font-size: 1.5rem;
-          color: var(--primary-color);
-        }
-        .modal-close {
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          cursor: pointer;
-          color: #6b7280;
-        }
-        .modal-body {
-          margin-bottom: 1.5rem;
-          line-height: 1.5;
-          color: #374151;
-        }
-        .modal-footer {
-          display: flex;
-          justify-content: flex-end;
-        }
-      `}} />
     </div>
   )
 }

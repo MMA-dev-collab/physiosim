@@ -493,9 +493,9 @@ function HistoryStep({ step }) {
               <div className="history-question-number">{index + 1}</div>
               <div className="history-question-icon">{q.icon || '❓'}</div>
               <div className="history-question-text">{q.question}</div>
-              <button className="btn-secondary btn-small">Answer</button>
             </div>
             <div className="history-answer-box">
+              <div className="history-answer-label">Answer:</div>
               <div className="history-answer-text">{q.answer}</div>
             </div>
           </div>

@@ -923,6 +923,15 @@
   border-left: 3px solid #3b82f6;
 }
 
+.history-answer-label {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .history-answer-text {
   color: #1e40af;
   line-height: 1.6;
