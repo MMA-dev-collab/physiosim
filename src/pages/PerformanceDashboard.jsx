@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import Loader from '@/components/ui/loader-12'
@@ -12,28 +12,44 @@ import {
     ResponsiveContainer,
     BarChart,
     Bar,
-    PieChart,
-    Pie,
+    ReferenceLine,
     Cell,
     Legend
 } from 'recharts'
 import './PerformanceDashboard.css'
 
 const COLORS = {
-    strong: '#10b981',
-    neutral: '#f59e0b',
-    weak: '#ef4444',
-    primary: '#6366f1',
-    secondary: '#8b5cf6'
+    primary: '#3b82f6',    // blue-500
+    primaryDark: '#2563eb', // blue-600
+    success: '#10b981',    // emerald-500
+    warning: '#f59e0b',    // amber-500
+    danger: '#ef4444',     // red-500
+    neutral: '#94a3b8',    // slate-400
+    background: '#f8fafc'  // slate-50
 }
 
-const PIE_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4']
+const getFeedback = (type, value) => {
+    if (type === 'accuracy') {
+        if (value >= 85) return { text: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-50' }
+        if (value >= 70) return { text: 'Good', color: 'text-blue-600', bg: 'bg-blue-50' }
+        if (value >= 50) return { text: 'Needs Work', color: 'text-amber-600', bg: 'bg-amber-50' }
+        return { text: 'Critical', color: 'text-red-600', bg: 'bg-red-50' }
+    }
+    if (type === 'time') {
+        // Assuming ~60s is ideal average for this example context, adjust as needed or use expectedTime
+        if (value < 10) return { text: 'Rushing?', color: 'text-amber-600', bg: 'bg-amber-50' }
+        if (value > 120) return { text: 'Slow', color: 'text-amber-600', bg: 'bg-amber-50' }
+        return { text: 'On Pace', color: 'text-emerald-600', bg: 'bg-emerald-50' }
+    }
+    return { text: '-', color: 'text-slate-600', bg: 'bg-slate-50' }
+}
 
 export default function PerformanceDashboard({ auth }) {
     const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [data, setData] = useState(null)
+    const [timeFilter, setTimeFilter] = useState('All')
 
     useEffect(() => {
         const fetchData = async () => {
@@ -56,15 +72,36 @@ export default function PerformanceDashboard({ auth }) {
         fetchData()
     }, [auth.token])
 
+    const processedData = useMemo(() => {
+        if (!data) return null
+        
+        // Identify weakest category
+        const sortedByWeakness = [...data.byTag].sort((a, b) => {
+             // Lower accuracy is worse
+             const accDiff = (100 - b.errorRate) - (100 - a.errorRate) // this sorts high to low, we want low to high
+             if ((100 - a.errorRate) !== (100 - b.errorRate)) return (100 - a.errorRate) - (100 - b.errorRate)
+             return 0
+        })
+
+        const weakest = sortedByWeakness[0]?.confidence === 'weak' ? sortedByWeakness[0] : null
+        const uniqueTags = ['All', ...new Set(data.byTag.map(item => item.tag))]
+
+        return {
+            weakest,
+            sortedTags: sortedByWeakness,
+            uniqueTags
+        }
+    }, [data])
+
     if (loading) return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div className="flex justify-center items-center h-screen">
             <Loader />
         </div>
     )
 
     if (error) return (
         <div className="page">
-            <div style={{ color: '#ef4444', fontWeight: 500 }}>{error}</div>
+            <div className="text-red-500 font-medium">{error}</div>
         </div>
     )
 
@@ -76,184 +113,254 @@ export default function PerformanceDashboard({ auth }) {
                 <div className="page-eyebrow">Analytics</div>
                 <h1 className="page-title">Performance Dashboard</h1>
                 <p className="page-subtitle">
-                    Track your learning progress and identify areas for improvement
+                    Your personal learning coach. Track progress and identify what to practice next.
                 </p>
             </div>
 
             {!hasData ? (
                 <div className="card empty-state">
                     <div className="empty-icon">📊</div>
-                    <h3>No Data Yet</h3>
-                    <p>Complete some cases to see your performance analytics!</p>
+                    <h3>Start Your Journey</h3>
+                    <p>Complete your first case to unlock personalized insights.</p>
                     <button className="btn-primary" onClick={() => navigate('/cases')}>
-                        Browse Cases
+                        Start Practice
                     </button>
                 </div>
             ) : (
                 <>
-                    {/* Overall Stats Cards */}
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-icon">📝</div>
-                            <div className="stat-info">
-                                <div className="stat-value">{data.overallStats.totalAttempts}</div>
-                                <div className="stat-label">Total Attempts</div>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">✅</div>
-                            <div className="stat-info">
-                                <div className="stat-value">{data.overallStats.correctAttempts}</div>
-                                <div className="stat-label">Correct Answers</div>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">🎯</div>
-                            <div className="stat-info">
-                                <div className="stat-value">{data.overallStats.accuracyRate}%</div>
-                                <div className="stat-label">Accuracy Rate</div>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">⏱️</div>
-                            <div className="stat-info">
-                                <div className="stat-value">{data.overallStats.avgTimePerQuestion}s</div>
-                                <div className="stat-label">Avg. Time/Question</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Charts Row */}
-                    <div className="charts-grid">
-                        {/* Accuracy Over Time */}
-                        {data.accuracyOverTime.length > 0 && (
-                            <div className="card chart-card">
-                                <h3>Accuracy Over Time</h3>
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <LineChart data={data.accuracyOverTime}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis
-                                            dataKey="date"
-                                            tick={{ fontSize: 12 }}
-                                            tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                        />
-                                        <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                                        <Tooltip
-                                            formatter={(val) => [`${val}%`, 'Accuracy']}
-                                            labelFormatter={(val) => new Date(val).toLocaleDateString()}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="accuracy"
-                                            stroke={COLORS.primary}
-                                            strokeWidth={2}
-                                            dot={{ fill: COLORS.primary }}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-
-                        {/* Time Per Category */}
-                        {data.byTag.length > 0 && (
-                            <div className="card chart-card">
-                                <h3>Time by Category</h3>
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <BarChart data={data.byTag}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis dataKey="tag" tick={{ fontSize: 12 }} />
-                                        <YAxis tick={{ fontSize: 12 }} />
-                                        <Tooltip formatter={(val) => [`${val}s`, 'Avg Time']} />
-                                        <Bar dataKey="avgTimeSpent" fill={COLORS.secondary} radius={[4, 4, 0, 0]} />
-                                        <Bar dataKey="expectedTime" fill="#e5e7eb" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-
-                        {/* Error Rate Distribution */}
-                        {data.byTag.length > 0 && (
-                            <div className="card chart-card">
-                                <h3>Attempts by Category</h3>
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <PieChart>
-                                        <Pie
-                                            data={data.byTag}
-                                            dataKey="totalAttempts"
-                                            nameKey="tag"
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={80}
-                                            label={({ tag, percent }) => `${tag} (${(percent * 100).toFixed(0)}%)`}
-                                        >
-                                            {data.byTag.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Confidence by Tag */}
-                    <div className="card">
-                        <h3>Performance by Category</h3>
-                        <p className="section-description">Your strengths and areas for improvement</p>
-                        <div className="confidence-grid">
-                            {data.byTag.map((tag) => (
-                                <div key={tag.tag} className={`confidence-card ${tag.confidence}`}>
-                                    <div className="confidence-header">
-                                        <span className="confidence-tag">{tag.tag}</span>
-                                        <span className={`confidence-badge ${tag.confidence}`}>
-                                            {tag.confidence === 'strong' && '💪 Strong'}
-                                            {tag.confidence === 'neutral' && '📈 Improving'}
-                                            {tag.confidence === 'weak' && '⚠️ Needs Work'}
-                                        </span>
-                                    </div>
-                                    <div className="confidence-stats">
-                                        <div className="confidence-stat">
-                                            <span className="confidence-stat-value">{100 - tag.errorRate}%</span>
-                                            <span className="confidence-stat-label">Accuracy</span>
-                                        </div>
-                                        <div className="confidence-stat">
-                                            <span className="confidence-stat-value">{tag.avgTimeSpent}s</span>
-                                            <span className="confidence-stat-label">Avg Time</span>
-                                        </div>
-                                        <div className="confidence-stat">
-                                            <span className="confidence-stat-value">{tag.totalAttempts}</span>
-                                            <span className="confidence-stat-label">Attempts</span>
+                    {/* 1. CRITICAL ATTENTION SECTION */}
+                    {processedData.weakest && (
+                        <div className="section-block attention-section">
+                            <div className="card attention-card">
+                                <div className="attention-content">
+                                    <div className="attention-header">
+                                        <div className="attention-icon">⚠️</div>
+                                        <div>
+                                            <h3>Focus Area: {processedData.weakest.tag}</h3>
+                                            <p>{processedData.weakest.label || `Accuracy in ${processedData.weakest.tag} is lower than your average.`}</p>
                                         </div>
                                     </div>
-                                    <div className="confidence-label">{tag.label}</div>
+                                    <div className="attention-stats">
+                                        <div className="mini-stat">
+                                            <span className="label">Accuracy</span>
+                                            <span className="value critical">{100 - processedData.weakest.errorRate}%</span>
+                                        </div>
+                                        <div className="mini-stat">
+                                            <span className="label">Mistakes</span>
+                                            <span className="value">{processedData.weakest.totalAttempts * (processedData.weakest.errorRate / 100)}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Weak Points Summary */}
-                    {data.byTag.filter(t => t.confidence === 'weak').length > 0 && (
-                        <div className="card weak-points-card">
-                            <h3>⚠️ Areas Needing Attention</h3>
-                            <div className="weak-points-list">
-                                {data.byTag.filter(t => t.confidence === 'weak').map((tag) => (
-                                    <div key={tag.tag} className="weak-point-item">
-                                        <div className="weak-point-tag">{tag.tag}</div>
-                                        <div className="weak-point-reason">
-                                            {tag.errorRate > 50 && `High error rate (${tag.errorRate}%)`}
-                                            {tag.errorRate <= 50 && tag.avgTimeSpent > tag.expectedTime &&
-                                                `Taking longer than expected (${tag.avgTimeSpent}s vs ${tag.expectedTime}s)`}
-                                        </div>
-                                        <button className="btn-secondary btn-small" onClick={() => navigate('/cases')}>
-                                            Practice
-                                        </button>
-                                    </div>
-                                ))}
+                                <div className="attention-action">
+                                    <p className="recommendation">Recommended: Practice 3 more {processedData.weakest.tag} cases.</p>
+                                    <button className="btn-primary w-full" onClick={() => navigate(`/cases?filter=${processedData.weakest.tag}`)}>
+                                        Practice {processedData.weakest.tag} Now
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
+
+                    {/* 2. TOP STATS CARDS */}
+                    <div className="stats-grid">
+                        <StatCard 
+                            icon="📝" 
+                            label="Total Attempts" 
+                            value={data.overallStats.totalAttempts} 
+                            subtext="Lifetime cases"
+                        />
+                        <StatCard 
+                            icon="🎯" 
+                            label="Accuracy Rate" 
+                            value={`${data.overallStats.accuracyRate}%`}
+                            feedback={getFeedback('accuracy', data.overallStats.accuracyRate)}
+                        />
+                        <StatCard 
+                            icon="✅" 
+                            label="Correct Answers" 
+                            value={data.overallStats.correctAttempts}
+                            subtext={`out of ${data.overallStats.totalAttempts}`}
+                        />
+                        <StatCard 
+                            icon="⏱️" 
+                            label="Avg Time / Question" 
+                            value={`${data.overallStats.avgTimePerQuestion}s`}
+                            feedback={getFeedback('time', data.overallStats.avgTimePerQuestion)}
+                        />
+                    </div>
+
+                    {/* 3. TIME BY CATEGORY (Full width) */}
+                    <div className="section-block">
+                        <div className="section-header-row">
+                            <div>
+                                <h3>Speed & Efficiency</h3>
+                                <p className="section-description">Compare your average time per question against the ideal time.</p>
+                            </div>
+                            <div className="filter-pills">
+                                {processedData.uniqueTags.map(tag => (
+                                    <button 
+                                        key={tag}
+                                        className={`pill-filter ${timeFilter === tag ? 'active' : ''}`}
+                                        onClick={() => setTimeFilter(tag)}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="card chart-card full-width">
+                            <ResponsiveContainer width="100%" height={320}>
+                                <BarChart 
+                                    data={timeFilter === 'All' ? data.byTag : data.byTag.filter(t => t.tag === timeFilter)}
+                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="tag" tick={{fill: '#64748b', fontSize: 12}} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{fill: '#64748b', fontSize: 12}} axisLine={false} tickLine={false} unit="s" />
+                                    <Tooltip 
+                                        cursor={{fill: '#f1f5f9'}}
+                                        contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                                    />
+                                    <Legend />
+                                    <Bar dataKey="avgTimeSpent" name="Your Time" fill={COLORS.primary} radius={[4, 4, 0, 0]} barSize={40} />
+                                    <Bar dataKey="expectedTime" name="Ideal Time" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                            <div className="chart-insight">
+                                💡 Tip: If your time is significantly lower than Ideal Time, you might be rushing.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 4. SECONDARY CHARTS GRID */}
+                    <div className="grid-2-charts">
+                        {/* Accuracy Trend */}
+                        <div className="card chart-card">
+                            <h3>Accuracy Metric</h3>
+                            <p className="text-sm text-slate-500 mb-4">Trend over last 10 sessions</p>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <LineChart data={data.accuracyOverTime}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis 
+                                        dataKey="date" 
+                                        tick={{fontSize: 10}} 
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
+                                    />
+                                    <YAxis domain={[0, 100]} hide />
+                                    <Tooltip />
+                                    <ReferenceLine y={80} stroke={COLORS.success} strokeDasharray="3 3" label={{ value: 'Target (80%)', fill: COLORS.success, fontSize: 10, position: 'insideTopRight' }} />
+                                    <Line type="monotone" dataKey="accuracy" stroke={COLORS.primary} strokeWidth={3} dot={{r: 4, fill: COLORS.primary, strokeWidth: 2, stroke: '#fff'}} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Attempts Distribution (Horizontal Bar) */}
+                        <div className="card chart-card">
+                            <h3>Volume by Category</h3>
+                            <p className="text-sm text-slate-500 mb-4">Where are you spending your time?</p>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart layout="vertical" data={data.byTag} margin={{ left: 40 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                                    <XAxis type="number" hide />
+                                    <YAxis type="category" dataKey="tag" width={100} tick={{fontSize: 12}} />
+                                    <Tooltip cursor={{fill: 'transparent'}} />
+                                    <Bar dataKey="totalAttempts" fill={COLORS.primaryDark} radius={[0, 4, 4, 0]} barSize={20}>
+                                        {data.byTag.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={index % 2 === 0 ? COLORS.primary : COLORS.primaryDark} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* 5. DETAILED CATEGORY CARDS */}
+                    <div className="section-block">
+                        <h3>Category Performance</h3>
+                        <p className="section-description mb-6">Prioritized by where you need most improvement.</p>
+                        <div className="confidence-grid">
+                            {processedData.sortedTags.map((tag) => (
+                                <CategoryCard key={tag.tag} tagData={tag} navigate={navigate} />
+                            ))}
+                        </div>
+                    </div>
                 </>
+            )}
+        </div>
+    )
+}
+
+function StatCard({ icon, label, value, subtext, feedback }) {
+    return (
+        <div className="stat-card">
+            <div className="stat-icon">{icon}</div>
+            <div className="stat-info">
+                <div className="stat-value">{value}</div>
+                <div className="stat-label">{label}</div>
+                {feedback ? (
+                    <div className={`stat-feedback ${feedback.color} ${feedback.bg}`}>
+                        {feedback.text}
+                    </div>
+                ) : (
+                   subtext && <div className="stat-subtext">{subtext}</div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+function CategoryCard({ tagData, navigate }) {
+    const isWeak = tagData.confidence === 'weak'
+    const accuracy = 100 - tagData.errorRate
+    
+    return (
+        <div className={`confidence-card ${tagData.confidence}`}>
+            <div className="confidence-header">
+                <div>
+                    <span className="confidence-tag">{tagData.tag}</span>
+                    <div className="confidence-tag-label">{tagData.label}</div>
+                </div>
+                <span className={`confidence-badge ${tagData.confidence}`}>
+                    {tagData.confidence === 'strong' && 'Top Strength'}
+                    {tagData.confidence === 'neutral' && 'Improving'}
+                    {tagData.confidence === 'weak' && 'Needs Practice'}
+                </span>
+            </div>
+            
+            <div className="confidence-meter-container">
+                <div className="flex justify-between text-xs mb-1">
+                    <span>Accuracy</span>
+                    <span className="font-bold">{accuracy.toFixed(0)}%</span>
+                </div>
+                <div className="meter-bg">
+                    <div 
+                        className="meter-fill" 
+                        style={{ 
+                            width: `${accuracy}%`,
+                            backgroundColor: isWeak ? COLORS.danger : (accuracy > 80 ? COLORS.success : COLORS.warning)
+                        }}
+                    ></div>
+                </div>
+            </div>
+
+            <div className="confidence-stats-row">
+                <div className="c-stat">
+                    <span className="val">{tagData.avgTimeSpent}s</span>
+                    <span className="lbl">Avg Time</span>
+                </div>
+                <div className="c-stat">
+                    <span className="val">{tagData.totalAttempts}</span>
+                    <span className="lbl">Attempts</span>
+                </div>
+            </div>
+
+            {isWeak && (
+                <button 
+                    className="btn-practice-sm"
+                    onClick={() => navigate(`/cases?filter=${tagData.tag}`)}
+                >
+                    Practice {tagData.tag}
+                </button>
             )}
         </div>
     )
