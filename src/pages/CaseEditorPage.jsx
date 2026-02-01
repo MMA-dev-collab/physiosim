@@ -5,6 +5,7 @@ import StepEditor from '../components/StepEditor'
 import { useToast } from '../context/ToastContext'
 import ConfirmationModal from '../components/common/ConfirmationModal'
 import Loader from '../components/ui/loader-12'
+import ImageUpload from '../components/common/ImageUpload'
 import './CaseEditorPage.css'
 
 export default function CaseEditorPage({ auth }) {
@@ -550,6 +551,25 @@ export default function CaseEditorPage({ auth }) {
                                 />
                                 {touched.duration && errors.duration && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.duration}</span>}
                             </label>
+
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <ImageUpload
+                                    label="Cover Image"
+                                    folderType="case-cover"
+                                    initialUrl={caseData.thumbnailUrl}
+                                    onUpload={(url) => setCaseData({ ...caseData, thumbnailUrl: url })}
+                                />
+                                <div style={{ marginTop: '0.5rem' }}>
+                                    <label style={{ fontSize: '0.875rem', color: '#4b5563' }}>Or enter URL manually:</label>
+                                    <input
+                                        value={caseData.thumbnailUrl || ''}
+                                        onChange={e => setCaseData({ ...caseData, thumbnailUrl: e.target.value })}
+                                        placeholder="https://..."
+                                        style={{ marginTop: '0.25rem' }}
+                                    />
+                                </div>
+                            </div>
+
                             <label style={{ gridColumn: '1 / -1' }}>
                                 <span>Brief Description <span style={{ color: 'red' }}>*</span></span>
                                 <textarea

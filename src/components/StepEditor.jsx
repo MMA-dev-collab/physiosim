@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useToast } from '../context/ToastContext'
 import './StepEditor.css'
 import EmojiInput from './common/EmojiInput'
+import ImageUpload from './common/ImageUpload'
 
 export default function StepEditor({ step, onSave, onCancel }) {
     const [editedStep, setEditedStep] = useState({ ...step })
@@ -307,19 +308,27 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     <span className="validation-error"><span>⚠️</span>{errors.gender}</span>
                 )}
             </label>
-            <label>
-                Image URL (optional)
-                <input
-                    value={editedStep.content?.imageUrl || ''}
-                    onChange={(e) => updateContent('imageUrl', e.target.value)}
-                    onBlur={() => handleBlur('imageUrl')}
-                    placeholder="https://... or data:image/..."
-                    style={{ borderColor: touched.imageUrl && errors.imageUrl ? 'var(--step-editor-danger)' : undefined }}
+            <div style={{ gridColumn: '1 / -1' }}>
+                <ImageUpload
+                    label="Patient Image (Optional)"
+                    folderType="step-image"
+                    initialUrl={editedStep.content?.imageUrl}
+                    onUpload={(url) => updateContent('imageUrl', url)}
                 />
-                {touched.imageUrl && errors.imageUrl && (
-                    <span className="validation-error"><span>⚠️</span>{errors.imageUrl}</span>
-                )}
-            </label>
+                <div style={{ marginTop: '0.5rem' }}>
+                    <label style={{ fontSize: '0.875rem', color: '#4b5563' }}>Or enter URL manually:</label>
+                    <input
+                        value={editedStep.content?.imageUrl || ''}
+                        onChange={(e) => updateContent('imageUrl', e.target.value)}
+                        onBlur={() => handleBlur('imageUrl')}
+                        placeholder="https://... or data:image/..."
+                        style={{ marginTop: '0.25rem', borderColor: touched.imageUrl && errors.imageUrl ? 'var(--step-editor-danger)' : undefined }}
+                    />
+                    {touched.imageUrl && errors.imageUrl && (
+                        <span className="validation-error"><span>⚠️</span>{errors.imageUrl}</span>
+                    )}
+                </div>
+            </div>
             <label style={{ gridColumn: '1 / -1' }}>
                 <div className="flex items-center gap-1">
                     Description <span className="text-red-500">*</span>
