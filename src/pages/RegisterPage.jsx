@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import './Auth.css'
+import PasswordInput from '../components/ui/password-input-2'
 
 function RegisterPage({ setAuth }) {
     const navigate = useNavigate()
@@ -291,18 +292,16 @@ function RegisterPage({ setAuth }) {
                             <label htmlFor="password" className="form-label">
                                 Password <span className="required">*</span>
                             </label>
-                            <input
+                            <PasswordInput
                                 id="password"
                                 name="password"
-                                type="password"
-                                className={`form-input ${errors.password ? 'input-error' : ''}`}
                                 placeholder="Create a password"
                                 value={formData.password}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
+                                className={errors.password ? 'border-red-500' : ''}
                             />
                             {errors.password && <span className="field-error">{errors.password}</span>}
-                            {!errors.password && <span className="field-hint">Min 8 chars, 1 letter & 1 number</span>}
                         </div>
 
                         <div className="form-group">

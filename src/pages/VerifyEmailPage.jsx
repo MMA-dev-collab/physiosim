@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 import './Auth.css'
+import OTPInput from '../components/ui/otp-input'
 
 function VerifyEmailPage({ setAuth }) {
     const navigate = useNavigate()
@@ -9,7 +10,6 @@ function VerifyEmailPage({ setAuth }) {
     const userId = location.state?.userId
     const email = location.state?.email
 
-    const [code, setCode] = useState('')
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
     const [resendLoading, setResendLoading] = useState(false)
@@ -30,8 +30,7 @@ function VerifyEmailPage({ setAuth }) {
         )
     }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
+    const handleVerify = async (codeValue) => {
         setError(null)
         setLoading(true)
 
@@ -42,7 +41,7 @@ function VerifyEmailPage({ setAuth }) {
                     'Content-Type': 'application/json',
                     'ngrok-skip-browser-warning': 'true'
                 },
-                body: JSON.stringify({ userId, code }),
+                body: JSON.stringify({ userId, code: codeValue }),
             })
 
             const data = await res.json()
@@ -93,57 +92,15 @@ function VerifyEmailPage({ setAuth }) {
     return (
         <div className="auth-page">
             <div className="auth-container">
-                <div className="auth-card">
-                    <div className="auth-header">
-                        <h1 className="auth-title">Verify Email</h1>
-                        <p className="auth-subtitle">
-                            Please enter the 6-digit code sent to <strong>{email || 'your email'}</strong>
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="auth-form-container">
-                        <div className="form-group">
-                            <label htmlFor="code" className="form-label">
-                                Verification Code
-                            </label>
-                            <input
-                                id="code"
-                                type="text"
-                                className="form-input"
-                                placeholder="123456"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                maxLength={6}
-                                style={{ letterSpacing: '5px', textAlign: 'center', fontSize: '1.2rem' }}
-                            />
-                        </div>
-
-                        {error && <div className="auth-error">{error}</div>}
-                        {message && <div className="auth-success" style={{ color: 'green', marginBottom: '1rem', textAlign: 'center' }}>{message}</div>}
-
-                        <button
-                            type="submit"
-                            className="auth-submit-btn"
-                            disabled={loading || code.length !== 6}
-                        >
-                            {loading ? 'Verifying...' : 'Verify Email'}
-                        </button>
-                    </form>
-
-                    <div className="auth-footer">
-                        <p className="auth-footer-text">
-                            Didn't receive the code?{' '}
-                            <button
-                                onClick={handleResend}
-                                className="auth-link"
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit' }}
-                                disabled={resendLoading}
-                            >
-                                {resendLoading ? 'Sending...' : 'Resend Code'}
-                            </button>
-                        </p>
-                    </div>
-                </div>
+                <OTPInput
+                    email={email || 'your email'}
+                    onVerify={handleVerify}
+                    onResend={handleResend}
+                    loading={loading}
+                    resendLoading={resendLoading}
+                    error={error}
+                    message={message}
+                />
             </div>
         </div>
     )
