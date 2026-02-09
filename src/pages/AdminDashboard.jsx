@@ -18,8 +18,8 @@ function AdminDashboard({ auth }) {
       {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar-header">
-          <div className="logo-icon">H</div>
-          <div className="logo-text">Healthink.</div>
+         
+          <div className="logo-text">PhysioSim</div>
         </div>
         <nav className="admin-sidebar-nav">
           <button
