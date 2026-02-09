@@ -1,7 +1,8 @@
- export const API_BASE_URL = 'https://backend-0l26gfl1.b4a.run';
+ export const API_BASE_URL = 'backend-production-d9a4.up.railway.app';
 
 // Local development URL
 //export const API_BASE_URL = 'http://localhost:4000';
+
 
 
 
