@@ -41,7 +41,9 @@ function App() {
 
         <div className="app-shell">
           <header className="app-header">
-            <div className="logo">PhysioCaseLab</div>
+            <div className="logo">
+            <img src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" alt="PhysioSim" />
+            </div>
             <nav className="nav-links">
               <Link to="/">Home</Link>
               <Link to="/membership">Membership</Link>
