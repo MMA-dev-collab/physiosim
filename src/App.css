@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 3rem 0 3rem;
+  padding: 0rem 3rem;
   border-bottom: 1px solid rgba(229, 231, 235, 0.8);
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
