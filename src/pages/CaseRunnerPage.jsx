@@ -806,35 +806,67 @@ function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScor
             </div>
           </div>
 
-          <textarea
-            value={essayAnswer}
-            onChange={(e) => setEssayAnswer(e.target.value)}
-            rows={10}
-            placeholder="Type your answer here... (Maximum 1000 characters)"
-            maxLength={1000}
-            disabled={essayScore !== null || isReviewMode}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              borderRadius: '8px',
+          {isReviewMode ? (
+            <div style={{
+              padding: '1.5rem',
+              borderRadius: '12px',
+              background: '#f1f5f9',
               border: '2px solid #e2e8f0',
-              fontSize: '1rem',
-              fontFamily: 'inherit',
-              lineHeight: '1.6',
-              resize: 'vertical',
-              minHeight: '200px',
-              opacity: (essayScore !== null || isReviewMode) ? 0.6 : 1,
-              cursor: (essayScore !== null || isReviewMode) ? 'not-allowed' : 'text'
-            }}
-          />
-          <div style={{
-            textAlign: 'right',
-            fontSize: '0.875rem',
-            color: '#64748b',
-            marginTop: '0.5rem'
-          }}>
-            {essayAnswer.length} / 1000 characters
-          </div>
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '1rem',
+                fontSize: '1.05rem',
+                fontWeight: 600,
+                color: '#334155'
+              }}>
+                <span style={{ fontSize: '1.3rem' }}>👤</span>
+                Your Submitted Answer
+              </div>
+              <div style={{
+                color: '#475569',
+                lineHeight: '1.7',
+                whiteSpace: 'pre-wrap',
+                fontSize: '0.95rem'
+              }}>
+                {essayAnswer || <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>No answer submitted.</span>}
+              </div>
+            </div>
+          ) : (
+            <>
+              <textarea
+                value={essayAnswer}
+                onChange={(e) => setEssayAnswer(e.target.value)}
+                rows={10}
+                placeholder="Type your answer here... (Maximum 1000 characters)"
+                maxLength={1000}
+                disabled={essayScore !== null}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  border: '2px solid #e2e8f0',
+                  fontSize: '1rem',
+                  fontFamily: 'inherit',
+                  lineHeight: '1.6',
+                  resize: 'vertical',
+                  minHeight: '200px',
+                  opacity: essayScore !== null ? 0.6 : 1,
+                  cursor: essayScore !== null ? 'not-allowed' : 'text'
+                }}
+              />
+              <div style={{
+                textAlign: 'right',
+                fontSize: '0.875rem',
+                color: '#64748b',
+                marginTop: '0.5rem'
+              }}>
+                {essayAnswer.length} / 1000 characters
+              </div>
+            </>
+          )}
         </div>
       ))}
 
@@ -882,7 +914,7 @@ function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScor
         </div>
       )}
 
-      {essayScore !== null && essayQuestions.length > 0 && essayQuestions[0].perfect_answer && (
+      {(essayScore !== null || isReviewMode) && essayQuestions.length > 0 && essayQuestions[0].perfect_answer && (
         <div style={{
           marginTop: '1.5rem',
           padding: '1.5rem',

@@ -19,7 +19,7 @@ function CasesPage({ auth }) {
 
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
-  const limit = 12
+  const limit = 15
   const navigate = useNavigate()
 
   // Helper to update specific params
