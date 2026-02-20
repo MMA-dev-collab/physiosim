@@ -1,0 +1,671 @@
+/* =====================================================
+   Clinical Phase Manager Styling
+   Phase accordion and category grid layout
+   ===================================================== */
+
+.clinical-phase-manager {
+    padding: 1.5rem;
+}
+
+.manager-header {
+    margin-bottom: 1.5rem;
+}
+
+.manager-header h2 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--step-editor-text, #1e293b);
+}
+
+.manager-header p {
+    margin: 0;
+    color: var(--step-editor-muted, #64748b);
+    font-size: 0.9375rem;
+}
+
+/* Phase Accordion */
+.phase-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.phase-panel {
+    background: white;
+    border: 1px solid var(--step-editor-border, #e2e8f0);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.phase-panel:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.phase-panel.expanded {
+    border-color: #6366f1;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+}
+
+.phase-panel-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.phase-panel-header:hover {
+    background: #f8fafc;
+}
+
+.phase-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.phase-number {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.phase-panel.expanded .phase-number {
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.phase-icon {
+    font-size: 1.25rem;
+}
+
+.phase-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--step-editor-text, #1e293b);
+}
+
+.phase-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.progress-badge {
+    padding: 0.25rem 0.625rem;
+    background: #f1f5f9;
+    border-radius: 20px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.complete-badge {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+.expand-icon {
+    font-size: 1rem;
+    color: #94a3b8;
+    transition: transform 0.2s;
+}
+
+.expand-icon.rotated {
+    transform: rotate(180deg);
+}
+
+/* Panel Content */
+.phase-panel-content {
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.phase-description {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #64748b;
+    border-left: 3px solid #6366f1;
+}
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.category-card {
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.category-card.has-content {
+    background: white;
+    border: 1px solid #10b981;
+    border-style: solid;
+}
+
+.category-card:hover {
+    border-color: #6366f1;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.category-label {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--step-editor-text, #1e293b);
+}
+
+.user-input-badge-small {
+    padding: 0.125rem 0.5rem;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.filled-indicator {
+    margin-left: auto;
+    color: #10b981;
+    font-size: 1rem;
+}
+
+/* Category Actions */
+.category-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.btn-delete {
+    padding: 0.5rem;
+    background: transparent;
+    border: 1px solid #fee2e2;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+}
+
+.btn-add-category {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background: white;
+    border: 1px dashed #6366f1;
+    border-radius: 6px;
+    color: #6366f1;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add-category:hover {
+    background: #eef2ff;
+    border-style: solid;
+}
+
+/* Phase Hint */
+.phase-hint {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #fef3c7;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #92400e;
+}
+
+/* Category Editor Wrapper */
+.category-editor-wrapper {
+    margin-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.75rem;
+}
+
+/* Manager Stats */
+.manager-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 12px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #6366f1;
+}
+
+.stat-label {
+    font-size: 0.8125rem;
+    color: #64748b;
+}
+
+/* =====================================================
+   Educational Steps Section (MCQ / Essay)
+   ===================================================== */
+
+.educational-steps-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.educational-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.educational-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.educational-header p {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.educational-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-add-mcq,
+.btn-add-essay {
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+}
+
+.btn-add-mcq {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.btn-add-mcq:hover {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-add-essay {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+}
+
+.btn-add-essay:hover {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.edu-empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9375rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
+}
+
+.edu-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.edu-step-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    transition: all 0.2s;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.edu-step-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.edu-step-card.mcq {
+    border-left: 4px solid #6366f1;
+}
+
+.edu-step-card.essay {
+    border-left: 4px solid #14b8a6;
+}
+
+.edu-step-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.edu-step-type-badge {
+    padding: 0.25rem 0.625rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.edu-step-card.mcq .edu-step-type-badge {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.edu-step-card.essay .edu-step-type-badge {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+.edu-step-index {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.edu-step-preview {
+    font-size: 0.9375rem;
+    color: #475569;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 300px;
+}
+
+.edu-step-meta {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.edu-step-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-stats {
+        gap: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .educational-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .edu-step-preview {
+        max-width: 150px;
+    }
+}
+
+/* Reorder Styling */
+.reorder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.reorder-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.reorder-item.pinned {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.reorder-item.draggable {
+    cursor: grab;
+    border-left: 3px solid #6366f1;
+}
+
+.reorder-item.draggable:active {
+    cursor: grabbing;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    border-color: #6366f1;
+    z-index: 10;
+}
+
+.drag-handle {
+    font-size: 1.25rem;
+    color: #94a3b8;
+    cursor: grab;
+    user-select: none;
+    padding: 0 0.5rem;
+}
+
+.step-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.step-phase-badge {
+    padding: 0.25rem 0.5rem;
+    background: #e0e7ff;
+    color: #4338ca;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.pinned-section,
+.draggable-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.pinned-header,
+.draggable-header {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-left: 0.25rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+/* Nested Reorder Styles */
+.phase-group-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.phase-group-header {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: default;
+}
+
+.phase-drag-handle {
+    font-size: 1.25rem;
+    color: #94a3b8;
+    cursor: grab;
+    padding-right: 1rem;
+    user-select: none;
+}
+
+.phase-drag-handle:active {
+    cursor: grabbing;
+}
+
+.phase-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    cursor: pointer;
+    user-select: none;
+}
+
+.phase-toggle:hover .phase-name {
+    color: #4f46e5;
+}
+
+.phase-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.toggle-icon {
+    font-size: 0.75rem;
+    color: #64748b;
+    width: 1rem;
+}
+
+.step-count {
+    font-size: 0.825rem;
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.phase-group-content {
+    padding: 0.5rem;
+    background: #fafafa;
+}
+
+.empty-phase-msg {
+    padding: 1rem;
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
+/* Update inner item styles for nested context */
+.reorder-item.draggable {
+    margin-bottom: 0.5rem;
+    border-left-width: 4px;
+}
+
+.reorder-item.draggable:last-child {
+    margin-bottom: 0;
+}

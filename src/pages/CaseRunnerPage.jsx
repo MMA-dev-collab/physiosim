@@ -4,6 +4,9 @@ import { API_BASE_URL } from '../config'
 import Loader from '@/components/ui/loader-12'
 import { useIdleTimer } from '../hooks/useIdleTimer'
 import HintModal from '@/components/common/HintModal'
+import { ClinicalStepRunner } from '@/components/clinical'
+import ClinicalHub from '@/components/clinical/ClinicalHub'
+import CaseRunnerLayout from './CaseRunnerLayout'
 
 function CaseRunnerPage({ auth }) {
   const { id } = useParams()
@@ -19,6 +22,11 @@ function CaseRunnerPage({ auth }) {
   const [essayAnswer, setEssayAnswer] = useState('')
   const [essayFeedback, setEssayFeedback] = useState(null)
   const [essayScore, setEssayScore] = useState(null)
+
+  // Progress state for Clinical Hubs (Map of HubID -> Set<SubStepID>)
+  // We use a simpler object structure: { [hubId]: [subStepId1, subStepId2, ...] } for serialization if needed,
+  // but Set is easier for runtime. Let's use an object with arrays to be safe/simple.
+  const [hubProgress, setHubProgress] = useState({})
 
   // Adaptive feedback state
   const [showHint, setShowHint] = useState(false)
@@ -53,8 +61,75 @@ function CaseRunnerPage({ auth }) {
     load()
   }, [id, auth])
 
-  const steps = caseData?.steps || []
+  // Pre-process steps to merge consecutive 'assessment' and 'history' steps
+  const steps = useMemo(() => {
+    if (!caseData?.steps) return []
+    const rawSteps = caseData.steps
+    const processed = []
+    let i = 0
+    while (i < rawSteps.length) {
+      const step = rawSteps[i]
+
+      // Group Assessment Steps (only clinical type, not MCQ/Essay)
+      if (step.phase === 'assessment' && step.type === 'clinical') {
+        const group = []
+        while (i < rawSteps.length && rawSteps[i].phase === 'assessment' && rawSteps[i].type === 'clinical') {
+          group.push(rawSteps[i])
+          i++
+        }
+        processed.push({
+          id: `assessment-hub-${group[0].id}`,
+          type: 'clinical_hub',
+          phase: 'assessment',
+          title: 'Physical Assessment',
+          subSteps: group,
+          content: { title: 'Physical Assessment' }
+        })
+        continue;
+      }
+
+      // Group History Steps (only clinical type)
+      if (step.phase === 'history_presentation' && step.type === 'clinical') {
+        const group = []
+        while (i < rawSteps.length && rawSteps[i].phase === 'history_presentation' && rawSteps[i].type === 'clinical') {
+          group.push(rawSteps[i])
+          i++
+        }
+        processed.push({
+          id: `history-hub-${group[0].id}`,
+          type: 'clinical_hub',
+          phase: 'history_presentation',
+          title: 'Patient History',
+          subSteps: group,
+          content: { title: 'Patient History' }
+        })
+        continue;
+      }
+
+      processed.push(step)
+      i++
+    }
+    return processed
+  }, [caseData])
+
   const currentStep = steps[currentStepIndex]
+
+  // Track viewed sub-steps for hubs
+  const handleSubStepView = useCallback((subStepId) => {
+    if (currentStep?.type !== 'clinical_hub') return
+
+    setHubProgress(prev => {
+      const hubId = currentStep.id
+      const currentViewed = prev[hubId] || []
+      if (currentViewed.includes(subStepId)) return prev
+
+      return {
+        ...prev,
+        [hubId]: [...currentViewed, subStepId]
+      }
+    })
+  }, [currentStep])
+
 
   useEffect(() => {
     // Reset state first
@@ -68,28 +143,37 @@ function CaseRunnerPage({ auth }) {
     if (caseData?.userProgress && currentStep?.id) {
       const progress = caseData.userProgress[currentStep.id]
       if (progress) {
-        setSelectedOption(progress.selectedOptionId)
-        setIsCorrect(progress.isCorrect)
+        if (currentStep.type === 'mcq') {
+          setSelectedOption(progress.selectedOptionId)
+          setIsCorrect(progress.isCorrect)
 
-        // Find feedback for the selected option
-        const selectedOpt = currentStep.options?.find(o => o.id === progress.selectedOptionId)
-        if (selectedOpt) {
-          setFeedback(selectedOpt.feedback)
+          // Find feedback for the selected option
+          const selectedOpt = currentStep.options?.find(o => o.id === progress.selectedOptionId)
+          if (selectedOpt) {
+            setFeedback(selectedOpt.feedback)
+          }
+        } else if (currentStep.type === 'essay') {
+          setEssayAnswer(progress.essay_answer || progress.answer || '')
+          setEssayScore(progress.score)
+          setEssayFeedback(progress.feedback)
+          setIsCorrect(progress.isCorrect)
         }
       } else {
         setSelectedOption(null)
         setIsCorrect(null)
         setFeedback(null)
+        setEssayAnswer('')
+        setEssayFeedback(null)
+        setEssayScore(null)
       }
     } else {
       setSelectedOption(null)
       setFeedback(null)
       setIsCorrect(null)
+      setEssayAnswer('')
+      setEssayFeedback(null)
+      setEssayScore(null)
     }
-    // Reset essay state
-    setEssayAnswer('')
-    setEssayFeedback(null)
-    setEssayScore(null)
   }, [currentStepIndex, caseData])
 
   // Default expected times by step type (in ms)
@@ -99,7 +183,8 @@ function CaseRunnerPage({ auth }) {
     'diagnosis': 120000,
     'treatment': 90000,
     'info': 30000,
-    'investigation': 60000
+    'investigation': 60000,
+    'clinical_hub': 120000
   }
 
   // Get idle timeout for current step
@@ -111,14 +196,12 @@ function CaseRunnerPage({ auth }) {
     const customTime = Number(currentStep.expected_time)
     const threshold = (customTime > 0) ? customTime * 1000 : defaultTime
 
-
-
     return threshold
   }, [currentStep, currentStepIndex])
 
   // Fetch hint for current step
   const fetchHint = useCallback(async () => {
-    if (!currentStep?.id || currentStep.type !== 'mcq') return
+    if (!currentStep?.id || (currentStep.type !== 'mcq' && currentStep.type !== 'essay')) return
     // Check if hints are enabled for this step
     if (currentStep.hint_enabled === false) return
 
@@ -146,7 +229,7 @@ function CaseRunnerPage({ auth }) {
   const { resetTimer } = useIdleTimer({
     idleTimeout: getIdleTimeout(),
     onIdle: fetchHint,
-    enabled: currentStep?.type === 'mcq' && !isCorrect && !showHint && (currentStep?.hint_enabled !== false)
+    enabled: (currentStep?.type === 'mcq' || currentStep?.type === 'essay') && !isCorrect && !showHint && (currentStep?.hint_enabled !== false) && essayScore === null
   })
 
   const progressPercent = useMemo(() => {
@@ -200,14 +283,31 @@ function CaseRunnerPage({ auth }) {
     }
   }
 
-  // For MCQ steps, can go next only after answer is submitted AND Correct
-  // For essay steps, can go next only after answer is submitted
-  // For non-MCQ/essay steps, can always go next
-  const canGoNext =
-    caseData?.isCompleted ||
-    (currentStep?.type === 'mcq' && selectedOption !== null && isCorrect === true) ||
-    (currentStep?.type === 'essay' && essayScore !== null) ||
-    (currentStep?.type !== 'mcq' && currentStep?.type !== 'essay')
+  // Logic to check if user can proceed
+  const canGoNext = useMemo(() => {
+    if (caseData?.isCompleted) return true
+    if (!currentStep) return false
+
+    // MCQ: Must select correct option
+    if (currentStep.type === 'mcq') {
+      return selectedOption !== null && isCorrect === true
+    }
+
+    // Essay: Must submit
+    if (currentStep.type === 'essay') {
+      return essayScore !== null
+    }
+
+    // Clinical Hub: Must view all sub-steps
+    if (currentStep.type === 'clinical_hub') {
+      const viewed = hubProgress[currentStep.id]?.length || 0
+      const total = currentStep.subSteps?.length || 0
+      return viewed >= total
+    }
+
+    // Default: Open
+    return true
+  }, [caseData, currentStep, selectedOption, isCorrect, essayScore, hubProgress])
 
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {
@@ -239,195 +339,164 @@ function CaseRunnerPage({ auth }) {
   if (!caseData) return null
 
   return (
-    <div className="page">
-      {/* Hint Modal */}
+    <div className="page" style={{ padding: 0 }}> {/* Reset padding for full-screen layout */}
       <HintModal
         isOpen={showHint}
         hint={currentHint}
         onClose={() => setShowHint(false)}
       />
 
-      <div className="page-header">
-        {caseData.isCompleted && (
-          <div style={{
-            background: '#fef9c3',
-            border: '1px solid #fde047',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1.5rem',
-            color: '#854d0e',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <span>👁️</span>
-            <strong>Review Mode:</strong> You are viewing your past attempt. Answers are read-only.
-          </div>
-        )}
-        <div className="page-eyebrow">Case</div>
-        <h1 className="page-title">{caseData.title}</h1>
-        <p className="page-subtitle">
-          Follow the steps, choose appropriate actions, and reflect on the feedback.
-        </p>
-      </div>
+      <CaseRunnerLayout
+        caseTitle={caseData.title}
+        currentStepIndex={currentStepIndex}
+        totalSteps={steps.length}
+        steps={steps}
+        isReviewMode={caseData.isCompleted}
+        patientInfo={currentStep?.type === 'info' ? currentStep.content : null} // Pass patient info if available
+      >
+        {/* Step Content */}
+        <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
 
-      <div className="card">
-        <div className="step-header">
-          <div>
-            <div className="step-title">
-              Step {currentStepIndex + 1} of {steps.length}{' '}
-              {currentStep?.type === 'info' && ' – Patient information'}
-              {currentStep?.type === 'mcq' && ' – Decision point'}
-              {currentStep?.type === 'investigation' && ' – Investigations & imaging'}
+          {/* Special Header for non-clinical steps that still need context */}
+          {(currentStep?.type !== 'clinical' && currentStep?.type !== 'clinical_hub') && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                {currentStep?.content?.title ||
+                  (currentStep?.type === 'mcq' ? 'Clinical Decision' :
+                    currentStep?.type === 'history' ? 'History Taking' :
+                      currentStep?.type === 'investigation' ? 'Investigations' :
+                        currentStep?.type === 'essay' ? 'Essay Question' :
+                          'Step Content')}
+              </h2>
             </div>
-          </div>
-          <div style={{ minWidth: '160px' }}>
-            <div className="progress-track">
-              <div
-                className="progress-bar"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
+          )}
 
-        {currentStep?.type === 'info' && (
-          <PatientInfoStep content={currentStep.content} />
-        )}
+          {currentStep?.type === 'info' && (
+            <PatientInfoStep content={currentStep.content} />
+          )}
 
-        {currentStep?.type === 'history' && (
-          <HistoryStep step={currentStep} />
-        )}
+          {currentStep?.type === 'history' && (
+            <HistoryStep step={currentStep} />
+          )}
 
-        {currentStep?.type === 'mcq' && (
-          <McqStep
-            step={currentStep}
-            selectedOption={selectedOption}
-            feedback={feedback}
-            isCorrect={isCorrect}
-            onAnswer={handleAnswer}
-          />
-        )}
+          {currentStep?.type === 'mcq' && (
+            <McqStep
+              step={currentStep}
+              selectedOption={selectedOption}
+              feedback={feedback}
+              isCorrect={isCorrect}
+              onAnswer={handleAnswer}
+            />
+          )}
 
-        {currentStep?.type === 'investigation' && (
-          <InvestigationsStep step={currentStep} />
-        )}
+          {currentStep?.type === 'clinical' && (
+            <ClinicalStepRunner step={currentStep} />
+          )}
 
-        {currentStep?.type === 'essay' && (
-          <EssayStep
-            step={currentStep}
-            essayAnswer={essayAnswer}
-            setEssayAnswer={setEssayAnswer}
-            essayFeedback={essayFeedback}
-            essayScore={essayScore}
-            onSubmit={async () => {
-              const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
-              try {
-                const isFinal = currentStepIndex === steps.length - 1
-                const res = await fetch(
-                  `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStep.id}/answer-essay`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Bearer ${auth.token}`,
-                      'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({
-                      essayAnswer,
-                      isFinalStep: isFinal,
-                      timeSpent,
-                      hintShown,
-                      attemptNumber
-                    }),
+          {currentStep?.type === 'clinical_hub' && (
+            <ClinicalHub
+              step={currentStep}
+              viewedSubSteps={new Set(hubProgress[currentStep.id] || [])}
+              onStepViewed={handleSubStepView}
+            />
+          )}
+
+          {currentStep?.type === 'investigation' && (
+            <InvestigationsStep step={currentStep} />
+          )}
+
+          {currentStep?.type === 'essay' && (
+            <EssayStep
+              step={currentStep}
+              essayAnswer={essayAnswer}
+              setEssayAnswer={setEssayAnswer}
+              essayFeedback={essayFeedback}
+              essayScore={essayScore}
+              isReviewMode={caseData.isCompleted}
+              onSubmit={async () => {
+                if (caseData.isCompleted) return // Block submission in review mode
+                const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+                try {
+                  const isFinal = currentStepIndex === steps.length - 1
+                  const res = await fetch(
+                    `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStep.id}/answer-essay`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${auth.token}`,
+                        'ngrok-skip-browser-warning': 'true'
+                      },
+                      body: JSON.stringify({
+                        essayAnswer,
+                        isFinalStep: isFinal,
+                        timeSpent,
+                        hintShown,
+                        attemptNumber
+                      }),
+                    }
+                  )
+                  const data = await res.json()
+                  if (!res.ok) {
+                    throw new Error(data.message || 'Failed to submit answer')
                   }
-                )
-                const data = await res.json()
-                if (!res.ok) {
-                  throw new Error(data.message || 'Failed to submit answer')
+
+                  setEssayScore(data.score)
+                  setEssayFeedback(data.feedback)
+                  setIsCorrect(data.correct)
+                  if (data.final) {
+                    setFinalSummary(data)
+                  }
+                } catch (e) {
+                  setEssayFeedback(e.message)
                 }
+              }}
+            />
+          )}
 
-                setEssayScore(data.score)
-                setEssayFeedback(data.feedback)
-                setIsCorrect(data.correct)
-                if (data.final) {
-                  setFinalSummary(data)
-                }
-              } catch (e) {
-                setEssayFeedback(e.message)
-              }
-            }}
-          />
-        )}
-
-        <div className="step-actions">
-          <button
-            className="btn-secondary"
-            type="button"
-            onClick={() => setCurrentStepIndex((i) => Math.max(0, i - 1))}
-            disabled={currentStepIndex === 0}
-          >
-            Previous step
-          </button>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {feedback && currentStep?.type === 'mcq' && (
-              <button className="btn-secondary" type="button" onClick={handleTryAgain}>
-                Try again
-              </button>
-            )}
-            {currentStepIndex < steps.length - 1 && (
-              <button
-                className="btn-primary"
-                type="button"
-                disabled={!canGoNext}
-                onClick={handleNext}
-              >
-                Next step
-              </button>
-            )}
-            {currentStepIndex === steps.length - 1 && caseData.isCompleted && !finalSummary && (
-              <button className="btn-primary" type="button" onClick={() => navigate('/cases')}>
-                Done – back to cases
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {finalSummary && (
-        <div className="card" style={{ marginTop: '1.5rem' }}>
-          <div className="section-title">Case completed</div>
-          <p className="section-description">
-            Great work. Here is a quick summary for this case and your overall progress.
-          </p>
-          <div className="stat-row">
-            <div className="stat">
-              <div className="stat-label">Score for this case</div>
-              <div className="stat-value">{finalSummary.score}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">Cases completed overall</div>
-              <div className="stat-value">
-                {finalSummary.stats?.casesCompleted ?? 0}
-              </div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">Total score</div>
-              <div className="stat-value">
-                {finalSummary.stats?.totalScore ?? 0}
-              </div>
-            </div>
-          </div>
-          <div style={{ marginTop: '1.2rem', display: 'flex', gap: '0.7rem' }}>
-            <button className="btn-primary" onClick={() => navigate('/cases')}>
-              Done – back to cases
+          {/* Action Footer */}
+          <div className="mt-12 pt-6 border-t border-slate-200 flex items-center justify-between">
+            <button
+              className="px-4 py-2 text-slate-500 font-medium hover:text-slate-700 transition-colors disabled:opacity-50"
+              type="button"
+              onClick={() => setCurrentStepIndex((i) => Math.max(0, i - 1))}
+              disabled={currentStepIndex === 0}
+            >
+              ← Previous
             </button>
+
+            <div className="flex gap-3">
+              {feedback && currentStep?.type === 'mcq' && (
+                <button className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors" type="button" onClick={handleTryAgain}>
+                  Try Again
+                </button>
+              )}
+              {currentStepIndex < steps.length - 1 && (
+                <button
+                  className="px-6 py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 shadow-md shadow-teal-200 transition-all disabled:opacity-50 disabled:shadow-none"
+                  type="button"
+                  disabled={!canGoNext}
+                  onClick={handleNext}
+                >
+                  Next Step →
+                </button>
+              )}
+              {currentStepIndex === steps.length - 1 && (
+                <button className="px-6 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 shadow-lg" type="button" onClick={() => navigate('/cases')}>
+                  Finish Case
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      )}
+
+
+      </CaseRunnerLayout>
     </div>
   )
 }
+
+
 
 function PatientInfoStep({ content }) {
   if (!content) return null
@@ -700,7 +769,7 @@ function InvestigationsStep({ step }) {
   )
 }
 
-function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit }) {
+function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit, isReviewMode }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
@@ -743,7 +812,7 @@ function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScor
             rows={10}
             placeholder="Type your answer here... (Maximum 1000 characters)"
             maxLength={1000}
-            disabled={essayScore !== null}
+            disabled={essayScore !== null || isReviewMode}
             style={{
               width: '100%',
               padding: '1rem',
@@ -754,8 +823,8 @@ function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScor
               lineHeight: '1.6',
               resize: 'vertical',
               minHeight: '200px',
-              opacity: essayScore !== null ? 0.6 : 1,
-              cursor: essayScore !== null ? 'not-allowed' : 'text'
+              opacity: (essayScore !== null || isReviewMode) ? 0.6 : 1,
+              cursor: (essayScore !== null || isReviewMode) ? 'not-allowed' : 'text'
             }}
           />
           <div style={{
@@ -769,7 +838,7 @@ function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScor
         </div>
       ))}
 
-      {essayScore === null && (
+      {essayScore === null && !isReviewMode && (
         <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
           <button
             className="btn-primary"

@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext'
 import ConfirmationModal from '../components/common/ConfirmationModal'
 import Loader from '../components/ui/loader-12'
 import ImageUpload from '../components/common/ImageUpload'
+import { ClinicalPhaseManager } from '../components/clinical'
 import './CaseEditorPage.css'
 
 export default function CaseEditorPage({ auth }) {
@@ -222,48 +223,32 @@ export default function CaseEditorPage({ auth }) {
     }
 
     const handlePublish = async () => {
-        // PUBLISHING VALIDATION - strict rules enforced here
-        if (steps.length < 3) {
-            toast.error('Publishing requires at least 3 steps (1 Info + 2 others)')
+        // PUBLISHING VALIDATION
+        if (steps.length < 1) {
+            toast.error('Publishing requires at least 1 step')
             return
         }
 
-        // Check if Info step exists and is the first step
-        const firstStep = steps.find(s => s.stepIndex === 0)
-        if (!firstStep || firstStep.type !== 'info') {
-            toast.error('The first step must be an "Info" step')
-            return
-        }
-
-        // Check if the Case ends with an MCQ step
-        const lastStep = steps[steps.length - 1];
-        if (lastStep.type !== 'mcq') {
-            toast.error('A case must end with an MCQ step to assess the student.');
-            return;
-        }
+        // Removed strict Info/MCQ type checks to support flexible clinical workflows
 
         // DEEP VALIDATION - ensure all steps have content
         for (const step of steps) {
-            if (step.type === 'info') {
-                const content = step.content || {}
-                if (!content.patientName || !content.age || !content.gender ||
-                    !content.description || !content.chiefComplaint) {
-                    toast.error(`Step ${step.stepIndex + 1} (Info): Missing required fields`)
+            // General check for empty content
+            if (!step.content || Object.keys(step.content).length === 0) {
+                // Exception for some types if they use other fields like 'options' or 'investigations'
+                if (step.type !== 'mcq' && step.type !== 'investigation' && step.type !== 'essay') {
+                    toast.error(`Step ${step.stepIndex + 1}: Content is empty`)
                     return
                 }
             }
 
-            if (step.type === 'history') {
-                const questions = step.content?.questions || []
-                if (questions.length === 0) {
-                    toast.error(`Step ${step.stepIndex + 1} (History): No questions added`)
+            // Type-specific checks
+            if (step.type === 'info') {
+                const content = step.content || {}
+                // Relaxed: just check description or chief complaint
+                if (!content.description && !content.chiefComplaint && !content.patientName) {
+                    toast.error(`Step ${step.stepIndex + 1} (Info): Please add some patient details`)
                     return
-                }
-                for (const q of questions) {
-                    if (!q.question || !q.answer) {
-                        toast.error(`Step ${step.stepIndex + 1} (History): Question or answer is empty`)
-                        return
-                    }
                 }
             }
 
@@ -280,24 +265,29 @@ export default function CaseEditorPage({ auth }) {
                 }
             }
 
-            if (step.type === 'investigation') {
-                const investigations = step.investigations || []
-                const xrays = step.xrays || []
-                if (investigations.length === 0 && xrays.length === 0) {
-                    toast.error(`Step ${step.stepIndex + 1} (Investigation): No investigations or X-rays added`)
+            if (step.type === 'essay') {
+                const essayQs = step.essayQuestions || []
+                if (essayQs.length < 1) {
+                    toast.error(`Step ${step.stepIndex + 1} (Essay): At least 1 essay question required`)
                     return
                 }
-                for (const inv of investigations) {
-                    if (!inv.groupLabel || !inv.testName || !inv.description) {
-                        toast.error(`Step ${step.stepIndex + 1} (Investigation): Missing required fields`)
-                        return
-                    }
+                const hasEmptyQuestion = essayQs.some(eq => !eq.question_text || !eq.question_text.trim())
+                if (hasEmptyQuestion) {
+                    toast.error(`Step ${step.stepIndex + 1} (Essay): All questions must have text`)
+                    return
                 }
-                for (const xray of xrays) {
-                    if (!xray.label || !xray.imageUrl) {
-                        toast.error(`Step ${step.stepIndex + 1} (X-Ray): Missing label or image URL`)
-                        return
-                    }
+            }
+
+            // Clinical specific validation
+            if (step.type === 'clinical') {
+                // Check if there is ANY data in content
+                const hasContent = step.content && Object.values(step.content).some(v =>
+                    v && (Array.isArray(v) ? v.length > 0 : typeof v === 'object' ? Object.keys(v).length > 0 : true)
+                )
+
+                if (!hasContent) {
+                    toast.error(`Step ${step.stepIndex + 1} (${step.category || 'Clinical'}): Please add content`)
+                    return
                 }
             }
         }
@@ -347,18 +337,30 @@ export default function CaseEditorPage({ auth }) {
         }
     }
 
-    const handleAddStep = async (type) => {
-        // Basic step template
-        const newStep = {
-            stepIndex: steps.length,
-            type,
-            content: {},
-            question: '',
-            explanationOnFail: '',
-            maxScore: 10,
-            options: [],
-            investigations: [],
-            xrays: []
+    const handleAddStep = async (stepData) => {
+        // Support both old string execution and new object execution
+        const isLegacyCall = typeof stepData === 'string'
+
+        let newStep
+
+        if (isLegacyCall) {
+            newStep = {
+                stepIndex: steps.length,
+                type: stepData,
+                content: {},
+                question: '',
+                explanationOnFail: '',
+                maxScore: 10,
+                options: [],
+                investigations: [],
+                xrays: []
+            }
+        } else {
+            // New clinical step structure
+            newStep = {
+                stepIndex: steps.length,
+                ...stepData
+            }
         }
 
         // Save to backend immediately to get ID
@@ -407,6 +409,34 @@ export default function CaseEditorPage({ auth }) {
             setSteps(steps.filter(s => s.id !== stepToDelete))
             toast.success('Step deleted')
             setStepToDelete(null)
+        } catch (e) {
+            toast.error(e.message)
+        }
+    }
+
+    const handleReorderSteps = async (reorderedSteps) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}/reorder-steps`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.token}`,
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: JSON.stringify({ steps: reorderedSteps }),
+            })
+            if (!res.ok) throw new Error('Failed to reorder steps')
+
+            // Reload steps
+            const stepsRes = await fetch(`${API_BASE_URL}/api/admin/cases/${id}/steps`, {
+                headers: {
+                    Authorization: `Bearer ${auth.token}`,
+                    'ngrok-skip-browser-warning': 'true'
+                }
+            })
+            const stepsData = await stepsRes.json()
+            setSteps(stepsData)
+            toast.success('Steps reordered successfully!')
         } catch (e) {
             toast.error(e.message)
         }
@@ -596,87 +626,15 @@ export default function CaseEditorPage({ auth }) {
 
                 {activeTab === 'steps' && (
                     <div className="steps-section">
-                        <div className="steps-list">
-                            {(Array.isArray(steps) ? steps : []).map((step, idx) => (
-                                <div key={step.id} className="step-card">
-                                    <div className="step-header">
-                                        <span className="step-number">Step {idx + 1}</span>
-                                        <span className="step-type">{step.type.toUpperCase()}</span>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button
-                                                className={editingStepId === step.id ? 'btn-primary btn-small' : 'btn-secondary btn-small'}
-                                                onClick={() => setEditingStepId(editingStepId === step.id ? null : step.id)}
-                                            >
-                                                {editingStepId === step.id ? 'Close' : 'Edit'}
-                                            </button>
-                                            <button className="btn-delete-step" onClick={() => handleDeleteStep(step.id)}>🗑</button>
-                                        </div>
-                                    </div>
-                                    {editingStepId === step.id ? (
-                                        <div style={{ marginTop: '1rem' }}>
-                                            <StepEditor
-                                                step={step}
-                                                onSave={handleUpdateStep}
-                                                onCancel={() => setEditingStepId(null)}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="step-preview">
-                                            {step.type === 'info' && (
-                                                <p>Patient: {step.content?.patientName || 'Not set'}, Age: {step.content?.age || 'Not set'}</p>
-                                            )}
-                                            {step.type === 'history' && (
-                                                <p>{step.content?.questions?.length || 0} questions</p>
-                                            )}
-                                            {step.type === 'mcq' && (
-                                                <p>Question: {step.question || step.content?.prompt || 'Not set'} ({step.options?.length || 0} options)</p>
-                                            )}
-                                            {step.type === 'investigation' && (
-                                                <p>{step.investigations?.length || 0} investigations, {step.xrays?.length || 0} x-rays</p>
-                                            )}
-                                            {step.type === 'essay' && (
-                                                <p>{step.essayQuestions?.length || 0} essay questions</p>
-                                            )}
-                                            {(step.type === 'diagnosis' || step.type === 'treatment') && (
-                                                <p>{step.type} step</p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="add-step-controls">
-                            {steps.length > 0 && steps[steps.length - 1].type !== 'mcq' && (
-                                <div style={{
-                                    padding: '1rem',
-                                    marginBottom: '1rem',
-                                    background: '#fff7ed',
-                                    border: '1px solid #fed7aa',
-                                    borderRadius: '8px',
-                                    color: '#c2410c',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    <span>⚠️</span>
-                                    <strong>Requirement:</strong> Your case must end with an MCQ step. Please add one.
-                                </div>
-                            )}
-                            <h3>Add New Step</h3>
-                            <div className="step-buttons">
-                                <button className="btn-secondary" onClick={() => handleAddStep('info')}>+ Info Step</button>
-                                <button className="btn-secondary" onClick={() => handleAddStep('history')}>+ History Step</button>
-                                <button className="btn-secondary" onClick={() => handleAddStep('mcq')}>+ MCQ Step</button>
-                                <button className="btn-secondary" onClick={() => handleAddStep('investigation')}>+ Investigation</button>
-                                <button className="btn-secondary" onClick={() => handleAddStep('diagnosis')}>+ Diagnosis</button>
-                                <button className="btn-secondary" onClick={() => handleAddStep('treatment')}>+ Treatment</button>
-                                <button className="btn-secondary" onClick={() => handleAddStep('essay')}>+ Essay Questions</button>
-                            </div>
-                        </div>
-                        <p style={{ marginTop: '1rem', color: '#3b82f6', fontSize: '0.9rem' }}>
-                            💡 Click "Edit" on any step to add or modify its content.
-                        </p>
+                        <ClinicalPhaseManager
+                            caseId={id}
+                            steps={steps}
+                            onAddStep={handleAddStep}
+                            onUpdateStep={handleUpdateStep}
+                            onDeleteStep={handleDeleteStep}
+                            onReorderSteps={handleReorderSteps}
+                            auth={auth}
+                        />
                     </div>
                 )}
             </div>
