@@ -132,7 +132,7 @@ export default function CaseRunnerLayout({
                 </header>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8 scroll-smooth">
+                <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8 scroll-smooth" style={{ position: 'relative' }}>
                     <div className="max-w-4xl mx-auto pb-20"> {/* pb-20 for bottom clearance */}
                         {children}
                     </div>

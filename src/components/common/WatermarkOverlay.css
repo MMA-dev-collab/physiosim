@@ -1,0 +1,91 @@
+/* ============================================================
+   WatermarkOverlay — Case Content Box Watermark
+   ============================================================ */
+
+/* position:absolute — scoped to the nearest position:relative parent */
+.watermark-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Grid slightly oversized so drift doesn't reveal bare edges */
+.watermark-grid {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  align-items: center;
+  justify-items: center;
+  animation: watermark-float 40s ease-in-out infinite alternate;
+}
+
+/* Individual stamp — big and spread out */
+.watermark-stamp {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 30px 40px;
+  opacity: 0.2;
+  transform: rotate(-20deg);
+  /* 2 stamps per row */
+  flex-shrink: 0;
+}
+
+.watermark-stamp img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: grayscale(50%);
+  flex-shrink: 0;
+}
+
+.watermark-stamp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.watermark-id {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a3a5c;
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+  font-family: monospace;
+}
+
+.watermark-email {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a3a5c;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+/* Gentle diagonal drift */
+@keyframes watermark-float {
+  0% {
+    transform: translate(0px, 0px);
+  }
+
+  33% {
+    transform: translate(20px, -15px);
+  }
+
+  66% {
+    transform: translate(35px, 10px);
+  }
+
+  100% {
+    transform: translate(-15px, 25px);
+  }
+}

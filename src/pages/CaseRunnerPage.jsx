@@ -7,6 +7,7 @@ import HintModal from '@/components/common/HintModal'
 import { ClinicalStepRunner } from '@/components/clinical'
 import ClinicalHub from '@/components/clinical/ClinicalHub'
 import CaseRunnerLayout from './CaseRunnerLayout'
+import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 
 function CaseRunnerPage({ auth }) {
   const { id } = useParams()
@@ -354,6 +355,11 @@ function CaseRunnerPage({ auth }) {
         isReviewMode={caseData.isCompleted}
         patientInfo={currentStep?.type === 'info' ? currentStep.content : null} // Pass patient info if available
       >
+        {/* Watermark — absolute inside the case content box */}
+        {/* <WatermarkOverlay
+          userId={auth.user.id || auth.user._id || ''}
+          userEmail={auth.user.email || ''}
+        /> */}
         {/* Step Content */}
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
 
