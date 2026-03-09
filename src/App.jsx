@@ -34,7 +34,6 @@ function App() {
   const logout = () => setAuth(null)
 
   const isAdmin = auth?.user?.role === 'admin'
-  console.log(API_BASE_URL + '/api/categories')
   return (
     <ToastProvider>
       <Router>
