@@ -11,6 +11,10 @@ export default function CasesTab({ auth }) {
   const [toast, setToast] = useState(null)
   const [caseToDelete, setCaseToDelete] = useState(null)
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+
   // Filters
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -82,6 +86,15 @@ export default function CasesTab({ auth }) {
       (!c.categoryId && c.category === categoryFilter)
     return matchesSearch && matchesCategory
   })
+
+  // Reset to first page when search or category filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, categoryFilter])
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredCases.length / pageSize)
+  const paginatedCases = filteredCases.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const getDifficultyStyle = (difficulty) => {
     const d = difficulty?.toLowerCase()
@@ -164,7 +177,7 @@ export default function CasesTab({ auth }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-admin-border/50">
-            {filteredCases.map(c => (
+            {paginatedCases.map(c => (
               <tr key={c.id} className="hover:bg-admin-bg/50 transition-colors">
                 <td className="py-4 px-6">
                   <div className="font-semibold text-admin-primary">{c.title}</div>
@@ -211,6 +224,62 @@ export default function CasesTab({ auth }) {
           </div>
         )}
       </div>
+
+      {/* Pagination UI */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-admin-border shadow-admin-card overflow-x-auto gap-4">
+          <p className="text-sm text-admin-text-muted whitespace-nowrap">
+            Showing <span className="font-bold text-admin-text">{Math.min(filteredCases.length, (currentPage - 1) * pageSize + 1)}</span> to{' '}
+            <span className="font-bold text-admin-text">{Math.min(filteredCases.length, currentPage * pageSize)}</span> of{' '}
+            <span className="font-bold text-admin-text">{filteredCases.length}</span> cases
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="w-10 h-10 flex items-center justify-center rounded-lg border border-admin-border text-admin-text-muted hover:border-admin-primary hover:text-admin-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+            >
+              <span className="material-symbols-outlined">chevron_left</span>
+            </button>
+
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-lg text-sm font-bold transition-all shrink-0 ${currentPage === pageNum
+                          ? 'bg-admin-primary text-white shadow-sm'
+                          : 'text-admin-text-muted hover:bg-admin-bg'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                }
+                if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                  return <span key={pageNum} className="text-slate-300">...</span>
+                }
+                return null
+              })}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="w-10 h-10 flex items-center justify-center rounded-lg border border-admin-border text-admin-text-muted hover:border-admin-primary hover:text-admin-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+            >
+              <span className="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (

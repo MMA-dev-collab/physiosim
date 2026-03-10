@@ -7,7 +7,7 @@ import SubscriptionsTab from '../components/admin/SubscriptionsTab'
 import CaseAccessTab from '../components/admin/CaseAccessTab'
 import SubscriptionPlansTab from '../components/admin/SubscriptionPlansTab'
 import DashboardLayout from '../components/admin/DashboardLayout'
-import HeaderBar from '../components/admin/HeaderBar'
+import SidebarNavigation from '../components/admin/SidebarNavigation'
 import { API_BASE_URL } from '../config'
 
 function AdminDashboard({ auth }) {
@@ -20,7 +20,6 @@ function AdminDashboard({ auth }) {
 
   return (
     <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange} auth={auth}>
-      <HeaderBar activeTab={activeTab} auth={auth} />
       <div className="flex-1">
         {activeTab === 'overview' && <OverviewTab auth={auth} onTabChange={handleTabChange} />}
         {activeTab === 'cases' && <CasesTab auth={auth} />}
@@ -191,8 +190,8 @@ function OverviewTab({ auth, onTabChange }) {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Current Simulation Cases */}
-        <div className="bg-admin-card rounded-2xl border border-admin-border shadow-admin-card flex flex-col h-[500px] overflow-hidden">
-          <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-bg/50">
+        <div className="bg-admin-card rounded-2xl border border-admin-border shadow-admin-card flex flex-col h-[500px]">
+          <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-bg/50 shrink-0">
             <div>
               <h4 className="text-lg font-bold text-admin-text">Current Simulation Cases</h4>
               <p className="text-xs text-admin-text-muted mt-0.5">Recently added or modified cases.</p>
@@ -204,7 +203,7 @@ function OverviewTab({ auth, onTabChange }) {
               View Library <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto thin-scrollbar">
             <ul className="divide-y divide-admin-border/50">
               {recentCases.map((c) => (
                 <li key={c.id} className="p-4 hover:bg-admin-bg transition-colors flex items-center justify-between group gap-4">
@@ -242,12 +241,12 @@ function OverviewTab({ auth, onTabChange }) {
         </div>
 
         {/* Activity Feed */}
-        <div className="bg-admin-card rounded-2xl border border-admin-border shadow-admin-card flex flex-col h-[500px] overflow-hidden">
-          <div className="p-6 border-b border-admin-border bg-admin-bg/50">
+        <div className="bg-admin-card rounded-2xl border border-admin-border shadow-admin-card flex flex-col h-[500px]">
+          <div className="p-6 border-b border-admin-border bg-admin-bg/50 shrink-0">
             <h4 className="text-lg font-bold text-admin-text">Recent Activities</h4>
             <p className="text-xs text-admin-text-muted mt-0.5">Overview of platform events.</p>
           </div>
-          <div className="p-6 flex-1">
+          <div className="p-6 flex-1 overflow-y-auto thin-scrollbar">
             <div className="space-y-6">
               {stats.recentActivity && stats.recentActivity.length > 0 ? (
                 stats.recentActivity.map((activity, index) => (

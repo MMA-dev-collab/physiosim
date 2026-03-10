@@ -12,10 +12,19 @@ const navItems = [
 
 export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen, setIsOpen }) {
     const user = auth?.user
+    const [showProfileMenu, setShowProfileMenu] = React.useState(false)
+
+    const websiteLinks = [
+        { label: 'Home', path: '/', icon: 'home' },
+        { label: 'Cases', path: '/cases', icon: 'clinical_notes' },
+        { label: 'Membership', path: '/membership', icon: 'workspace_premium' },
+        { label: 'Leadership', path: '/leadership', icon: 'leaderboard' },
+        { label: 'Progress', path: '/progress', icon: 'monitoring' },
+    ]
 
     return (
         <aside
-            className={`fixed inset-y-0 left-0 z-[100] w-64 border-r border-admin-border bg-admin-sidebar flex flex-col shrink-0 h-screen transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+            className={`fixed inset-y-0 left-0 z-[110] w-64 border-r border-admin-border bg-admin-sidebar flex flex-col shrink-0  transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
         >
             {/* Logo */}
@@ -58,9 +67,39 @@ export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen
                 ))}
             </nav>
 
-            {/* User Profile */}
-            <div className="p-4 border-t border-admin-border">
-                <div className="flex items-center gap-3 p-2 rounded-xl bg-admin-bg border border-admin-border">
+            {/* User Profile & Website Menu */}
+            <div className="p-4 border-t border-admin-border relative">
+                {showProfileMenu && (
+                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl border border-admin-border shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="p-3 border-b border-admin-border bg-admin-bg/50">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Website Navigation</p>
+                        </div>
+                        <div className="py-2">
+                            {websiteLinks.map((link) => (
+                                <a
+                                    key={link.path}
+                                    href={link.path}
+                                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-admin-bg hover:text-admin-primary transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-lg">{link.icon}</span>
+                                    {link.label}
+                                </a>
+                            ))}
+                        </div>
+                        <div className="border-t border-admin-border py-2 bg-slate-50/50">
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-admin-danger hover:bg-admin-danger/5 transition-colors">
+                                <span className="material-symbols-outlined text-lg">logout</span>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all border ${showProfileMenu ? 'bg-admin-sidebar-active-bg border-admin-primary/20' : 'bg-admin-bg border-admin-border hover:border-admin-primary/30'
+                        }`}
+                >
                     <div className="w-9 h-9 rounded-full bg-admin-primary/20 flex items-center justify-center text-admin-primary/70 font-bold overflow-hidden shrink-0 border border-white">
                         {user?.profileImage ? (
                             <img className="w-full h-full object-cover" src={user.profileImage} alt="Profile" />
@@ -68,11 +107,14 @@ export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen
                             user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'A'
                         )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-left">
                         <p className="text-sm font-bold text-slate-900 truncate">{user?.name || user?.email?.split('@')[0] || 'Admin'}</p>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate mt-0.5">{user?.role || 'System Admin'}</p>
                     </div>
-                </div>
+                    <span className={`material-symbols-outlined text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`}>
+                        expand_less
+                    </span>
+                </button>
             </div>
         </aside>
     )
