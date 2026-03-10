@@ -24,7 +24,7 @@ export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen
 
     return (
         <aside
-            className={`fixed inset-y-0 left-0 z-[110] w-64 border-r border-admin-border bg-admin-sidebar flex flex-col shrink-0  transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+            className={`fixed inset-y-0 left-0 z-[110] w-64 border-r border-admin-border bg-admin-sidebar flex flex-col shrink-0 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
         >
             {/* Logo */}
@@ -70,7 +70,7 @@ export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen
             {/* User Profile & Website Menu */}
             <div className="p-4 border-t border-admin-border relative">
                 {showProfileMenu && (
-                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl border border-admin-border shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl border border-admin-border shadow-2xl overflow-hidden z-[1000] animate-in fade-in slide-in-from-bottom-2 duration-200">
                         <div className="p-3 border-b border-admin-border bg-admin-bg/50">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Website Navigation</p>
                         </div>

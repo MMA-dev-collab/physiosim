@@ -7,6 +7,8 @@ export default function UsersTab({ auth }) {
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
   const [selectedUser, setSelectedUser] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   const loadUsers = async () => {
     setLoading(true)
@@ -32,6 +34,10 @@ export default function UsersTab({ auth }) {
     loadUsers()
   }, [])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter])
+
   const filteredUsers = users.filter(u => {
     if (filter === 'all') return true
     if (filter === 'admin') return u.role === 'admin'
@@ -39,6 +45,13 @@ export default function UsersTab({ auth }) {
     if (filter === 'student') return u.role === 'student' || u.role === 'user'
     return true
   })
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / pageSize)
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   // Close drawer on escape key
   useEffect(() => {
@@ -145,7 +158,7 @@ export default function UsersTab({ auth }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-admin-border/50">
-            {filteredUsers.map(u => {
+            {paginatedUsers.map(u => {
               const member = getMemberBadge(u.membershipType)
               const isSelected = selectedUser?.id === u.id
               return (
@@ -198,6 +211,54 @@ export default function UsersTab({ auth }) {
           <div className="py-12 text-center">
             <span className="material-symbols-outlined text-4xl text-slate-300 mb-2 block">person_off</span>
             <p className="text-slate-400 text-sm">No users found for this filter.</p>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 bg-admin-bg/50 border-t border-admin-border flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-xs text-admin-text-muted font-medium">
+              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredUsers.length)} of {filteredUsers.length} users
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-admin-card border border-admin-border rounded-lg text-admin-text-muted hover:text-admin-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .map((page, index, array) => (
+                    <React.Fragment key={page}>
+                      {index > 0 && array[index - 1] !== page - 1 && (
+                        <span className="px-1 text-admin-text-muted opacity-50 text-xs">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-[32px] h-8 rounded-lg text-xs font-bold border transition-all ${currentPage === page
+                          ? 'bg-admin-primary text-white border-admin-primary shadow-sm'
+                          : 'bg-admin-card text-admin-text-muted border-admin-border hover:border-admin-primary/50'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-admin-card border border-admin-border rounded-lg text-admin-text-muted hover:text-admin-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

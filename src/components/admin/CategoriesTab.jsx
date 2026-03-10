@@ -25,6 +25,7 @@ const ICON_COLORS = [
 export default function CategoriesTab({ auth }) {
     const { toast } = useToast()
     const [categories, setCategories] = useState([])
+    const [cases, setCases] = useState([])
     const [loading, setLoading] = useState(true)
     const [categoryToDelete, setCategoryToDelete] = useState(null)
 
@@ -36,23 +37,37 @@ export default function CategoriesTab({ auth }) {
     const [formIcon, setFormIcon] = useState('skeleton')
     const [saving, setSaving] = useState(false)
 
-    const loadCategories = async () => {
+    const loadData = async () => {
         setLoading(true)
         try {
-            const res = await fetch(`${API_BASE_URL}/api/categories`, {
-                headers: { 'ngrok-skip-browser-warning': 'true' }
-            })
-            const data = await res.json()
-            if (res.ok) setCategories(data)
+            const [catsRes, casesRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/api/categories`, {
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                }),
+                fetch(`${API_BASE_URL}/api/admin/cases`, {
+                    headers: {
+                        'Authorization': `Bearer ${auth.token}`,
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                })
+            ])
+
+            const [catsData, casesData] = await Promise.all([
+                catsRes.json(),
+                casesRes.json()
+            ])
+
+            if (catsRes.ok) setCategories(catsData)
+            if (casesRes.ok) setCases(Array.isArray(casesData) ? casesData : (casesData?.cases || []))
         } catch (e) {
-            toast.error('Failed to load categories')
+            toast.error('Failed to load data')
         } finally {
             setLoading(false)
         }
     }
 
     useEffect(() => {
-        loadCategories()
+        loadData()
     }, [])
 
     const openCreate = () => {
@@ -104,7 +119,7 @@ export default function CategoriesTab({ auth }) {
             if (!res.ok) throw new Error('Failed to save')
             toast.success(editingCategory ? 'Category updated' : 'Category created')
             setShowModal(false)
-            loadCategories()
+            loadData()
         } catch (e) {
             toast.error(e.message)
         } finally {
@@ -125,7 +140,7 @@ export default function CategoriesTab({ auth }) {
             if (!res.ok) throw new Error('Failed to delete')
             toast.success('Category deleted')
             setCategoryToDelete(null)
-            loadCategories()
+            loadData()
         } catch (e) {
             toast.error(e.message)
         }
@@ -185,7 +200,7 @@ export default function CategoriesTab({ auth }) {
                         )}
                         <div className="mt-4 flex items-center justify-between">
                             <span className="text-sm font-bold text-admin-text-muted bg-admin-bg border border-admin-border/50 px-3 py-1 rounded-full">
-                                {cat.caseCount || 0} Cases
+                                {(Array.isArray(cases) ? cases : []).filter(c => c.categoryId === cat.id).length} Cases
                             </span>
                             <span className="text-admin-accent text-[12px] font-black uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-admin-accent shadow-sm" />
@@ -209,7 +224,7 @@ export default function CategoriesTab({ auth }) {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-admin-overlay backdrop-blur-sm px-4">
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-admin-overlay backdrop-blur-sm px-4">
                     <div className="bg-admin-card w-full max-w-lg rounded-2xl shadow-admin-modal border border-admin-border overflow-hidden">
                         {/* Modal Header */}
                         <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-bg/50">
@@ -311,6 +326,7 @@ export default function CategoriesTab({ auth }) {
                 onConfirm={confirmDelete}
                 onCancel={() => setCategoryToDelete(null)}
                 isDanger={true}
+                zIndex={1000}
             />
         </div>
     )

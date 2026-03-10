@@ -19,6 +19,8 @@ export default function SubscriptionsTab({ auth }) {
     endDate: '',
     daysToAdd: ''
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
   const [touched, setTouched] = useState({ userId: false, planId: false })
 
   // Modal states
@@ -214,6 +216,13 @@ export default function SubscriptionsTab({ auth }) {
     return 'bg-slate-100 text-slate-600'
   }
 
+  // Pagination Logic
+  const totalPages = Math.ceil(subscriptions.length / pageSize)
+  const paginatedSubscriptions = subscriptions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
+
   const getHealthStyle = (health) => {
     if (health === 'expired') return 'bg-red-100 text-red-700'
     if (health === 'expiring_soon') return 'bg-amber-100 text-amber-700'
@@ -289,7 +298,7 @@ export default function SubscriptionsTab({ auth }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {subscriptions.map((sub) => (
+              {paginatedSubscriptions.map((sub) => (
                 <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="py-4 px-6">
                     <p className="text-sm font-semibold text-slate-900">{sub.email || sub.name || `User #${sub.userId}`}</p>
@@ -361,11 +370,59 @@ export default function SubscriptionsTab({ auth }) {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-xs text-slate-500 font-medium">
+              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, subscriptions.length)} of {subscriptions.length} subscriptions
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-admin-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .map((page, index, array) => (
+                    <React.Fragment key={page}>
+                      {index > 0 && array[index - 1] !== page - 1 && (
+                        <span className="px-1 text-slate-300 text-xs">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-[32px] h-8 rounded-lg text-xs font-bold border transition-all ${currentPage === page
+                          ? 'bg-admin-primary text-white border-admin-primary shadow-sm'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-admin-primary/50 shadow-sm'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-admin-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Create Subscription Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-6 border-b border-slate-200 flex items-center justify-between">
               <h3 className="text-xl font-bold text-admin-primary">Create New Subscription</h3>

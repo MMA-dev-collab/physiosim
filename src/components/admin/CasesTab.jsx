@@ -255,8 +255,8 @@ export default function CasesTab({ auth }) {
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`w-10 h-10 rounded-lg text-sm font-bold transition-all shrink-0 ${currentPage === pageNum
-                          ? 'bg-admin-primary text-white shadow-sm'
-                          : 'text-admin-text-muted hover:bg-admin-bg'
+                        ? 'bg-admin-primary text-white shadow-sm'
+                        : 'text-admin-text-muted hover:bg-admin-bg'
                         }`}
                     >
                       {pageNum}
@@ -283,7 +283,7 @@ export default function CasesTab({ auth }) {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-[1001]">
           <div className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${toast.type === 'success' ? 'bg-admin-accent' : 'bg-red-500'
             }`}>
             <span className="material-symbols-outlined text-lg">

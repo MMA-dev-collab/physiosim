@@ -378,7 +378,7 @@ export default function SubscriptionPlansTab({ auth }) {
 
       {/* Create/Edit Plan Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-6 border-b border-slate-200 flex items-center justify-between shrink-0">
               <h3 className="text-xl font-bold text-admin-primary">

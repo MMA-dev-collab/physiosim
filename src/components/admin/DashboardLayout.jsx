@@ -22,7 +22,7 @@ export default function DashboardLayout({ activeTab, onTabChange, auth, children
                 setIsOpen={setIsMobileMenuOpen}
             />
 
-            <main className="flex-1 flex flex-col min-w-0 w-full relative">
+            <main className="flex-1 flex flex-col min-w-0 w-full relative lg:pl-64">
                 {/* Mobile Menu Toggle Button */}
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
