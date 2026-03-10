@@ -272,93 +272,95 @@ export default function SubscriptionsTab({ auth }) {
         </button>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Plan</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Start</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">End</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Days Left</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Health</th>
-              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {subscriptions.map((sub) => (
-              <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="py-4 px-6">
-                  <p className="text-sm font-semibold text-slate-900">{sub.email || sub.name || `User #${sub.userId}`}</p>
-                  <p className="text-xs text-slate-400">ID: {sub.userId}</p>
-                </td>
-                <td className="py-4 px-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sub.planName === 'Premium' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'
-                    }`}>
-                    {sub.planName}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(sub.status)}`}>
-                    {sub.status}
-                  </span>
-                </td>
-                <td className="py-4 px-4 text-sm text-slate-600">{new Date(sub.startDate).toLocaleDateString()}</td>
-                <td className="py-4 px-4 text-sm text-slate-600">{new Date(sub.endDate).toLocaleDateString()}</td>
-                <td className="py-4 px-4">
-                  <span className={`text-sm font-bold ${sub.daysRemaining < 0 ? 'text-red-500' : sub.daysRemaining <= 7 ? 'text-amber-500' : 'text-admin-accent'
-                    }`}>
-                    {sub.daysRemaining || 0}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getHealthStyle(sub.health)}`}>
-                    {sub.health || 'active'}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  {sub.status === 'active' && (
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <button
-                        onClick={() => openExtendModal(sub.id)}
-                        className="px-2 py-1 bg-admin-accent text-white rounded text-[10px] font-bold hover:bg-admin-accent/90"
-                      >
-                        Extend
-                      </button>
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value && e.target.value !== sub.planId) confirmChangePlan(sub.id, e.target.value)
-                        }}
-                        value={sub.planId}
-                        className="bg-slate-100 border-none rounded text-[10px] font-medium py-1 pl-1 pr-5 max-w-[100px] focus:ring-1 focus:ring-admin-primary/30"
-                      >
-                        {plans.filter(p => p.isActive || p.id === sub.planId).map(p => (
-                          <option key={p.id} value={p.id} disabled={!p.isActive}>{p.name}</option>
-                        ))}
-                      </select>
-                      {sub.planName !== 'Normal' && (
-                        <button
-                          onClick={() => confirmDeactivate(sub.id, sub.planName)}
-                          className="px-2 py-1 bg-amber-500 text-white rounded text-[10px] font-bold hover:bg-amber-600"
-                        >
-                          Deactivate
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </td>
+      {/* Table Section */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Plan</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Start</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">End</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Days Left</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Health</th>
+                <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {subscriptions.length === 0 && (
-          <div className="py-12 text-center">
-            <span className="material-symbols-outlined text-4xl text-slate-300 mb-2 block">credit_card_off</span>
-            <p className="text-slate-400 text-sm">No subscriptions found.</p>
-          </div>
-        )}
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {subscriptions.map((sub) => (
+                <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-4 px-6">
+                    <p className="text-sm font-semibold text-slate-900">{sub.email || sub.name || `User #${sub.userId}`}</p>
+                    <p className="text-xs text-slate-400">ID: {sub.userId}</p>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sub.planName === 'Premium' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'
+                      }`}>
+                      {sub.planName}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(sub.status)}`}>
+                      {sub.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-sm text-slate-600">{new Date(sub.startDate).toLocaleDateString()}</td>
+                  <td className="py-4 px-4 text-sm text-slate-600">{new Date(sub.endDate).toLocaleDateString()}</td>
+                  <td className="py-4 px-4">
+                    <span className={`text-sm font-bold ${sub.daysRemaining < 0 ? 'text-red-500' : sub.daysRemaining <= 7 ? 'text-amber-500' : 'text-admin-accent'
+                      }`}>
+                      {sub.daysRemaining || 0}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getHealthStyle(sub.health)}`}>
+                      {sub.health || 'active'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    {sub.status === 'active' && (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <button
+                          onClick={() => openExtendModal(sub.id)}
+                          className="px-2 py-1 bg-admin-accent text-white rounded text-[10px] font-bold hover:bg-admin-accent/90"
+                        >
+                          Extend
+                        </button>
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value && e.target.value !== sub.planId) confirmChangePlan(sub.id, e.target.value)
+                          }}
+                          value={sub.planId}
+                          className="bg-slate-100 border-none rounded text-[10px] font-medium py-1 pl-1 pr-5 max-w-[100px] focus:ring-1 focus:ring-admin-primary/30"
+                        >
+                          {plans.filter(p => p.isActive || p.id === sub.planId).map(p => (
+                            <option key={p.id} value={p.id} disabled={!p.isActive}>{p.name}</option>
+                          ))}
+                        </select>
+                        {sub.planName !== 'Normal' && (
+                          <button
+                            onClick={() => confirmDeactivate(sub.id, sub.planName)}
+                            className="px-2 py-1 bg-amber-500 text-white rounded text-[10px] font-bold hover:bg-amber-600"
+                          >
+                            Deactivate
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {subscriptions.length === 0 && (
+            <div className="py-12 text-center">
+              <span className="material-symbols-outlined text-4xl text-slate-300 mb-2 block">credit_card_off</span>
+              <p className="text-slate-400 text-sm">No subscriptions found.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create Subscription Modal */}

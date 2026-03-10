@@ -5,7 +5,7 @@ export default function DashboardLayout({ activeTab, onTabChange, auth, children
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-admin-bg font-display">
+        <div className="flex min-h-screen w-full bg-admin-bg font-display">
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div
@@ -22,7 +22,7 @@ export default function DashboardLayout({ activeTab, onTabChange, auth, children
                 setIsOpen={setIsMobileMenuOpen}
             />
 
-            <main className="flex-1 flex flex-col min-w-0 overflow-hidden w-full relative">
+            <main className="flex-1 flex flex-col min-w-0 w-full relative">
                 {/* Clone children to pass mobile menu toggle down to HeaderBar if it's there */}
                 {React.Children.map(children, child => {
                     if (React.isValidElement(child)) {

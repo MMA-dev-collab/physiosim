@@ -21,7 +21,7 @@ function AdminDashboard({ auth }) {
   return (
     <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange} auth={auth}>
       <HeaderBar activeTab={activeTab} auth={auth} />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {activeTab === 'overview' && <OverviewTab auth={auth} onTabChange={handleTabChange} />}
         {activeTab === 'cases' && <CasesTab auth={auth} />}
         {activeTab === 'users' && <UsersTab auth={auth} />}
@@ -204,7 +204,7 @@ function OverviewTab({ auth, onTabChange }) {
               View Library <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1">
             <ul className="divide-y divide-admin-border/50">
               {recentCases.map((c) => (
                 <li key={c.id} className="p-4 hover:bg-admin-bg transition-colors flex items-center justify-between group gap-4">
@@ -247,7 +247,7 @@ function OverviewTab({ auth, onTabChange }) {
             <h4 className="text-lg font-bold text-admin-text">Recent Activities</h4>
             <p className="text-xs text-admin-text-muted mt-0.5">Overview of platform events.</p>
           </div>
-          <div className="p-6 flex-1 overflow-auto">
+          <div className="p-6 flex-1">
             <div className="space-y-6">
               {stats.recentActivity && stats.recentActivity.length > 0 ? (
                 stats.recentActivity.map((activity, index) => (

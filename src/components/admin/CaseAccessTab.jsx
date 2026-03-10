@@ -250,40 +250,44 @@ export default function CaseAccessTab({ auth }) {
         </select>
       </div>
 
-      {/* Two Panel Layout */}
-      <div className="flex gap-8">
-        {/* Left: Plan Cards */}
-        <div className="w-1/4 flex flex-col gap-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-admin-text-muted px-1">Subscription Plans</h3>
-          {plans.filter(p => p.isActive).map(plan => (
-            <div key={plan.id} className="p-4 bg-admin-card border border-admin-border rounded-xl hover:border-admin-primary transition-colors shadow-admin-card">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${plan.role === 'premium' ? 'bg-admin-primary/10 text-admin-primary' : 'bg-admin-bg text-admin-text-muted border border-admin-border'
-                  }`}>
-                  {plan.role}
-                </span>
-                <span className="text-lg font-black text-admin-text">${parseFloat(plan.price || 0).toFixed(0)}</span>
+      {/* Vertical Layout */}
+      <div className="flex flex-col gap-8">
+        {/* Top: Plan Cards */}
+        <div className="w-full">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-admin-text-muted px-1 mb-4">Subscription Plans</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {plans.filter(p => p.isActive).map(plan => (
+              <div key={plan.id} className="p-4 bg-admin-card border border-admin-border rounded-xl hover:border-admin-primary transition-colors shadow-admin-card flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${plan.role === 'premium' ? 'bg-admin-primary/10 text-admin-primary' : 'bg-admin-bg text-admin-text-muted border border-admin-border'
+                      }`}>
+                      {plan.role}
+                    </span>
+                    <span className="text-lg font-black text-admin-text">${parseFloat(plan.price || 0).toFixed(0)}</span>
+                  </div>
+                  <h4 className="text-base font-bold text-admin-text">{plan.name}</h4>
+                </div>
+                <p className="text-xs text-admin-text-muted mt-2 font-medium">
+                  {(() => {
+                    const accessibleCases = cases.filter(c => canPlanAccessCase(plan, c) && c.status === 'published');
+                    let count = accessibleCases.length;
+                    if (plan.maxFreeCases !== null && plan.maxFreeCases !== undefined && plan.maxFreeCases !== '') {
+                      const limit = parseInt(plan.maxFreeCases);
+                      if (!isNaN(limit) && count > limit) count = limit;
+                    }
+                    if (plan.role === 'normal' || plan.name === 'Normal') return `${count} Free Cases`;
+                    if (plan.role === 'premium') return `${count} Cases (All Access)`;
+                    return `${count} Cases (Includes Free)`;
+                  })()}
+                </p>
               </div>
-              <h4 className="text-base font-bold text-admin-text">{plan.name}</h4>
-              <p className="text-xs text-admin-text-muted mt-1 font-medium">
-                {(() => {
-                  const accessibleCases = cases.filter(c => canPlanAccessCase(plan, c) && c.status === 'published');
-                  let count = accessibleCases.length;
-                  if (plan.maxFreeCases !== null && plan.maxFreeCases !== undefined && plan.maxFreeCases !== '') {
-                    const limit = parseInt(plan.maxFreeCases);
-                    if (!isNaN(limit) && count > limit) count = limit;
-                  }
-                  if (plan.role === 'normal' || plan.name === 'Normal') return `${count} Free Cases`;
-                  if (plan.role === 'premium') return `${count} Cases (All Access)`;
-                  return `${count} Cases (Includes Free)`;
-                })()}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* Right: Access Table */}
-        <div className="flex-1 bg-admin-card rounded-xl border border-admin-border flex flex-col overflow-x-auto shadow-admin-card">
+        {/* Bottom: Access Table */}
+        <div className="flex-1 bg-admin-card rounded-xl border border-admin-border flex flex-col shadow-admin-card overflow-hidden">
           <div className="p-6 border-b border-admin-border bg-admin-bg/30">
             <h3 className="text-lg font-bold text-admin-text">Case Access Matrix</h3>
             <p className="text-xs text-admin-text-muted mb-4 font-medium">Assign cases to plans and manage publish status.</p>

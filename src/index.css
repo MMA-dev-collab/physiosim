@@ -3,161 +3,168 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+   :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+      --primary: 222.2 47.4% 11.2%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 222.2 84% 4.9%;
+      --radius: 0.5rem;
 
-    /* =========================
+      /* =========================
        BRAND COLORS
     ========================= */
-    --color-primary: #ec5b13;
-    --color-primary-hover: #d64f0e;
-    --color-primary-active: #b8430c;
-    --color-primary-soft: #fff1ea;
+      --color-primary: #ec5b13;
+      --color-primary-hover: #d64f0e;
+      --color-primary-active: #b8430c;
+      --color-primary-soft: #fff1ea;
 
-    --color-accent: #f97316;
-    --color-accent-hover: #ea580c;
+      --color-accent: #f97316;
+      --color-accent-hover: #ea580c;
 
-    /* =========================
+      /* =========================
        BACKGROUND COLORS
     ========================= */
-    --color-bg-main: #f8fafd;
-    --color-bg-sidebar: #ffffff;
-    --color-bg-card: #ffffff;
-    --color-bg-card-hover: #f5f7fb;
+      --color-bg-main: #f8fafd;
+      --color-bg-sidebar: #ffffff;
+      --color-bg-card: #ffffff;
+      --color-bg-card-hover: #f5f7fb;
 
-    --color-bg-modal: #ffffff;
-    --color-bg-overlay: rgba(15, 23, 42, 0.45);
+      --color-bg-modal: #ffffff;
+      --color-bg-overlay: rgba(15, 23, 42, 0.45);
 
-    /* =========================
+      /* =========================
        TEXT COLORS
     ========================= */
-    --color-text-primary: #0f172a;
-    --color-text-secondary: #475569;
-    --color-text-muted: #94a3b8;
-    --color-text-light: #cbd5e1;
+      --color-text-primary: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94a3b8;
+      --color-text-light: #cbd5e1;
 
-    --color-text-on-primary: #ffffff;
+      --color-text-on-primary: #ffffff;
 
-    /* =========================
+      /* =========================
        BORDER COLORS
     ========================= */
-    --color-border-light: #e2e8f0;
-    --color-border-default: #d1d5db;
-    --color-border-strong: #94a3b8;
+      --color-border-light: #e2e8f0;
+      --color-border-default: #d1d5db;
+      --color-border-strong: #94a3b8;
 
-    /* =========================
+      /* =========================
        SIDEBAR
     ========================= */
-    --color-sidebar-text: #334155;
-    --color-sidebar-icon: #64748b;
+      --color-sidebar-text: #334155;
+      --color-sidebar-icon: #64748b;
 
-    --color-sidebar-active-bg: #fff1ea;
-    --color-sidebar-active-text: #ec5b13;
+      --color-sidebar-active-bg: #fff1ea;
+      --color-sidebar-active-text: #ec5b13;
 
-    /* =========================
+      /* =========================
        STATUS COLORS
     ========================= */
-    --color-success: #10b981;
-    --color-success-bg: #ecfdf5;
+      --color-success: #10b981;
+      --color-success-bg: #ecfdf5;
 
-    --color-warning: #f59e0b;
-    --color-warning-bg: #fffbeb;
+      --color-warning: #f59e0b;
+      --color-warning-bg: #fffbeb;
 
-    --color-danger: #ef4444;
-    --color-danger-bg: #fef2f2;
+      --color-danger: #ef4444;
+      --color-danger-bg: #fef2f2;
 
-    --color-info: #3b82f6;
-    --color-info-bg: #eff6ff;
+      --color-info: #3b82f6;
+      --color-info-bg: #eff6ff;
 
-    /* =========================
+      /* =========================
        TABLES
     ========================= */
-    --color-table-header: #f1f5f9;
-    --color-table-row-hover: #f8fafc;
+      --color-table-header: #f1f5f9;
+      --color-table-row-hover: #f8fafc;
 
-    /* =========================
+      /* =========================
        BADGES
     ========================= */
-    --color-badge-beginner: #22c55e;
-    --color-badge-intermediate: #f59e0b;
-    --color-badge-advanced: #ef4444;
+      --color-badge-beginner: #22c55e;
+      --color-badge-intermediate: #f59e0b;
+      --color-badge-advanced: #ef4444;
 
-    --color-badge-bg-beginner: #ecfdf5;
-    --color-badge-bg-intermediate: #fffbeb;
-    --color-badge-bg-advanced: #fef2f2;
+      --color-badge-bg-beginner: #ecfdf5;
+      --color-badge-bg-intermediate: #fffbeb;
+      --color-badge-bg-advanced: #fef2f2;
 
-    /* =========================
+      /* =========================
        INPUTS
     ========================= */
-    --color-input-bg: #ffffff;
-    --color-input-border: #d1d5db;
-    --color-input-focus: #ec5b13;
+      --color-input-bg: #ffffff;
+      --color-input-border: #d1d5db;
+      --color-input-focus: #ec5b13;
 
-    --color-input-placeholder: #94a3b8;
+      --color-input-placeholder: #94a3b8;
 
-    /* =========================
+      /* =========================
        SHADOWS
     ========================= */
-    --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06);
-    --shadow-card-hover: 0 6px 16px rgba(15, 23, 42, 0.08);
+      --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06);
+      --shadow-card-hover: 0 6px 16px rgba(15, 23, 42, 0.08);
 
-    --shadow-modal: 0 10px 40px rgba(15, 23, 42, 0.15);
-  }
+      --shadow-modal: 0 10px 40px rgba(15, 23, 42, 0.15);
+   }
 }
 
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #1f2937;
-  background-color: #ffffff;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+   line-height: 1.5;
+   font-weight: 400;
+   color: #1f2937;
+   background-color: #ffffff;
+   text-rendering: optimizeLegibility;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
 }
 
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+   box-sizing: border-box;
+}
+
+html,
+body {
+   overflow-x: hidden;
+   position: relative;
+   width: 100%;
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
-  color: #1f2937;
+   margin: 0;
+   min-width: 320px;
+   min-height: 100vh;
+   background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+   color: #1f2937;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+   color: inherit;
+   text-decoration: none;
 }
 
 button {
-  font-family: inherit;
+   font-family: inherit;
 }
 
 #root {
-  min-height: 100vh;
+   min-height: 100vh;
 }

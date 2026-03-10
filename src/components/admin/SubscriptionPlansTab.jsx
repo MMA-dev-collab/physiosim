@@ -281,7 +281,7 @@ export default function SubscriptionPlansTab({ auth }) {
       {/* Plan Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map((plan) => (
-          <div key={plan.id} className={`relative bg-white rounded-2xl border shadow-sm overflow-hidden group transition-all hover:shadow-xl ${!plan.isActive ? 'border-slate-300 opacity-70' : plan.role === 'premium' ? 'border-admin-primary/40' : 'border-slate-200'
+          <div key={plan.id} className={`relative bg-white rounded-2xl border shadow-sm overflow-hidden group transition-all hover:shadow-xl flex flex-col h-full ${!plan.isActive ? 'border-slate-300 opacity-70' : plan.role === 'premium' ? 'border-admin-primary/40' : 'border-slate-200'
             }`}>
             {/* Card Header */}
             <div className={`p-6 pb-0 ${plan.role === 'premium' ? 'bg-admin-primary/5' : ''}`}>
@@ -294,8 +294,8 @@ export default function SubscriptionPlansTab({ auth }) {
                     )}
                   </div>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${plan.role === 'premium' ? 'bg-blue-100 text-blue-800'
-                      : plan.role === 'normal' ? 'bg-green-100 text-green-800'
-                        : 'bg-slate-100 text-slate-600'
+                    : plan.role === 'normal' ? 'bg-green-100 text-green-800'
+                      : 'bg-slate-100 text-slate-600'
                     }`}>
                     {plan.role === 'premium' ? '🔒 Premium' : plan.role === 'normal' ? '🆓 Free' : `⚙️ ${plan.role}`}
                   </span>
@@ -314,7 +314,7 @@ export default function SubscriptionPlansTab({ auth }) {
             </div>
 
             {/* Card Body */}
-            <div className="px-6 pb-4 space-y-3">
+            <div className="px-6 pb-4 space-y-3 flex-1">
               {/* Max Cases */}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Max Cases</span>
@@ -357,8 +357,8 @@ export default function SubscriptionPlansTab({ auth }) {
               <button
                 onClick={() => confirmToggleActive(plan)}
                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${plan.isActive
-                    ? 'bg-amber-500 text-white hover:bg-amber-600'
-                    : 'bg-admin-accent text-white hover:bg-admin-accent/90'
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-admin-accent text-white hover:bg-admin-accent/90'
                   }`}
               >
                 {plan.isActive ? 'Deactivate' : 'Activate'}

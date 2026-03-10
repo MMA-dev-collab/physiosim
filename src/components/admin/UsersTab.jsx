@@ -205,13 +205,16 @@ export default function UsersTab({ auth }) {
       {/* Slide-over User Drawer */}
       {selectedUser && (
         <>
-          {/* Backdrop for mobile */}
+          {/* Global Backdrop */}
           <div
-            className="fixed inset-0 bg-admin-overlay z-40 transition-opacity lg:hidden"
+            className="fixed inset-0 bg-admin-overlay z-[1000] transition-opacity"
             onClick={() => setSelectedUser(null)}
           />
 
-          <div style={{ zIndex: 1000 }} className="fixed inset-y-0 right-0 z-50 w-full max-w-[400px] bg-admin-card shadow-admin-modal border-l border-admin-border transform transition-transform duration-300 translate-x-0 flex flex-col">
+          <div
+            style={{ zIndex: 2000 }}
+            className="fixed inset-y-0 right-0 w-full max-w-[400px] bg-admin-card shadow-admin-modal border-l border-admin-border transform transition-transform duration-300 translate-x-0 flex flex-col"
+          >
             <div className="flex items-center justify-between p-6 border-b border-admin-border bg-admin-bg/50">
               <h3 className="text-lg font-bold text-admin-text">User Profile</h3>
               <button
