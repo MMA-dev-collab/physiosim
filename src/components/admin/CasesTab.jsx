@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../../config'
 import ConfirmationModal from '../common/ConfirmationModal'
-import './CasesTab.css'
-import Loader from '@/components/ui/loader-12'
 
 export default function CasesTab({ auth }) {
   const navigate = useNavigate()
@@ -76,7 +74,6 @@ export default function CasesTab({ auth }) {
     }
   }
 
-
   // Filter Logic
   const filteredCases = cases.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase())
@@ -86,33 +83,65 @@ export default function CasesTab({ auth }) {
     return matchesSearch && matchesCategory
   })
 
+  const getDifficultyStyle = (difficulty) => {
+    const d = difficulty?.toLowerCase()
+    if (d === 'beginner') return 'bg-[var(--color-badge-bg-beginner)] text-[var(--color-badge-beginner)]'
+    if (d === 'intermediate') return 'bg-[var(--color-badge-bg-intermediate)] text-[var(--color-badge-intermediate)]'
+    if (d === 'advanced') return 'bg-[var(--color-badge-bg-advanced)] text-[var(--color-badge-advanced)]'
+    return 'bg-admin-bg text-admin-text-muted'
+  }
+
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
-      <Loader />
+    <div className="p-8 animate-pulse space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="h-8 w-48 bg-slate-200 rounded-lg" />
+        <div className="h-10 w-32 bg-slate-200 rounded-lg" />
+      </div>
+      <div className="flex gap-3">
+        <div className="h-10 w-72 bg-slate-200 rounded-lg" />
+        <div className="h-10 w-40 bg-slate-200 rounded-lg" />
+      </div>
+      <div className="bg-white rounded-xl border border-slate-200">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-16 border-b border-slate-100 mx-4" />
+        ))}
+      </div>
     </div>
   )
 
   return (
-    <div className="admin-cases">
-      {/* Header Actions */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ margin: 0 }}>Case Management</h2>
-        <button className="btn-primary" onClick={() => navigate('/admin/cases/new')}>+ New Case</button>
+    <div className="p-8">
+      {/* Page Title & Actions */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-admin-primary">Case Library</h2>
+          <p className="text-slate-500 text-sm mt-1">Manage and publish clinical simulation scenarios.</p>
+        </div>
+        <button
+          onClick={() => navigate('/admin/cases/new')}
+          className="bg-admin-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-admin-primary-hover transition-all shadow-sm"
+        >
+          <span className="material-symbols-outlined text-lg">add</span>
+          New Case
+        </button>
       </div>
 
       {/* Filters */}
-      <div className="filters-bar" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-        <input
-          type="text"
-          placeholder="Search cases..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: '0.5rem 1rem', borderRadius: '100px', border: '1px solid #e2e8f0', width: '300px' }}
-        />
+      <div className="flex items-center gap-3 mb-6">
+        <div className="relative w-full max-w-md">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-admin-text-muted text-lg">search</span>
+          <input
+            className="w-full pl-10 pr-4 py-2 bg-admin-bg border border-admin-border rounded-lg text-sm focus:ring-2 focus:ring-admin-primary/20 placeholder:text-admin-text-muted text-admin-text transition-all"
+            placeholder="Search clinical cases..."
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          style={{ padding: '0.5rem 1rem', borderRadius: '100px', border: '1px solid #e2e8f0' }}
+          className="bg-admin-bg border border-admin-border rounded-lg text-xs font-semibold text-admin-text-muted py-2 pl-3 pr-8 focus:ring-2 focus:ring-admin-primary/20 cursor-pointer"
         >
           <option value="all">All Categories</option>
           {categories.map(c => (
@@ -121,42 +150,54 @@ export default function CasesTab({ auth }) {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="cases-table-container">
-        <table className="cases-table">
+      {/* Data Table */}
+      <div className="bg-admin-card rounded-xl border border-admin-border overflow-x-auto shadow-admin-card">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Difficulty</th>
-              <th>Duration</th>
-              <th>Actions</th>
+            <tr className="bg-admin-bg border-b border-admin-border">
+              <th className="py-4 px-6 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Case Title</th>
+              <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Category</th>
+              <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Difficulty</th>
+              <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Steps</th>
+              <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Duration</th>
+              <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-admin-border/50">
             {filteredCases.map(c => (
-              <tr key={c.id}>
-                <td>
-                  <div style={{ fontWeight: '500' }}>{c.title}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                    {c.difficulty} • {c.duration} min • {c.stepCount || 0} steps
-                  </div>
+              <tr key={c.id} className="hover:bg-admin-bg/50 transition-colors">
+                <td className="py-4 px-6">
+                  <div className="font-semibold text-admin-primary">{c.title}</div>
+                  <div className="text-[11px] text-slate-400">ID: {c.id}</div>
                 </td>
-                <td>
-                  <span className="badge badge-category">
+                <td className="py-4 px-4">
+                  <span className="px-2.5 py-1 bg-admin-bg text-admin-text-muted rounded-md text-xs font-medium border border-admin-border/50">
                     {c.categoryIcon} {c.categoryName || c.category}
                   </span>
                 </td>
-                <td>
-                  <span className={`badge badge-difficulty-${c.difficulty?.toLowerCase()}`}>
+                <td className="py-4 px-4">
+                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight ${getDifficultyStyle(c.difficulty)}`}>
                     {c.difficulty}
                   </span>
                 </td>
-                <td>{c.duration} min</td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="btn-icon btn-edit" onClick={() => navigate(`/admin/cases/${c.id}/edit`)} title="Edit">✎</button>
-                    <button className="btn-icon btn-delete" onClick={() => handleDelete(c)} title="Delete">🗑</button>
+                <td className="py-4 px-4 text-sm text-admin-text-muted font-medium">{c.stepCount || 0} Steps</td>
+                <td className="py-4 px-4 text-sm text-admin-text-muted">{c.duration} min</td>
+                <td className="py-4 px-4 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => navigate(`/admin/cases/${c.id}/edit`)}
+                      className="p-1.5 hover:bg-admin-bg rounded-lg text-admin-text-muted hover:text-admin-primary transition-colors"
+                      title="Edit"
+                    >
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(c)}
+                      className="p-1.5 hover:bg-admin-danger/10 rounded-lg text-admin-text-muted hover:text-admin-danger transition-colors"
+                      title="Delete"
+                    >
+                      <span className="material-symbols-outlined text-lg">delete</span>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -164,15 +205,21 @@ export default function CasesTab({ auth }) {
           </tbody>
         </table>
         {filteredCases.length === 0 && !loading && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No cases found matching your filters.</div>
+          <div className="py-12 text-center">
+            <span className="material-symbols-outlined text-4xl text-slate-300 mb-2 block">search_off</span>
+            <p className="text-slate-400 text-sm">No cases found matching your filters.</p>
+          </div>
         )}
       </div>
 
       {/* Toast Notification */}
       {toast && (
-        <div className="toast-container">
-          <div className={`toast ${toast.type}`}>
-            <span>{toast.type === 'success' ? '✅' : '❌'}</span>
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${toast.type === 'success' ? 'bg-admin-accent' : 'bg-red-500'
+            }`}>
+            <span className="material-symbols-outlined text-lg">
+              {toast.type === 'success' ? 'check_circle' : 'error'}
+            </span>
             <span>{toast.message}</span>
           </div>
         </div>

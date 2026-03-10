@@ -25,6 +25,7 @@ function App() {
     return stored ? JSON.parse(stored) : null
   })
   const [showDropdown, setShowDropdown] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     if (auth) localStorage.setItem('auth', JSON.stringify(auth))
@@ -32,6 +33,8 @@ function App() {
   }, [auth])
 
   const logout = () => setAuth(null)
+  const toggleMenu = () => setMenuOpen(!menuOpen)
+  const closeMenu = () => setMenuOpen(false)
 
   const isAdmin = auth?.user?.role === 'admin'
   return (
@@ -39,18 +42,23 @@ function App() {
       <Router>
 
         <div className="app-shell">
-          <header className="app-header">
+          <header className={`app-header ${menuOpen ? 'menu-open' : ''}`}>
             <div className="logo">
               <img src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" alt="PhysioSim" />
             </div>
-            <nav className="nav-links">
-              <Link to="/">Home</Link>
-              <Link to="/membership">Membership</Link>
-              <Link to="/about">About</Link>
-              <Link to="/cases">Cases</Link>
-              {auth && <Link to="/performance">My Progress</Link>}
-              {auth && <Link to="/leaderboard">Leaderboard</Link>}
-              {isAdmin && <Link to="/admin">Admin</Link>}
+
+            <button className="mobile-menu-toggle" onClick={toggleMenu} aria-label="Toggle Navigation">
+              <span className={`hamburger ${menuOpen ? 'active' : ''}`}></span>
+            </button>
+
+            <nav className={`nav-links ${menuOpen ? 'active' : ''}`}>
+              <Link to="/" onClick={closeMenu}>Home</Link>
+              <Link to="/membership" onClick={closeMenu}>Membership</Link>
+              <Link to="/about" onClick={closeMenu}>About</Link>
+              <Link to="/cases" onClick={closeMenu}>Cases</Link>
+              {auth && <Link to="/performance" onClick={closeMenu}>My Progress</Link>}
+              {auth && <Link to="/leaderboard" onClick={closeMenu}>Leaderboard</Link>}
+              {isAdmin && <Link to="/admin" onClick={closeMenu}>Admin</Link>}
             </nav>
             <div className="auth-area">
               {auth ? (

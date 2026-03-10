@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
-import './CasesTab.css' // Reuse table styles
 import { useToast } from '../../context/ToastContext'
 import ConfirmationModal from '../common/ConfirmationModal'
 import InputModal from '../common/InputModal'
-import Loader from '@/components/ui/loader-12'
 
 export default function SubscriptionsTab({ auth }) {
   const { toast } = useToast()
@@ -39,7 +37,6 @@ export default function SubscriptionsTab({ auth }) {
     onSubmit: () => { }
   })
 
-  // Form validation state
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
   useEffect(() => {
@@ -50,29 +47,18 @@ export default function SubscriptionsTab({ auth }) {
     try {
       const [subsRes, plansRes, usersRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/admin/subscriptions`, {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
+          headers: { Authorization: `Bearer ${auth.token}`, 'ngrok-skip-browser-warning': 'true' }
         }),
         fetch(`${API_BASE_URL}/api/admin/subscription-plans`, {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
+          headers: { Authorization: `Bearer ${auth.token}`, 'ngrok-skip-browser-warning': 'true' }
         }),
         fetch(`${API_BASE_URL}/api/admin/users`, {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
+          headers: { Authorization: `Bearer ${auth.token}`, 'ngrok-skip-browser-warning': 'true' }
         })
       ])
 
       const [subs, plansData, usersData] = await Promise.all([
-        subsRes.json(),
-        plansRes.json(),
-        usersRes.json()
+        subsRes.json(), plansRes.json(), usersRes.json()
       ])
 
       setSubscriptions(subs)
@@ -88,15 +74,8 @@ export default function SubscriptionsTab({ auth }) {
   const handleCreateSubscription = async () => {
     setHasAttemptedSubmit(true)
     try {
-      // Validate user selection
-      if (!formData.userId || formData.userId === '') {
-        return
-      }
-
-      // Validate plan selection
-      if (!formData.planId || formData.planId === '') {
-        return
-      }
+      if (!formData.userId || formData.userId === '') return
+      if (!formData.planId || formData.planId === '') return
 
       const selectedPlan = plans.find(p => p.id === parseInt(formData.planId))
       if (!selectedPlan) {
@@ -104,17 +83,14 @@ export default function SubscriptionsTab({ auth }) {
         return
       }
 
-      // Validate start date
       if (!formData.startDate) {
         toast.warning('Please select a start date')
         return
       }
 
-      // Calculate end date if not provided (safety fallback)
       let endDate = formData.endDate
       if (!endDate && selectedPlan.durationDays) {
         const start = new Date(formData.startDate)
-        // Use time-based calculation for precision
         const msToAdd = selectedPlan.durationDays * 24 * 60 * 60 * 1000
         const end = new Date(start.getTime() + msToAdd)
         endDate = end.toISOString().split('T')[0]
@@ -144,13 +120,7 @@ export default function SubscriptionsTab({ auth }) {
         const newSubscription = await res.json()
         toast.success(`Subscription created successfully! User now has ${newSubscription.planName} plan.`)
         setShowModal(false)
-        setFormData({
-          userId: '',
-          planId: '',
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: '',
-          daysToAdd: ''
-        })
+        setFormData({ userId: '', planId: '', startDate: new Date().toISOString().split('T')[0], endDate: '', daysToAdd: '' })
         setTouched({ userId: false, planId: false })
         setHasAttemptedSubmit(false)
         loadData()
@@ -175,65 +145,34 @@ export default function SubscriptionsTab({ auth }) {
       max: 180,
       onSubmit: async (value) => {
         const success = await handleExtend(subscriptionId, value)
-        if (success) {
-          setInputModal(prev => ({ ...prev, isOpen: false }))
-        }
+        if (success) setInputModal(prev => ({ ...prev, isOpen: false }))
       }
     })
   }
 
   const handleExtend = async (subscriptionId, daysToAddInput) => {
     const daysToAdd = parseInt(daysToAddInput);
-    if (isNaN(daysToAdd) || daysToAdd <= 0) {
-      toast.warning('Please enter a valid number of days')
-      return false
-    }
-
-    if (daysToAdd > 180) {
-      toast.warning('Maximum extension is 180 days. Please enter a value between 1 and 180.');
-      return false
-    }
+    if (isNaN(daysToAdd) || daysToAdd <= 0) { toast.warning('Please enter a valid number of days'); return false }
+    if (daysToAdd > 180) { toast.warning('Maximum extension is 180 days. Please enter a value between 1 and 180.'); return false }
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscriptions/${subscriptionId}/extend`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-          'ngrok-skip-browser-warning': 'true'
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}`, 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify({ daysToAdd: parseInt(daysToAdd) })
       })
-
-      if (res.ok) {
-        loadData()
-        toast.success('Subscription extended successfully')
-        return true
-      } else {
-        toast.error('Failed to extend subscription')
-        return false
-      }
-    } catch (err) {
-      toast.error('Failed to extend subscription')
-      return false
-    }
+      if (res.ok) { loadData(); toast.success('Subscription extended successfully'); return true }
+      else { toast.error('Failed to extend subscription'); return false }
+    } catch (err) { toast.error('Failed to extend subscription'); return false }
   }
 
   const confirmDeactivate = (subscriptionId, currentPlanName) => {
-    if (currentPlanName === 'Normal') {
-      toast.info('This user is already on the Normal plan.')
-      return
-    }
-
+    if (currentPlanName === 'Normal') { toast.info('This user is already on the Normal plan.'); return }
     setConfirmModal({
-      isOpen: true,
-      title: 'Deactivate Subscription?',
-      message: `Are you sure you want to deactivate this subscription? The user will be downgraded to the Normal plan immediately.`,
+      isOpen: true, title: 'Deactivate Subscription?',
+      message: 'Are you sure you want to deactivate this subscription? The user will be downgraded to the Normal plan immediately.',
       isDanger: true,
-      onConfirm: () => {
-        handleDeactivate(subscriptionId)
-        setConfirmModal(prev => ({ ...prev, isOpen: false }))
-      }
+      onConfirm: () => { handleDeactivate(subscriptionId); setConfirmModal(prev => ({ ...prev, isOpen: false })) }
     })
   }
 
@@ -241,35 +180,19 @@ export default function SubscriptionsTab({ auth }) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscriptions/${subscriptionId}/cancel`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-          'ngrok-skip-browser-warning': 'true'
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}`, 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify({ reason: 'Deactivated by admin - downgraded to Normal' })
       })
-
-      if (res.ok) {
-        toast.success('Subscription deactivated. User downgraded to Normal plan.')
-        loadData()
-      } else {
-        toast.error('Failed to deactivate subscription')
-      }
-    } catch (err) {
-      toast.error('Failed to deactivate subscription')
-    }
+      if (res.ok) { toast.success('Subscription deactivated. User downgraded to Normal plan.'); loadData() }
+      else toast.error('Failed to deactivate subscription')
+    } catch (err) { toast.error('Failed to deactivate subscription') }
   }
 
   const confirmChangePlan = (subscriptionId, newPlanId) => {
     setConfirmModal({
-      isOpen: true,
-      title: 'Change Subscription Plan',
-      message: 'Are you sure you want to change this subscription plan?',
-      isDanger: false,
-      onConfirm: () => {
-        handleChangePlan(subscriptionId, newPlanId)
-        setConfirmModal(prev => ({ ...prev, isOpen: false }))
-      }
+      isOpen: true, title: 'Change Subscription Plan',
+      message: 'Are you sure you want to change this subscription plan?', isDanger: false,
+      onConfirm: () => { handleChangePlan(subscriptionId, newPlanId); setConfirmModal(prev => ({ ...prev, isOpen: false })) }
     })
   }
 
@@ -277,399 +200,268 @@ export default function SubscriptionsTab({ auth }) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/subscriptions/${subscriptionId}/change-plan`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-          'ngrok-skip-browser-warning': 'true'
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}`, 'ngrok-skip-browser-warning': 'true' },
         body: JSON.stringify({ newPlanId: parseInt(newPlanId) })
       })
-
-      if (res.ok) {
-        loadData()
-        toast.success('Plan changed successfully')
-      } else {
-        toast.error('Failed to change plan')
-      }
-    } catch (err) {
-      toast.error('Failed to change plan')
-    }
+      if (res.ok) { loadData(); toast.success('Plan changed successfully') }
+      else toast.error('Failed to change plan')
+    } catch (err) { toast.error('Failed to change plan') }
   }
 
-  const getHealthColor = (health) => {
-    if (health === 'expired') return '#ef4444'
-    if (health === 'expiring_soon') return '#f59e0b'
-    return '#10b981'
+  const getStatusStyle = (status) => {
+    if (status === 'active') return 'bg-green-100 text-green-800'
+    if (status === 'expired') return 'bg-red-100 text-red-800'
+    return 'bg-slate-100 text-slate-600'
   }
 
-  const getStatusColor = (status) => {
-    if (status === 'active') return '#10b981'
-    if (status === 'expired') return '#ef4444'
-    return '#6b7280'
+  const getHealthStyle = (health) => {
+    if (health === 'expired') return 'bg-red-100 text-red-700'
+    if (health === 'expiring_soon') return 'bg-amber-100 text-amber-700'
+    return 'bg-green-100 text-green-700'
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', width: '100%' }}>
-      <Loader />
+    <div className="p-8 animate-pulse space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="h-8 w-56 bg-slate-200 rounded-lg" />
+        <div className="h-10 w-44 bg-slate-200 rounded-lg" />
+      </div>
+      <div className="bg-white rounded-xl border border-slate-200">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-16 border-b border-slate-100 mx-4" />
+        ))}
+      </div>
     </div>
   )
 
   if (plans.length === 0) {
     return (
-      <div>
-        <p style={{ color: '#ef4444', marginBottom: '1rem' }}>
-          ⚠️ No subscription plans found. Please ensure the database migration has been run.
-        </p>
-        <button onClick={loadData} style={{
-          padding: '0.5rem 1rem',
-          background: '#2563eb',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}>
-          Retry Loading
-        </button>
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-5xl text-amber-400 mb-4 block">warning</span>
+          <p className="text-slate-600 font-medium">No subscription plans found</p>
+          <p className="text-sm text-slate-400 mt-1">Please ensure the database migration has been run.</p>
+          <button onClick={loadData} className="mt-4 px-4 py-2 bg-admin-primary text-white text-sm font-bold rounded-lg hover:bg-admin-primary/90">
+            Retry Loading
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="admin-subscriptions">
-      <div className="section-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Subscription Management</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            onClick={() => {
-              if (users.length === 0) {
-                toast.warning('No users found. Please ensure users exist in the system.')
-                return
-              }
-              if (plans.length === 0) {
-                toast.warning('No subscription plans found. Please run the database migration.')
-                return
-              }
-              setHasAttemptedSubmit(false)
-              setTouched({ userId: false, planId: false })
-              setShowModal(true)
-            }}
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'var(--primary-color, #2563eb)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            + Create Subscription
-          </button>
+    <div className="p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Subscription Management</h2>
+          <p className="text-slate-500 text-sm mt-1">Manage user subscriptions and plan assignments</p>
         </div>
+        <button
+          onClick={() => {
+            if (users.length === 0) { toast.warning('No users found.'); return }
+            if (plans.length === 0) { toast.warning('No subscription plans found.'); return }
+            setHasAttemptedSubmit(false)
+            setTouched({ userId: false, planId: false })
+            setShowModal(true)
+          }}
+          className="bg-admin-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-admin-primary/90 transition-all shadow-sm"
+        >
+          <span className="material-symbols-outlined text-lg">add</span>
+          Create Subscription
+        </button>
       </div>
 
-      <div className="cases-table-container">
-        <table className="cases-table">
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr>
-              <th>User</th>
-              <th>Plan</th>
-              <th>Status</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Days Remaining</th>
-              <th>Health</th>
-              <th>Actions</th>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Plan</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Start</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">End</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Days Left</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Health</th>
+              <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100">
             {subscriptions.map((sub) => (
-              <tr key={sub.id}>
-                <td>
-                  <div style={{ fontWeight: '500' }}>{sub.email || sub.name || `User #${sub.userId}`}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>ID: {sub.userId}</div>
+              <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
+                <td className="py-4 px-6">
+                  <p className="text-sm font-semibold text-slate-900">{sub.email || sub.name || `User #${sub.userId}`}</p>
+                  <p className="text-xs text-slate-400">ID: {sub.userId}</p>
                 </td>
-                <td>
-                  <span className="badge" style={{
-                    background: sub.planName === 'Premium' ? '#eff6ff' : '#f3f4f6',
-                    color: sub.planName === 'Premium' ? '#2563eb' : '#374151'
-                  }}>
+                <td className="py-4 px-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sub.planName === 'Premium' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'
+                    }`}>
                     {sub.planName}
                   </span>
                 </td>
-                <td>
-                  <span className="badge" style={{
-                    background: getStatusColor(sub.status) + '20',
-                    color: getStatusColor(sub.status)
-                  }}>
+                <td className="py-4 px-4">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(sub.status)}`}>
                     {sub.status}
                   </span>
                 </td>
-                <td>{new Date(sub.startDate).toLocaleDateString()}</td>
-                <td>{new Date(sub.endDate).toLocaleDateString()}</td>
-                <td>
-                  <span style={{
-                    color: sub.daysRemaining < 0 ? '#ef4444' : sub.daysRemaining <= 7 ? '#f59e0b' : '#10b981',
-                    fontWeight: '500'
-                  }}>
+                <td className="py-4 px-4 text-sm text-slate-600">{new Date(sub.startDate).toLocaleDateString()}</td>
+                <td className="py-4 px-4 text-sm text-slate-600">{new Date(sub.endDate).toLocaleDateString()}</td>
+                <td className="py-4 px-4">
+                  <span className={`text-sm font-bold ${sub.daysRemaining < 0 ? 'text-red-500' : sub.daysRemaining <= 7 ? 'text-amber-500' : 'text-admin-accent'
+                    }`}>
                     {sub.daysRemaining || 0}
                   </span>
                 </td>
-                <td>
-                  <span className="badge" style={{
-                    background: getHealthColor(sub.health) + '20',
-                    color: getHealthColor(sub.health)
-                  }}>
+                <td className="py-4 px-4">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getHealthStyle(sub.health)}`}>
                     {sub.health || 'active'}
                   </span>
                 </td>
-                <td>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {sub.status === 'active' && (
-                      <>
+                <td className="py-4 px-4">
+                  {sub.status === 'active' && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <button
+                        onClick={() => openExtendModal(sub.id)}
+                        className="px-2 py-1 bg-admin-accent text-white rounded text-[10px] font-bold hover:bg-admin-accent/90"
+                      >
+                        Extend
+                      </button>
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value && e.target.value !== sub.planId) confirmChangePlan(sub.id, e.target.value)
+                        }}
+                        value={sub.planId}
+                        className="bg-slate-100 border-none rounded text-[10px] font-medium py-1 pl-1 pr-5 max-w-[100px] focus:ring-1 focus:ring-admin-primary/30"
+                      >
+                        {plans.filter(p => p.isActive || p.id === sub.planId).map(p => (
+                          <option key={p.id} value={p.id} disabled={!p.isActive}>{p.name}</option>
+                        ))}
+                      </select>
+                      {sub.planName !== 'Normal' && (
                         <button
-                          onClick={() => openExtendModal(sub.id)}
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            background: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.75rem'
-                          }}
+                          onClick={() => confirmDeactivate(sub.id, sub.planName)}
+                          className="px-2 py-1 bg-amber-500 text-white rounded text-[10px] font-bold hover:bg-amber-600"
                         >
-                          Extend
+                          Deactivate
                         </button>
-                        <select
-                          onChange={(e) => {
-                            if (e.target.value && e.target.value !== sub.planId) {
-                              confirmChangePlan(sub.id, e.target.value)
-                            }
-                          }}
-                          value={sub.planId}
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid #e2e8f0',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            maxWidth: '120px'
-                          }}
-                        >
-                          {plans.filter(p => p.isActive || p.id === sub.planId).map(p => (
-                            <option key={p.id} value={p.id} disabled={!p.isActive}>
-                              {p.name} {!p.isActive ? '(Inactive)' : ''}
-                            </option>
-                          ))}
-                        </select>
-                        {sub.planName !== 'Normal' && (
-                          <button
-                            onClick={() => confirmDeactivate(sub.id, sub.planName)}
-                            style={{
-                              padding: '0.25rem 0.5rem',
-                              background: '#f59e0b',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '0.75rem'
-                            }}
-                          >
-                            Deactivate
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {subscriptions.length === 0 && (
+          <div className="py-12 text-center">
+            <span className="material-symbols-outlined text-4xl text-slate-300 mb-2 block">credit_card_off</span>
+            <p className="text-slate-400 text-sm">No subscriptions found.</p>
+          </div>
+        )}
       </div>
 
+      {/* Create Subscription Modal */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div
-            style={{
-              background: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              width: '90%',
-              maxWidth: '500px',
-              maxHeight: '90vh',
-              overflow: 'auto'
-            }}>
-            <h3 style={{ marginTop: 0 }}>Create New Subscription</h3>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                User <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <select
-                value={formData.userId}
-                onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-                onBlur={() => setTouched({ ...touched, userId: true })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  border: (hasAttemptedSubmit || touched.userId) && !formData.userId ? '1px solid #ef4444' : '1px solid #e2e8f0'
-                }}
-              >
-                <option value="">Select user...</option>
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>{u.email} ({u.name || 'No name'})</option>
-                ))}
-              </select>
-              {(hasAttemptedSubmit || touched.userId) && !formData.userId && (
-                <small style={{ color: '#ef4444', marginTop: '0.25rem', display: 'block' }}>
-                  Please select a user
-                </small>
-              )}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-admin-primary">Create New Subscription</h3>
+              <button onClick={() => {
+                setShowModal(false); setHasAttemptedSubmit(false)
+                setFormData({ userId: '', planId: '', startDate: new Date().toISOString().split('T')[0], endDate: '', daysToAdd: '' })
+                setTouched({ userId: false, planId: false })
+              }} className="text-slate-400 hover:text-slate-600">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
+            <div className="p-6 space-y-5">
+              {/* User Select */}
+              <div>
+                <label className="text-sm font-bold text-slate-700 block mb-2">
+                  User <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.userId}
+                  onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                  onBlur={() => setTouched({ ...touched, userId: true })}
+                  className={`w-full bg-slate-50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20 ${(hasAttemptedSubmit || touched.userId) && !formData.userId ? 'border-red-400' : 'border-slate-200'
+                    }`}
+                >
+                  <option value="">Select user...</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.email} ({u.name || 'No name'})</option>
+                  ))}
+                </select>
+                {(hasAttemptedSubmit || touched.userId) && !formData.userId && (
+                  <p className="text-xs text-red-500 mt-1">Please select a user</p>
+                )}
+              </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Plan <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <select
-                value={formData.planId}
-                onChange={(e) => {
-                  if (!e.target.value) {
-                    setFormData({ ...formData, planId: '', endDate: '' })
-                    return
-                  }
-                  const plan = plans.find(p => p.id === parseInt(e.target.value))
-                  if (plan) {
-                    const baseDateStr = formData.startDate || new Date().toISOString().split('T')[0];
-                    const start = new Date(baseDateStr);
-                    // Use time-based calculation for precision (handles hours)
-                    const msToAdd = plan.durationDays * 24 * 60 * 60 * 1000;
-                    const end = new Date(start.getTime() + msToAdd);
-                    const calculatedEndDate = end.toISOString().split('T')[0];
-                    setFormData({
-                      ...formData,
-                      planId: e.target.value,
-                      startDate: baseDateStr,
-                      endDate: calculatedEndDate
-                    })
-                  } else {
-                    setFormData({ ...formData, planId: e.target.value })
-                  }
-                }}
-                onBlur={() => setTouched({ ...touched, planId: true })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  border: (hasAttemptedSubmit || touched.planId) && !formData.planId ? '1px solid #ef4444' : '1px solid #e2e8f0'
-                }}
-                required
-              >
-                <option value="">-- Select plan (required) --</option>
-                {plans.filter(p => p.isActive).map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} - ${p.price} ({p.durationDays} days)
-                  </option>
-                ))}
-              </select>
-              {(hasAttemptedSubmit || touched.planId) && !formData.planId && (
-                <small style={{ color: '#ef4444', marginTop: '0.25rem', display: 'block' }}>
-                  Please select a plan
-                </small>
-              )}
+              {/* Plan Select */}
+              <div>
+                <label className="text-sm font-bold text-slate-700 block mb-2">
+                  Plan <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.planId}
+                  onChange={(e) => {
+                    if (!e.target.value) { setFormData({ ...formData, planId: '', endDate: '' }); return }
+                    const plan = plans.find(p => p.id === parseInt(e.target.value))
+                    if (plan) {
+                      const baseDateStr = formData.startDate || new Date().toISOString().split('T')[0];
+                      const start = new Date(baseDateStr);
+                      const msToAdd = plan.durationDays * 24 * 60 * 60 * 1000;
+                      const end = new Date(start.getTime() + msToAdd);
+                      setFormData({ ...formData, planId: e.target.value, startDate: baseDateStr, endDate: end.toISOString().split('T')[0] })
+                    } else {
+                      setFormData({ ...formData, planId: e.target.value })
+                    }
+                  }}
+                  onBlur={() => setTouched({ ...touched, planId: true })}
+                  className={`w-full bg-slate-50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20 ${(hasAttemptedSubmit || touched.planId) && !formData.planId ? 'border-red-400' : 'border-slate-200'
+                    }`}
+                  required
+                >
+                  <option value="">-- Select plan (required) --</option>
+                  {plans.filter(p => p.isActive).map(p => (
+                    <option key={p.id} value={p.id}>{p.name} - ${p.price} ({p.durationDays} days)</option>
+                  ))}
+                </select>
+                {(hasAttemptedSubmit || touched.planId) && !formData.planId && (
+                  <p className="text-xs text-red-500 mt-1">Please select a plan</p>
+                )}
+              </div>
+
+              {/* Date Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-bold text-slate-700 block mb-2">Start Date</label>
+                  <input type="date" value={formData.startDate} readOnly
+                    className="w-full bg-slate-100 border-slate-200 rounded-lg px-4 py-3 text-sm cursor-not-allowed text-slate-500" />
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-slate-700 block mb-2">End Date</label>
+                  <input type="date" value={formData.endDate} readOnly
+                    className="w-full bg-slate-100 border-slate-200 rounded-lg px-4 py-3 text-sm cursor-not-allowed text-slate-500" />
+                </div>
+              </div>
             </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  border: '1px solid #e2e8f0',
-                  background: '#f9fafb',
-                  cursor: 'not-allowed',
-                  color: '#6b7280'
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                End Date
-              </label>
-              <input
-                type="date"
-                value={formData.endDate}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  border: '1px solid #e2e8f0',
-                  background: '#f9fafb',
-                  cursor: 'not-allowed',
-                  color: '#6b7280'
-                }}
-              />
-            </div>
-
-
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <div className="p-6 bg-slate-50 flex gap-3">
               <button
                 onClick={() => {
-                  setShowModal(false)
-                  setHasAttemptedSubmit(false)
-                  setFormData({
-                    userId: '',
-                    planId: '',
-                    startDate: new Date().toISOString().split('T')[0],
-                    endDate: '',
-                    daysToAdd: ''
-                  })
+                  setShowModal(false); setHasAttemptedSubmit(false)
+                  setFormData({ userId: '', planId: '', startDate: new Date().toISOString().split('T')[0], endDate: '', daysToAdd: '' })
                   setTouched({ userId: false, planId: false })
                 }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
+                className="flex-1 px-4 py-3 rounded-xl bg-slate-200 text-slate-700 font-bold hover:bg-slate-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateSubscription}
                 disabled={!formData.userId || !formData.planId}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: (!formData.userId || !formData.planId) ? '#e2e8f0' : 'var(--primary-color, #2563eb)',
-                  color: (!formData.userId || !formData.planId) ? '#94a3b8' : 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: (!formData.userId || !formData.planId) ? 'not-allowed' : 'pointer',
-                  fontWeight: '600'
-                }}
+                className="flex-[2] px-4 py-3 rounded-xl bg-admin-primary text-white font-bold shadow-lg shadow-admin-primary/20 hover:bg-admin-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create
               </button>
