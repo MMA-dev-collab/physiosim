@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config'
+import EmojiPicker from 'emoji-picker-react'
 import { useToast } from '../../context/ToastContext'
 import ConfirmationModal from '../common/ConfirmationModal'
 
-// Material Symbols icon mapping for categories
-const CATEGORY_ICONS = [
-    'skeleton', 'psychology', 'fitness_center', 'accessibility_new',
-    'respiratory_rate', 'cardiology', 'monitor_heart', 'self_care',
-    'elderly', 'child_care', 'healing', 'medical_services',
-    'emergency', 'sprint', 'neurology', 'exercise',
-]
+import { CATEGORY_ICONS } from '../../utils/constants'
+
+// Icon colors mapping for categories
 
 const ICON_COLORS = [
     'bg-[var(--color-primary-soft)] text-[var(--color-primary)]',
@@ -35,6 +32,7 @@ export default function CategoriesTab({ auth }) {
     const [formName, setFormName] = useState('')
     const [formDescription, setFormDescription] = useState('')
     const [formIcon, setFormIcon] = useState('skeleton')
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [saving, setSaving] = useState(false)
 
     const loadData = async () => {
@@ -75,6 +73,7 @@ export default function CategoriesTab({ auth }) {
         setFormName('')
         setFormDescription('')
         setFormIcon('skeleton')
+        setShowEmojiPicker(false)
         setShowModal(true)
     }
 
@@ -83,6 +82,7 @@ export default function CategoriesTab({ auth }) {
         setFormName(cat.name)
         setFormDescription(cat.description || '')
         setFormIcon(cat.materialIcon || 'skeleton')
+        setShowEmojiPicker(false)
         setShowModal(true)
     }
 
@@ -119,6 +119,7 @@ export default function CategoriesTab({ auth }) {
             if (!res.ok) throw new Error('Failed to save')
             toast.success(editingCategory ? 'Category updated' : 'Category created')
             setShowModal(false)
+            setShowEmojiPicker(false)
             loadData()
         } catch (e) {
             toast.error(e.message)
@@ -173,10 +174,10 @@ export default function CategoriesTab({ auth }) {
                     <div key={cat.id} className="group bg-admin-card rounded-xl border border-admin-border p-6 shadow-admin-card hover:shadow-admin-card-hover hover:border-admin-primary transition-all duration-300">
                         <div className="flex justify-between items-start mb-4">
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ICON_COLORS[index % ICON_COLORS.length]}`}>
-                                {cat.icon ? (
-                                    <span className="text-2xl">{cat.icon}</span>
+                                {CATEGORY_ICONS.includes(cat.icon || cat.materialIcon) ? (
+                                    <span className="material-symbols-outlined text-3xl">{cat.icon || cat.materialIcon || 'category'}</span>
                                 ) : (
-                                    <span className="material-symbols-outlined text-3xl">{cat.materialIcon || 'category'}</span>
+                                    <span className="text-2xl">{cat.icon || cat.materialIcon}</span>
                                 )}
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -260,21 +261,55 @@ export default function CategoriesTab({ auth }) {
                             </div>
 
                             <div className="space-y-4">
-                                <label className="text-sm font-bold text-admin-text block">Select Icon</label>
-                                <div className="grid grid-cols-6 gap-3">
-                                    {CATEGORY_ICONS.map(icon => (
-                                        <div
-                                            key={icon}
-                                            onClick={() => setFormIcon(icon)}
-                                            className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${formIcon === icon
-                                                ? 'bg-admin-primary text-white shadow-lg shadow-admin-primary/20'
-                                                : 'bg-admin-bg text-admin-text-muted hover:bg-admin-primary-soft hover:text-admin-primary'
-                                                }`}
-                                        >
-                                            <span className="material-symbols-outlined">{icon}</span>
-                                        </div>
-                                    ))}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-bold text-admin-text">Select Icon</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 ${showEmojiPicker
+                                            ? 'bg-admin-primary text-white border-admin-primary'
+                                            : 'bg-admin-bg text-admin-text-muted border-admin-border hover:border-admin-primary'
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-sm">mood</span>
+                                        {showEmojiPicker ? 'Hide Emoji Picker' : 'Choose Custom Emoji'}
+                                    </button>
                                 </div>
+
+                                {showEmojiPicker ? (
+                                    <div className="relative z-[1001] flex justify-center">
+                                        <div className="absolute top-0 shadow-2xl rounded-2xl overflow-hidden border border-admin-border">
+                                            <EmojiPicker
+                                                onEmojiClick={(emojiData) => {
+                                                    setFormIcon(emojiData.emoji)
+                                                    setShowEmojiPicker(false)
+                                                }}
+                                                width="100%"
+                                                height={350}
+                                                previewConfig={{ showPreview: false }}
+                                                skinTonesDisabled
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-6 gap-3">
+                                        {CATEGORY_ICONS.map(icon => (
+                                            <div
+                                                key={icon}
+                                                onClick={() => {
+                                                    setFormIcon(icon)
+                                                    setShowEmojiPicker(false)
+                                                }}
+                                                className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${formIcon === icon
+                                                    ? 'bg-admin-primary text-white shadow-lg shadow-admin-primary/20'
+                                                    : 'bg-admin-bg text-admin-text-muted hover:bg-admin-primary-soft hover:text-admin-primary'
+                                                    }`}
+                                            >
+                                                <span className="material-symbols-outlined">{icon}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Preview */}
@@ -286,7 +321,11 @@ export default function CategoriesTab({ auth }) {
                                 </div>
                                 <div className="flex justify-center">
                                     <div className="w-20 h-20 rounded-2xl bg-admin-primary/10 flex items-center justify-center text-admin-primary">
-                                        <span className="material-symbols-outlined text-5xl">{formIcon}</span>
+                                        {CATEGORY_ICONS.includes(formIcon) ? (
+                                            <span className="material-symbols-outlined text-5xl">{formIcon}</span>
+                                        ) : (
+                                            <span className="text-5xl">{formIcon}</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

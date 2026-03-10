@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../../config'
+import { CATEGORY_ICONS } from '../../utils/constants'
 import ConfirmationModal from '../common/ConfirmationModal'
 
 export default function CasesTab({ auth }) {
@@ -184,8 +185,13 @@ export default function CasesTab({ auth }) {
                   <div className="text-[11px] text-slate-400">ID: {c.id}</div>
                 </td>
                 <td className="py-4 px-4">
-                  <span className="px-2.5 py-1 bg-admin-bg text-admin-text-muted rounded-md text-xs font-medium border border-admin-border/50">
-                    {c.categoryIcon} {c.categoryName || c.category}
+                  <span className="px-2.5 py-1 bg-admin-bg text-admin-text-muted rounded-md text-xs font-medium border border-admin-border/50 flex items-center gap-2 w-fit">
+                    {CATEGORY_ICONS.includes(c.categoryIcon) ? (
+                      <span className="material-symbols-outlined text-[16px] leading-none">{c.categoryIcon || 'category'}</span>
+                    ) : (
+                      <span className="text-[14px] leading-none">{c.categoryIcon}</span>
+                    )}
+                    {c.categoryName || c.category}
                   </span>
                 </td>
                 <td className="py-4 px-4">
