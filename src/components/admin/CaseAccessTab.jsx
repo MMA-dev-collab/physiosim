@@ -9,6 +9,8 @@ export default function CaseAccessTab({ auth }) {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   // Filters
   const [search, setSearch] = useState('')
@@ -59,6 +61,11 @@ export default function CaseAccessTab({ auth }) {
       .then(data => setCategories(data))
       .catch(e => console.error(e))
   }, [])
+
+  // Reset to first page when filtering
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, categoryFilter, accessFilter])
 
   // Update case access - Refactored for Plan-based Access
   const handleAccessUpdate = async (caseId, updates) => {
@@ -146,6 +153,13 @@ export default function CaseAccessTab({ auth }) {
 
     return matchesSearch && matchesCategory && matchesAccess
   })
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredCases.length / pageSize)
+  const paginatedCases = filteredCases.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   // Check if a plan can access a case based on hierarchy
   const canPlanAccessCase = (plan, caseData) => {
@@ -309,7 +323,7 @@ export default function CaseAccessTab({ auth }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-admin-border/50">
-                {filteredCases.map(c => (
+                {paginatedCases.map(c => (
                   <tr key={c.id} className={`hover:bg-admin-bg/50 transition-colors ${updating === c.id ? 'opacity-50' : ''}`}>
                     <td className="py-3 px-4">
                       <p className="text-sm font-bold text-admin-text">{c.title}</p>
@@ -407,19 +421,65 @@ export default function CaseAccessTab({ auth }) {
               </div>
             )}
           </div>
-          {/* Footer Legend */}
-          <div className="p-4 bg-admin-bg/50 border-t border-admin-border flex justify-between items-center shrink-0">
-            <p className="text-[11px] text-admin-text-muted italic font-medium">Access changes take effect immediately for all active subscribers.</p>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-admin-accent shadow-sm" />
-                <span className="text-[11px] font-bold text-admin-text">Enabled</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-admin-border shadow-sm" />
-                <span className="text-[11px] font-bold text-admin-text-muted">Disabled</span>
+          {/* Footer Legend & Pagination */}
+          <div className="p-4 bg-admin-bg/50 border-t border-admin-border flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
+            <div className="flex flex-col gap-1">
+              <p className="text-[11px] text-admin-text-muted italic font-medium">Access changes take effect immediately for all active subscribers.</p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-admin-accent shadow-sm" />
+                  <span className="text-[11px] font-bold text-admin-text">Enabled</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-admin-border shadow-sm" />
+                  <span className="text-[11px] font-bold text-admin-text-muted">Disabled</span>
+                </div>
               </div>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1 self-end sm:self-center">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-admin-card border border-admin-border rounded-lg text-admin-text-muted hover:text-admin-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Previous Page"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+
+                <div className="flex items-center gap-1 px-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                    .map((page, index, array) => (
+                      <React.Fragment key={page}>
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="px-1 text-admin-text-muted opacity-50 text-xs">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`min-w-[32px] h-8 rounded-lg text-xs font-bold border transition-all ${currentPage === page
+                              ? 'bg-admin-primary text-white border-admin-primary shadow-sm active:scale-95'
+                              : 'bg-admin-card text-admin-text-muted border-admin-border hover:border-admin-primary/50'
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-admin-card border border-admin-border rounded-lg text-admin-text-muted hover:text-admin-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Next Page"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
