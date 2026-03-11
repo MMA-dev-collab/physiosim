@@ -142,8 +142,6 @@ export default function SubscriptionPlansTab({ auth }) {
     const days = parseInt(formData.durationDays) || 0
     const hours = parseInt(formData.durationHours) || 0
 
-    if (finalDays > 36500) { toast.error('Duration is too long'); setLoading(false); return }
-
     let totalDays = 0; let finalDays = 0;
     if (formData.isUnlimited) { finalDays = 36500 }
     else { totalDays = (years * 365) + days + (hours / 24); finalDays = parseFloat(totalDays.toFixed(4)); }
@@ -599,16 +597,17 @@ export default function SubscriptionPlansTab({ auth }) {
               </div>
             </form>
           </div>
+        </div>
       )}
 
-          <ConfirmationModal
-            isOpen={confirmModal.isOpen}
-            title={confirmModal.title}
-            message={confirmModal.message}
-            onConfirm={confirmModal.onConfirm}
-            onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-            isDanger={confirmModal.isDanger}
-          />
-        </div >
-      )
-      }
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        isDanger={confirmModal.isDanger}
+      />
+    </div>
+  )
+}
