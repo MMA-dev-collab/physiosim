@@ -34,6 +34,8 @@ export default function CategoriesTab({ auth }) {
     const [formIcon, setFormIcon] = useState('skeleton')
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [errors, setErrors] = useState({})
+    const [touched, setTouched] = useState({})
 
     const loadData = async () => {
         setLoading(true)
@@ -74,6 +76,8 @@ export default function CategoriesTab({ auth }) {
         setFormDescription('')
         setFormIcon('skeleton')
         setShowEmojiPicker(false)
+        setErrors({})
+        setTouched({})
         setShowModal(true)
     }
 
@@ -83,14 +87,27 @@ export default function CategoriesTab({ auth }) {
         setFormDescription(cat.description || '')
         setFormIcon(cat.materialIcon || 'skeleton')
         setShowEmojiPicker(false)
+        setErrors({})
+        setTouched({})
         setShowModal(true)
     }
 
+    const validate = (form = { name: formName, icon: formIcon }) => {
+        const newErrors = {}
+        if (!form.name || !form.name.trim()) newErrors.name = 'Category name is required'
+        if (!form.icon) newErrors.icon = 'Please select an icon'
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+
+    const handleBlur = (field) => {
+        setTouched(prev => ({ ...prev, [field]: true }))
+        validate()
+    }
+
     const handleSave = async () => {
-        if (!formName.trim()) {
-            toast.error('Category name is required')
-            return
-        }
+        setTouched({ name: true, icon: true })
+        if (!validate()) return
 
         setSaving(true)
         try {
@@ -242,11 +259,20 @@ export default function CategoriesTab({ auth }) {
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-admin-text">Category Name</label>
                                 <input
-                                    className="w-full bg-admin-bg border border-admin-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-admin-primary/20 text-sm text-admin-text placeholder:text-admin-text-muted"
+                                    className={`w-full bg-admin-bg border rounded-lg px-4 py-3 focus:ring-2 focus:ring-admin-primary/20 text-sm text-admin-text placeholder:text-admin-text-muted transition-colors ${errors.name && touched.name ? 'border-red-500' : 'border-admin-border'}`}
                                     placeholder="e.g. Cardiopulmonary Rehab"
                                     value={formName}
-                                    onChange={(e) => setFormName(e.target.value)}
+                                    onChange={(e) => {
+                                        setFormName(e.target.value)
+                                        if (touched.name) validate({ name: e.target.value, icon: formIcon })
+                                    }}
+                                    onBlur={() => handleBlur('name')}
                                 />
+                                {errors.name && touched.name && (
+                                    <p className="text-red-500 text-xs mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        ⚠ {errors.name}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -283,6 +309,8 @@ export default function CategoriesTab({ auth }) {
                                                 onEmojiClick={(emojiData) => {
                                                     setFormIcon(emojiData.emoji)
                                                     setShowEmojiPicker(false)
+                                                    setTouched(prev => ({ ...prev, icon: true }))
+                                                    validate({ name: formName, icon: emojiData.emoji })
                                                 }}
                                                 width="100%"
                                                 height={350}
@@ -299,6 +327,8 @@ export default function CategoriesTab({ auth }) {
                                                 onClick={() => {
                                                     setFormIcon(icon)
                                                     setShowEmojiPicker(false)
+                                                    setTouched(prev => ({ ...prev, icon: true }))
+                                                    validate({ name: formName, icon: icon })
                                                 }}
                                                 className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${formIcon === icon
                                                     ? 'bg-admin-primary text-white shadow-lg shadow-admin-primary/20'
@@ -309,6 +339,11 @@ export default function CategoriesTab({ auth }) {
                                             </div>
                                         ))}
                                     </div>
+                                )}
+                                {errors.icon && touched.icon && (
+                                    <p className="text-red-500 text-xs mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        ⚠ {errors.icon}
+                                    </p>
                                 )}
                             </div>
 

@@ -18,6 +18,8 @@ export default function SubscriptionPlansTab({ auth }) {
     maxFreeCases: '0', description: '', features: [], isActive: true, isPremium: false,
     isUnlimited: false, newFeature: ''
   })
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
 
   useEffect(() => { loadPlans() }, [auth])
 
@@ -68,6 +70,8 @@ export default function SubscriptionPlansTab({ auth }) {
           maxFreeCases: '0', description: '', features: [], isActive: true, isPremium: false, newFeature: ''
         })
       }
+      setErrors({})
+      setTouched({})
       setShowModal(true)
     } catch (err) {
       console.error('Error opening modal:', err)
@@ -83,6 +87,8 @@ export default function SubscriptionPlansTab({ auth }) {
       maxFreeCases: '0', description: '', features: [], isActive: true, isPremium: false,
       isUnlimited: false, newFeature: ''
     })
+    setErrors({})
+    setTouched({})
   }
 
   const handleAddFeature = () => {
@@ -95,23 +101,48 @@ export default function SubscriptionPlansTab({ auth }) {
     setFormData({ ...formData, features: formData.features.filter((_, i) => i !== index) })
   }
 
+  const validate = (data = formData) => {
+    const newErrors = {}
+    if (!data.name || !data.name.trim()) newErrors.name = 'Plan name is required'
+    if (data.price === '' || data.price === null || data.price === undefined) {
+      newErrors.price = 'Price is required'
+    } else {
+      const p = parseFloat(data.price)
+      if (isNaN(p) || p < 0) newErrors.price = 'Price must be 0 or greater'
+    }
+
+    const years = parseInt(data.durationYears) || 0
+    const days = parseInt(data.durationDays) || 0
+    const hours = parseInt(data.durationHours) || 0
+    if (years === 0 && days === 0 && hours === 0 && !data.isUnlimited) {
+      newErrors.duration = 'At least one duration field is required'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+    validate()
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
+    setTouched({ name: true, price: true, duration: true })
+    if (!validate()) return
+
     if (loading) return
     setLoading(true)
 
-    if (!formData.name || formData.name.trim() === '') { toast.error('Plan name is required'); setLoading(false); return }
-    if (!formData.price || formData.price === '') { toast.error('Price is required'); setLoading(false); return }
-
+    const price = parseFloat(formData.price)
     const years = parseInt(formData.durationYears) || 0
     const days = parseInt(formData.durationDays) || 0
     const hours = parseInt(formData.durationHours) || 0
-    if (years === 0 && days === 0 && hours === 0) { toast.error('Please specify at least one duration (years, days, or hours)'); setLoading(false); return }
 
-    const price = parseFloat(formData.price)
-    if (isNaN(price) || price < 0) { toast.error('Price must be a valid number (0 or greater)'); setLoading(false); return }
+    if (finalDays > 36500) { toast.error('Duration is too long'); setLoading(false); return }
 
     let totalDays = 0; let finalDays = 0;
     if (formData.isUnlimited) { finalDays = 36500 }
@@ -394,9 +425,17 @@ export default function SubscriptionPlansTab({ auth }) {
                 {/* Plan Name */}
                 <div>
                   <label className="text-sm font-bold text-slate-700 block mb-2">Plan Name <span className="text-red-500">*</span></label>
-                  <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required placeholder="e.g., Premium, Enterprise"
-                    className="w-full bg-slate-50 border-slate-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20" />
+                  <input type="text" value={formData.name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value })
+                      if (touched.name) validate({ ...formData, name: e.target.value })
+                    }}
+                    onBlur={() => handleBlur('name')}
+                    placeholder="e.g., Premium, Enterprise"
+                    className={`w-full bg-slate-50 border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20 transition-colors ${errors.name && touched.name ? 'border-red-500' : 'border-slate-200'}`} />
+                  {errors.name && touched.name && (
+                    <p className="text-red-500 text-xs mt-1">⚠ {errors.name}</p>
+                  )}
                 </div>
 
                 {/* Price & Duration */}
@@ -404,8 +443,15 @@ export default function SubscriptionPlansTab({ auth }) {
                   <div>
                     <label className="text-sm font-bold text-slate-700 block mb-2">Price ($) <span className="text-red-500">*</span></label>
                     <input type="number" step="0.01" min="0" value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })} required
-                      className="w-full bg-slate-50 border-slate-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20" />
+                      onChange={(e) => {
+                        setFormData({ ...formData, price: e.target.value })
+                        if (touched.price) validate({ ...formData, price: e.target.value })
+                      }}
+                      onBlur={() => handleBlur('price')}
+                      className={`w-full bg-slate-50 border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20 transition-colors ${errors.price && touched.price ? 'border-red-500' : 'border-slate-200'}`} />
+                    {errors.price && touched.price && (
+                      <p className="text-red-500 text-xs mt-1">⚠ {errors.price}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-bold text-slate-700 block mb-2">Max Free Cases</label>
@@ -426,11 +472,14 @@ export default function SubscriptionPlansTab({ auth }) {
                         onChange={(e) => {
                           let val = parseInt(e.target.value) || 0;
                           if (val > 10) val = 10; if (val < 0) val = 0;
-                          setFormData({ ...formData, durationYears: val.toString() });
+                          const newData = { ...formData, durationYears: val.toString() };
+                          setFormData(newData);
+                          if (touched.duration) validate(newData);
                         }}
+                        onBlur={() => handleBlur('duration')}
                         onKeyDown={(e) => { const a = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter']; if (!/^\d$/.test(e.key) && !a.includes(e.key)) e.preventDefault(); }}
                         disabled={formData.isUnlimited} placeholder="0"
-                        className="w-full bg-slate-50 border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-admin-primary/20 disabled:opacity-50" />
+                        className={`w-full bg-slate-50 border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-admin-primary/20 disabled:opacity-50 transition-colors ${errors.duration && touched.duration ? 'border-red-500' : 'border-slate-200'}`} />
                     </div>
                     <div>
                       <label className="text-xs text-slate-500 block mb-1">Days</label>
@@ -439,11 +488,14 @@ export default function SubscriptionPlansTab({ auth }) {
                           let days = parseInt(e.target.value) || 0; let years = parseInt(formData.durationYears) || 0;
                           if (days >= 365) { years += Math.floor(days / 365); days = days % 365; }
                           if (years > 10) { years = 10; days = 0; } if (years < 0) years = 0; if (days < 0) days = 0;
-                          setFormData({ ...formData, durationDays: days.toString(), durationYears: years.toString() });
+                          const newData = { ...formData, durationDays: days.toString(), durationYears: years.toString() };
+                          setFormData(newData);
+                          if (touched.duration) validate(newData);
                         }}
+                        onBlur={() => handleBlur('duration')}
                         onKeyDown={(e) => { const a = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter']; if (!/^\d$/.test(e.key) && !a.includes(e.key)) e.preventDefault(); }}
                         disabled={formData.isUnlimited} placeholder="30"
-                        className="w-full bg-slate-50 border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-admin-primary/20 disabled:opacity-50" />
+                        className={`w-full bg-slate-50 border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-admin-primary/20 disabled:opacity-50 transition-colors ${errors.duration && touched.duration ? 'border-red-500' : 'border-slate-200'}`} />
                     </div>
                     <div>
                       <label className="text-xs text-slate-500 block mb-1">Hours</label>
@@ -452,16 +504,26 @@ export default function SubscriptionPlansTab({ auth }) {
                           let hours = parseInt(e.target.value) || 0; let days = parseInt(formData.durationDays) || 0; let years = parseInt(formData.durationYears) || 0;
                           if (hours >= 24) { const ed = Math.floor(hours / 24); hours = hours % 24; days += ed; if (days >= 365) { years += Math.floor(days / 365); days = days % 365; } }
                           if (years > 10) { years = 10; days = 0; hours = 0; } if (years < 0) years = 0; if (days < 0) days = 0; if (hours < 0) hours = 0;
-                          setFormData({ ...formData, durationHours: hours.toString(), durationDays: days.toString(), durationYears: years.toString() });
+                          const newData = { ...formData, durationHours: hours.toString(), durationDays: days.toString(), durationYears: years.toString() };
+                          setFormData(newData);
+                          if (touched.duration) validate(newData);
                         }}
+                        onBlur={() => handleBlur('duration')}
                         onKeyDown={(e) => { const a = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter']; if (!/^\d$/.test(e.key) && !a.includes(e.key)) e.preventDefault(); }}
                         disabled={formData.isUnlimited} placeholder="0"
-                        className="w-full bg-slate-50 border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-admin-primary/20 disabled:opacity-50" />
+                        className={`w-full bg-slate-50 border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-admin-primary/20 disabled:opacity-50 transition-colors ${errors.duration && touched.duration ? 'border-red-500' : 'border-slate-200'}`} />
                     </div>
                   </div>
+                  {errors.duration && touched.duration && (
+                    <p className="text-red-500 text-xs mt-1 animate-in fade-in slide-in-from-top-1">⚠ {errors.duration}</p>
+                  )}
                   <label className="flex items-center gap-2 mt-3 cursor-pointer">
                     <input type="checkbox" checked={formData.isUnlimited}
-                      onChange={(e) => setFormData({ ...formData, isUnlimited: e.target.checked })}
+                      onChange={(e) => {
+                        const newData = { ...formData, isUnlimited: e.target.checked };
+                        setFormData(newData);
+                        if (touched.duration) validate(newData);
+                      }}
                       className="rounded border-slate-300 text-admin-primary focus:ring-admin-primary/20" />
                     <span className="text-xs text-slate-600">Unlimited Duration (100 years)</span>
                   </label>
@@ -537,17 +599,16 @@ export default function SubscriptionPlansTab({ auth }) {
               </div>
             </form>
           </div>
-        </div>
       )}
 
-      <ConfirmationModal
-        isOpen={confirmModal.isOpen}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-        isDanger={confirmModal.isDanger}
-      />
-    </div>
-  )
-}
+          <ConfirmationModal
+            isOpen={confirmModal.isOpen}
+            title={confirmModal.title}
+            message={confirmModal.message}
+            onConfirm={confirmModal.onConfirm}
+            onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            isDanger={confirmModal.isDanger}
+          />
+        </div >
+      )
+      }
