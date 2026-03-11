@@ -257,7 +257,7 @@ export default function CategoriesTab({ auth }) {
                         {/* Modal Body */}
                         <div className="p-8 space-y-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-admin-text">Category Name</label>
+                                <label className="text-sm font-bold text-admin-text">Category Name <span className="text-red-500">*</span></label>
                                 <input
                                     className={`w-full bg-admin-bg border rounded-lg px-4 py-3 focus:ring-2 focus:ring-admin-primary/20 text-sm text-admin-text placeholder:text-admin-text-muted transition-colors ${errors.name && touched.name ? 'border-red-500' : 'border-admin-border'}`}
                                     placeholder="e.g. Cardiopulmonary Rehab"
@@ -288,7 +288,7 @@ export default function CategoriesTab({ auth }) {
 
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm font-bold text-admin-text">Select Icon</label>
+                                    <label className="text-sm font-bold text-admin-text">Select Icon <span className="text-red-500">*</span></label>
                                     <button
                                         type="button"
                                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}

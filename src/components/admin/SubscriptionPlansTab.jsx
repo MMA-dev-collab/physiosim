@@ -462,7 +462,7 @@ export default function SubscriptionPlansTab({ auth }) {
 
                 {/* Duration Fields */}
                 <div>
-                  <label className="text-sm font-bold text-slate-700 block mb-2">Duration</label>
+                  <label className="text-sm font-bold text-slate-700 block mb-2">Duration <span className="text-red-500">*</span></label>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="text-xs text-slate-500 block mb-1">Years</label>
