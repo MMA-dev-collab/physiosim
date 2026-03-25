@@ -6,6 +6,7 @@ import { useIdleTimer } from '../hooks/useIdleTimer'
 import HintModal from '@/components/common/HintModal'
 import { ClinicalStepRunner } from '@/components/clinical'
 import ClinicalHub from '@/components/clinical/ClinicalHub'
+import CompositeAssessmentRunner from '@/components/clinical/CompositeAssessmentRunner'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 
@@ -24,10 +25,11 @@ function CaseRunnerPage({ auth }) {
   const [essayFeedback, setEssayFeedback] = useState(null)
   const [essayScore, setEssayScore] = useState(null)
 
-  // Progress state for Clinical Hubs (Map of HubID -> Set<SubStepID>)
-  // We use a simpler object structure: { [hubId]: [subStepId1, subStepId2, ...] } for serialization if needed,
-  // but Set is easier for runtime. Let's use an object with arrays to be safe/simple.
+  // Progress state for Clinical Hubs 
   const [hubProgress, setHubProgress] = useState({})
+  
+  // Track active sub-step for hubs so Layout accordion can control it
+  const [activeSubStepId, setActiveSubStepId] = useState(null)
 
   // Adaptive feedback state
   const [showHint, setShowHint] = useState(false)
@@ -53,6 +55,10 @@ function CaseRunnerPage({ auth }) {
         }
         const data = await res.json()
         setCaseData(data)
+        // Resume from saved step index
+        if (data.currentStepIndex && data.currentStepIndex > 0 && !data.isCompleted) {
+          setCurrentStepIndex(data.currentStepIndex)
+        }
       } catch (e) {
         setError(e.message)
       } finally {
@@ -131,6 +137,27 @@ function CaseRunnerPage({ auth }) {
     })
   }, [currentStep])
 
+  // When currentStepIndex changes, safely determine the initial active subStep if it's a hub
+  useEffect(() => {
+    if (!currentStep) return
+    
+    // Auto-select first substep if it's a hub and activeSubStepId is not within this hub
+    if (currentStep.type === 'clinical_hub' && currentStep.subSteps?.length > 0) {
+      const isCurrentActiveValid = currentStep.subSteps.some(s => s.id === activeSubStepId)
+      if (!isCurrentActiveValid) {
+        setActiveSubStepId(currentStep.subSteps[0].id)
+      }
+    } else {
+      setActiveSubStepId(null)
+    }
+  }, [currentStepIndex, currentStep, activeSubStepId])
+
+  // Track viewed sub-steps
+  useEffect(() => {
+    if (activeSubStepId && currentStep?.type === 'clinical_hub') {
+      handleSubStepView(activeSubStepId)
+    }
+  }, [activeSubStepId, currentStep, handleSubStepView])
 
   useEffect(() => {
     // Reset state first
@@ -299,11 +326,9 @@ function CaseRunnerPage({ auth }) {
       return essayScore !== null
     }
 
-    // Clinical Hub: Must view all sub-steps
+    // Clinical Hub: the Next button just progresses through sub-steps then advances
     if (currentStep.type === 'clinical_hub') {
-      const viewed = hubProgress[currentStep.id]?.length || 0
-      const total = currentStep.subSteps?.length || 0
-      return viewed >= total
+      return true
     }
 
     // Default: Open
@@ -311,10 +336,63 @@ function CaseRunnerPage({ auth }) {
   }, [caseData, currentStep, selectedOption, isCorrect, essayScore, hubProgress])
 
   const handleNext = () => {
+    // If we're in a clinical_hub, check if there are more sub-steps to view
+    if (currentStep?.type === 'clinical_hub' && currentStep.subSteps?.length > 0) {
+      const subIndex = currentStep.subSteps.findIndex(s => s.id === activeSubStepId)
+      if (subIndex !== -1 && subIndex < currentStep.subSteps.length - 1) {
+        // Go to next sub-step
+        setActiveSubStepId(currentStep.subSteps[subIndex + 1].id)
+        return
+      }
+    }
+
     if (currentStepIndex < steps.length - 1) {
-      setCurrentStepIndex((i) => i + 1)
+      const nextIdx = currentStepIndex + 1
+      setCurrentStepIndex(nextIdx)
+      // Persist progress for mid-case resume
+      saveProgress(nextIdx)
     }
   }
+
+  const handleBack = () => {
+    // If we're in a clinical_hub, check if there are previous sub-steps to view
+    if (currentStep?.type === 'clinical_hub' && currentStep.subSteps?.length > 0) {
+      const subIndex = currentStep.subSteps.findIndex(s => s.id === activeSubStepId)
+      if (subIndex > 0) {
+        // Go to previous sub-step
+        setActiveSubStepId(currentStep.subSteps[subIndex - 1].id)
+        return
+      }
+    }
+
+    if (currentStepIndex > 0) {
+      const prevIdx = currentStepIndex - 1
+      setCurrentStepIndex(prevIdx)
+      
+      // If returning to a hub, auto-select its LAST sub-step
+      const prevStep = steps[prevIdx]
+      if (prevStep?.type === 'clinical_hub' && prevStep.subSteps?.length > 0) {
+        setActiveSubStepId(prevStep.subSteps[prevStep.subSteps.length - 1].id)
+      }
+    }
+  }
+
+  // Save currentStepIndex to backend (non-blocking)
+  const saveProgress = useCallback(async (stepIdx) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/cases/${id}/progress`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify({ currentStepIndex: stepIdx })
+      })
+    } catch (err) {
+      console.error('Failed to save progress:', err)
+    }
+  }, [id, auth.token])
 
   const handleTryAgain = () => {
     setSelectedOption(null)
@@ -349,11 +427,22 @@ function CaseRunnerPage({ auth }) {
 
       <CaseRunnerLayout
         caseTitle={caseData.title}
+        patientData={caseData.patientData || currentStep?.content}
+        difficulty={caseData.difficulty}
+        duration={caseData.duration}
         currentStepIndex={currentStepIndex}
         totalSteps={steps.length}
         steps={steps}
         isReviewMode={caseData.isCompleted}
-        patientInfo={currentStep?.type === 'info' ? currentStep.content : null} // Pass patient info if available
+        onStepClick={(idx) => setCurrentStepIndex(idx)}
+        onNext={handleNext}
+        onBack={handleBack}
+        isNextDisabled={!canGoNext}
+        clinicalTip={currentStep?.content?.clinicalTip || currentStep?.logic?.reasoning}
+        // Sub-step accordion props
+        activeSubStepId={activeSubStepId}
+        onSubStepClick={setActiveSubStepId}
+        hubProgress={hubProgress}
       >
         {/* Watermark — absolute inside the case content box */}
         {/* <WatermarkOverlay
@@ -395,20 +484,39 @@ function CaseRunnerPage({ auth }) {
             />
           )}
 
-          {currentStep?.type === 'clinical' && (
+          {currentStep?.type === 'clinical' && currentStep?.category === 'composite_history' && (
+            <div className="animate-in fade-in duration-500">
+               <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective History</h2>
+               <ClinicalStepRunner step={currentStep} hideHeader={true} />
+            </div>
+          )}
+
+          {currentStep?.type === 'clinical' && currentStep?.category !== 'composite_history' && !currentStep?.content?.sections && (
             <ClinicalStepRunner step={currentStep} />
           )}
 
           {currentStep?.type === 'clinical_hub' && (
-            <ClinicalHub
-              step={currentStep}
-              viewedSubSteps={new Set(hubProgress[currentStep.id] || [])}
-              onStepViewed={handleSubStepView}
-            />
+            <div className="animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-3xl font-bold text-slate-800">
+                      {currentStep.title === 'Physical Assessment' ? 'Objective Examination' : currentStep.title === 'Patient History' ? 'Subjective History' : currentStep.title}
+                    </h2>
+                </div>
+                {/* Render the specific sub-step directly */}
+                {(() => {
+                   const sub = currentStep.subSteps?.find(s => s.id === activeSubStepId) || currentStep.subSteps?.[0];
+                   return sub ? <ClinicalStepRunner step={sub} hideHeader={true} /> : null
+                })()}
+            </div>
           )}
 
           {currentStep?.type === 'investigation' && (
             <InvestigationsStep step={currentStep} />
+          )}
+
+          {/* Composite Assessment (new: sections-based) */}
+          {currentStep?.type === 'clinical' && currentStep?.content?.sections && (
+            <CompositeAssessmentRunner step={currentStep} />
           )}
 
           {currentStep?.type === 'essay' && (
@@ -460,40 +568,18 @@ function CaseRunnerPage({ auth }) {
             />
           )}
 
-          {/* Action Footer */}
-          <div className="mt-12 pt-6 border-t border-slate-200 flex items-center justify-between">
-            <button
-              className="px-4 py-2 text-slate-500 font-medium hover:text-slate-700 transition-colors disabled:opacity-50"
-              type="button"
-              onClick={() => setCurrentStepIndex((i) => Math.max(0, i - 1))}
-              disabled={currentStepIndex === 0}
-            >
-              ← Previous
-            </button>
-
-            <div className="flex gap-3">
-              {feedback && currentStep?.type === 'mcq' && (
-                <button className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors" type="button" onClick={handleTryAgain}>
-                  Try Again
-                </button>
-              )}
-              {currentStepIndex < steps.length - 1 && (
-                <button
-                  className="px-6 py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 shadow-md shadow-teal-200 transition-all disabled:opacity-50 disabled:shadow-none"
-                  type="button"
-                  disabled={!canGoNext}
-                  onClick={handleNext}
-                >
-                  Next Step →
-                </button>
-              )}
-              {currentStepIndex === steps.length - 1 && (
-                <button className="px-6 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 shadow-lg" type="button" onClick={() => navigate('/cases')}>
-                  Finish Case
-                </button>
-              )}
+          {/* MCQ Retry button */}
+          {feedback && currentStep?.type === 'mcq' && (
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <button
+                className="cf-btn cf-btn-secondary"
+                type="button"
+                onClick={handleTryAgain}
+              >
+                Try Again
+              </button>
             </div>
-          </div>
+          )}
         </div>
 
 
@@ -618,24 +704,29 @@ function HistoryStep({ step }) {
 
   return (
     <div className="history-step">
-      <div className="section-title" style={{ marginBottom: '1rem' }}>
+      <div className="section-title" style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>
         {step.content?.title || 'History of Pain'}
       </div>
-      <p className="section-description" style={{ marginBottom: '1.5rem' }}>
+      <p className="section-description" style={{ color: 'var(--cf-text-muted)', marginBottom: '32px' }}>
         {step.content?.description || 'Questions you should ask and patient answers'}
       </p>
-      <div className="history-questions">
+      <div className="history-questions space-y-4">
         {questions.map((q, index) => (
-          <div key={index} className="history-question-card">
-            <div className="history-question-header">
-              <div className="history-question-number">{index + 1}</div>
-              <div className="history-question-icon">{q.icon || '❓'}</div>
-              <div className="history-question-text">{q.question}</div>
-            </div>
-            <div className="history-answer-box">
-              <div className="history-answer-label">Answer:</div>
-              <div className="history-answer-text">{q.answer}</div>
-            </div>
+          <div key={index} className="history-section-box">
+             <div className="flex items-start gap-4">
+               <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg shadow-sm">
+                 {q.icon || '❓'}
+               </div>
+               <div className="flex-1">
+                 <div className="history-section-title" style={{ fontSize: '15px', color: 'var(--cf-text-muted)', marginBottom: '4px' }}>Question {index + 1}</div>
+                 <div className="history-section-content" style={{ fontSize: '17px', fontWeight: '600', marginBottom: '16px' }}>{q.question}</div>
+                 
+                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Patient Answer</div>
+                    <div className="text-slate-800 font-medium">{q.answer}</div>
+                 </div>
+               </div>
+             </div>
           </div>
         ))}
       </div>

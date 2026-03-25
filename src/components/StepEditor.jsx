@@ -212,6 +212,18 @@ export default function StepEditor({ step, onSave, onCancel }) {
             </div>
 
             <div className="step-editor-body">
+                {/* Step Title (for sidebar label) */}
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f0f4ff', borderRadius: '8px', border: '1px solid #dde4f0' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.8rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                        Step Title (sidebar label)
+                    </label>
+                    <input
+                        value={editedStep.title || ''}
+                        onChange={e => setEditedStep({ ...editedStep, title: e.target.value })}
+                        placeholder="e.g. Flexibility Tests — Cervical"
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                    />
+                </div>
                 {step.type === 'info' && <InfoStepEditor editedStep={editedStep} updateContent={updateContent} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'history' && <HistoryStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'mcq' && <McqStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}

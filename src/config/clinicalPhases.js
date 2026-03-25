@@ -51,10 +51,11 @@ export const CLINICAL_PHASES = [
 // Categories within each phase
 export const PHASE_CATEGORIES = {
     history_presentation: [
-        { id: 'present_history', label: 'Present History', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
-        { id: 'history_of_pain', label: 'History of Pain', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
-        { id: 'past_history', label: 'Past History', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
-        { id: 'medication', label: 'Medication', inputMode: 'author_only', dataTypes: ['text', 'numbers'] }
+        { id: 'composite_history', label: 'Subjective History (Unified)', inputMode: 'composite', dataTypes: ['text', 'tags', 'numbers'] },
+        { id: 'present_history', label: 'Present History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
+        { id: 'history_of_pain', label: 'History of Pain (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
+        { id: 'past_history', label: 'Past History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
+        { id: 'medication', label: 'Medication (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] }
     ],
     assessment: [
         { id: 'observation_anterior', label: 'Observation - Anterior View', inputMode: 'author_only', dataTypes: ['image', 'text'] },
@@ -94,6 +95,22 @@ export const ROM_CLINICAL_TIP = {
 
 // Default data templates for each category
 export const CATEGORY_TEMPLATES = {
+    composite_history: {
+        chief_complaint: '',
+        key_findings: [],
+        lifestyle: {
+            occupational: '',
+            household: ''
+        },
+        pain_characteristics: {
+            intensity: null,
+            pain_type: '',
+            relief: '',
+            aggravating: ''
+        },
+        past_history: [], // [{ condition, since, notes }]
+        medication: [] // [{ name, dose, frequency, notes }]
+    },
     present_history: {
         chief_complaint: '',
         chief_complaint_arabic: '',

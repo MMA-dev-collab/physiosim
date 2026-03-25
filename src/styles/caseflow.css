@@ -1,0 +1,985 @@
+/* ============================================================
+   Case Flow Runner — CSS
+   Covers: 3-column layout, patient card, stepper, footer,
+   CompositeAssessmentRunner sections, responsive breakpoints
+============================================================ */
+
+/* ──────────── VARIABLES ──────────── */
+:root {
+  --cf-bg: #f8fafc; /* slate-50 background for the layout */
+  --cf-surface: #ffffff;
+  --cf-surface-2: #f1f5f9; /* slate-100 for subtle backgrounds */
+  --cf-border: #e2e8f0; /* slate-200 for borders */
+  --cf-text: #1e293b; /* slate-800 for main text */
+  --cf-text-muted: #64748b; /* slate-500 for secondary text */
+  --cf-primary: #2563eb; /* blue-600 primary */
+  --cf-primary-glow: rgba(37, 99, 235, 0.08);
+  --cf-success: #22c55e; /* green-500 */
+  --cf-warning: #f59e0b; /* amber-500 */
+  --cf-danger: #ef4444; /* red-500 */
+  --cf-radius: 16px;
+  --cf-radius-sm: 12px;
+  --cf-radius-xs: 8px;
+  --cf-transition: 200ms ease;
+  --cf-sidebar-w: 280px;
+  --cf-stepper-w: 240px;
+  --cf-footer-h: 80px;
+}
+
+/* ──────────── 3-COLUMN LAYOUT ──────────── */
+.cf-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--cf-bg);
+  color: var(--cf-text);
+}
+
+.cf-sidebar {
+  width: var(--cf-sidebar-w);
+  flex-shrink: 0;
+  background: var(--cf-surface);
+  border-right: 1px solid var(--cf-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-shadow: 1px 0 10px rgba(0,0,0,0.02);
+}
+
+.cf-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: var(--cf-footer-h);
+}
+
+.cf-main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 48px;
+  width: 100%;
+}
+
+.cf-stepper-col {
+  width: var(--cf-stepper-w);
+  flex-shrink: 0;
+  background: var(--cf-surface);
+  border-left: 1px solid var(--cf-border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* ──────────── PATIENT CARD ──────────── */
+.cf-patient-card {
+  padding: 24px 20px;
+}
+
+.cf-patient-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cf-primary-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--cf-primary);
+  overflow: hidden;
+}
+
+.cf-patient-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.cf-patient-name {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.cf-patient-info {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--cf-text-muted);
+  margin-bottom: 24px;
+}
+
+.cf-patient-divider {
+  border: none;
+  border-top: 1px solid var(--cf-border);
+  margin: 0 0 16px;
+}
+
+.cf-patient-field {
+  margin-bottom: 14px;
+}
+
+.cf-patient-field-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--cf-text-muted);
+  margin-bottom: 4px;
+}
+
+.cf-patient-field-value {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cf-pain-bar-track {
+  width: 8px;
+  height: 120px;
+  background: var(--cf-surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 16px auto 0;
+  position: relative;
+}
+
+.cf-pain-bar-fill {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 4px;
+  transition: height var(--cf-transition);
+  background: linear-gradient(to top, var(--cf-danger), #fb7185);
+}
+
+/* ──────────── STEPPER ──────────── */
+.cf-stepper-header {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--cf-text-muted);
+  margin-bottom: 8px;
+}
+
+.cf-stepper-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--cf-text-muted);
+  margin-bottom: 20px;
+}
+
+.cf-stepper-meta svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+
+.cf-step-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.cf-step-list::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--cf-border);
+}
+
+.cf-step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--cf-text-muted);
+  position: relative;
+  cursor: pointer;
+  transition: color var(--cf-transition);
+}
+
+.cf-step-item:hover {
+  color: var(--cf-text);
+}
+
+.cf-step-item.active {
+  color: var(--cf-text);
+  font-weight: 600;
+}
+
+.cf-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--cf-border);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+  transition: all var(--cf-transition);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cf-step-item.active .cf-step-dot {
+  border-color: var(--cf-primary);
+  background: #fff;
+  color: var(--cf-primary);
+}
+
+
+
+.cf-step-item.completed .cf-step-dot {
+  border-color: var(--cf-success);
+  background: var(--cf-success);
+  color: #fff;
+}
+
+/* ──────────── FOOTER ──────────── */
+.cf-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--cf-sidebar-w);
+  right: var(--cf-stepper-w);
+  height: var(--cf-footer-h);
+  background: var(--cf-surface);
+  border-top: 1px solid var(--cf-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  z-index: 10;
+}
+
+.cf-footer-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--cf-text-muted);
+}
+
+.cf-footer-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.cf-footer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cf-border);
+  transition: all var(--cf-transition);
+}
+
+.cf-footer-dot.active {
+  background: var(--cf-primary);
+  transform: scale(1.2);
+}
+
+.cf-footer-dot.completed {
+  background: var(--cf-success);
+}
+
+.cf-footer-nav {
+  display: flex;
+  gap: 12px;
+}
+
+.cf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--cf-radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all var(--cf-transition);
+  min-height: 44px;
+}
+
+.cf-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cf-btn-secondary {
+  background: var(--cf-surface-2);
+  color: var(--cf-text);
+  border: 1px solid var(--cf-border);
+}
+
+.cf-btn-secondary:hover:not(:disabled) {
+  background: var(--cf-border);
+}
+
+.cf-btn-primary {
+  background: var(--cf-primary);
+  color: #fff;
+}
+
+.cf-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* ──────────── COMPOSITE ASSESSMENT RUNNER ──────────── */
+.car-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.car-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--cf-text-muted);
+  text-align: center;
+}
+
+.car-empty svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.car-step-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cf-text);
+  margin: 0 0 4px;
+}
+
+.car-section {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius);
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.car-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cf-text);
+  margin: 0 0 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cf-border);
+}
+
+/* Observation Grid */
+.car-obs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.car-obs-card {
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-sm);
+  overflow: hidden;
+}
+
+.car-obs-label {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--cf-text-muted);
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.car-obs-img-wrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+.car-obs-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.car-obs-findings {
+  padding: 16px;
+  background: #fff;
+  list-style: none;
+}
+
+.car-obs-findings li {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cf-text);
+  line-height: 1.4;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.car-obs-findings li::before {
+  content: "•";
+  color: var(--cf-primary);
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+.car-obs-standalone-findings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.car-finding-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 20px;
+  background: var(--cf-primary-glow);
+  color: var(--cf-primary);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+/* ROM Table */
+.car-rom-table-wrap {
+  overflow-x: auto;
+}
+
+.car-rom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.car-rom-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--cf-text-muted);
+  background: var(--cf-surface-2);
+  border-bottom: 1px solid var(--cf-border);
+}
+
+.car-rom-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--cf-border);
+}
+
+.car-rom-movement {
+  font-weight: 500;
+}
+
+.car-rom-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.car-rom-badge-normal {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--cf-success);
+}
+
+.car-rom-badge-limited {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--cf-warning);
+}
+
+.car-pain-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.car-pain-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.car-pain-dot-present {
+  background: var(--cf-danger);
+}
+
+.car-pain-dot-slight {
+  background: var(--cf-warning);
+}
+
+.car-pain-dot-absent {
+  background: var(--cf-success);
+}
+
+.car-rom-endfeel {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--cf-surface-2);
+  border-radius: var(--cf-radius-xs);
+  font-size: 13px;
+  color: var(--cf-text-muted);
+}
+
+/* Flexibility Cards */
+.car-flex-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.car-flex-tag {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: rgba(108, 99, 255, 0.1);
+  color: var(--cf-primary);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.car-flex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.car-flex-card {
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-sm);
+  overflow: hidden;
+}
+
+.car-flex-img-wrap {
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.car-flex-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.car-flex-card-body {
+  padding: 10px 12px;
+}
+
+.car-flex-card-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.car-flex-card-result {
+  font-size: 12px;
+  color: var(--cf-primary);
+}
+
+.car-flex-card-notes {
+  font-size: 12px;
+  color: var(--cf-text-muted);
+  margin-top: 4px;
+}
+
+/* Special Tests */
+.car-special-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.car-special-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--cf-surface-2);
+  border-radius: var(--cf-radius-xs);
+  border: 1px solid var(--cf-border);
+}
+
+.car-special-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.car-special-result {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.car-test-positive {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--cf-danger);
+}
+
+.car-test-negative {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--cf-success);
+}
+
+.car-special-notes {
+  font-size: 12px;
+  color: var(--cf-text-muted);
+}
+
+.car-special-link {
+  color: var(--cf-text-muted);
+  transition: color var(--cf-transition);
+  cursor: pointer;
+}
+
+.car-special-link:hover {
+  color: var(--cf-primary);
+}
+
+/* Investigations */
+.car-inv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.car-inv-item {
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-sm);
+  padding: 16px;
+}
+
+.car-inv-modality {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--cf-primary-glow);
+  color: var(--cf-primary);
+  margin-bottom: 12px;
+}
+
+.car-inv-img-wrap {
+  border-radius: var(--cf-radius-xs);
+  overflow: hidden;
+  margin-bottom: 12px;
+  max-height: 300px;
+}
+
+.car-inv-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.car-inv-report,
+.car-inv-conclusion {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 8px;
+  color: var(--cf-text-muted);
+}
+
+.car-inv-conclusion {
+  color: var(--cf-text);
+}
+
+/* MMT Grid */
+.car-mmt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.car-mmt-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-xs);
+}
+
+.car-mmt-muscle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.car-mmt-grade {
+  font-size: 12px;
+  color: var(--cf-primary);
+  font-weight: 600;
+}
+
+.car-mmt-notes {
+  font-size: 11px;
+  color: var(--cf-text-muted);
+}
+
+/* Palpation */
+.car-palp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.car-palp-item {
+  padding: 12px 14px;
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-xs);
+}
+
+.car-palp-location {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.car-palp-finding {
+  font-size: 13px;
+  color: var(--cf-text-muted);
+}
+
+.car-palp-severity {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--cf-warning);
+  margin-top: 6px;
+}
+
+.car-palp-notes {
+  font-size: 12px;
+  color: var(--cf-text-muted);
+  margin-top: 4px;
+}
+
+/* Generic */
+.car-generic-data {
+  font-size: 12px;
+  background: var(--cf-surface-2);
+  padding: 12px;
+  border-radius: var(--cf-radius-xs);
+  overflow-x: auto;
+  color: var(--cf-text-muted);
+}
+
+/* Clinical Tip Box */
+.car-clinical-tip {
+  background: rgba(108, 99, 255, 0.06);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  border-radius: var(--cf-radius);
+}
+
+.car-clinical-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--cf-primary);
+  border-bottom: 1px solid rgba(108, 99, 255, 0.15);
+}
+
+.car-clinical-tip-body {
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cf-text);
+}
+
+.car-clinical-tip-body p {
+  margin: 0 0 6px;
+}
+
+.car-clinical-tip-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* No data message */
+.car-no-data {
+  font-size: 13px;
+  color: var(--cf-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ──────────── SUBJECTIVE (HISTORY) ──────────── */
+.history-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.history-card {
+  background: #fff;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.history-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cf-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.history-card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cf-primary);
+}
+
+.history-section-box {
+  background: #fff;
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.history-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--cf-text);
+}
+
+.history-section-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cf-text);
+}
+
+/* ──────────── ROM TABLES ──────────── */
+.rom-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 24px 0 16px;
+}
+
+.rom-table-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cf-text);
+}
+
+.rom-badge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rom-badge-normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.rom-badge-limited {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ──────────── RESPONSIVE ──────────── */
+@media (max-width: 1024px) {
+  .cf-stepper-col {
+    display: none;
+  }
+  .cf-footer {
+    right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .cf-sidebar {
+    display: none;
+  }
+  .cf-main-scroll {
+    padding: 20px 16px;
+  }
+  .cf-footer {
+    left: 0;
+  }
+  .car-obs-grid {
+    grid-template-columns: 1fr;
+  }
+  .history-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ──────────── COMPOSITE HISTORY RUNNER ──────────── */
+.composite-history-runner .history-section-box {
+  background: #fff;
+  border: 1px solid var(--cf-border);
+  border-radius: 24px;
+  padding: 32px;
+}
+
+.font-arabic {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.8;
+  word-spacing: 2px;
+}
+
+[dir="rtl"] .font-arabic {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.composite-history-runner .line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;  
+  line-clamp: 1;
+  overflow: hidden;
+}

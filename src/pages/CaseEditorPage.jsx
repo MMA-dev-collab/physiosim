@@ -32,6 +32,15 @@ export default function CaseEditorPage({ auth }) {
         isLocked: false,
         prerequisiteCaseId: '',
         metadata: { brief: '' },
+        patientData: {
+            patientName: '',
+            age: '',
+            gender: '',
+            chiefComplaint: '',
+            description: '',
+            imageUrl: '',
+            painIntensity: 0
+        },
         thumbnailUrl: '',
         duration: 10,
         status: 'draft',
@@ -74,7 +83,16 @@ export default function CaseEditorPage({ auth }) {
                     if (found) {
                         setCaseData({
                             ...found,
-                            metadata: found.metadata || { brief: '' }
+                            metadata: found.metadata || { brief: '' },
+                            patientData: found.patientData || {
+                                patientName: '',
+                                age: '',
+                                gender: '',
+                                chiefComplaint: '',
+                                description: '',
+                                imageUrl: '',
+                                painIntensity: 0
+                            }
                         })
                     } else {
                         throw new Error('Case not found')
@@ -612,6 +630,76 @@ export default function CaseEditorPage({ auth }) {
                                 />
                                 {touched.brief && errors.brief && <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.brief}</span>}
                             </label>
+                        </div>
+
+                        {/* ─── Patient Data Section ─── */}
+                        <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#f8f9fc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600, color: '#1e293b' }}>Patient Data (Persistent Card)</h3>
+                            <div className="form-grid">
+                                <label>
+                                    <span>Patient Name</span>
+                                    <input
+                                        value={caseData.patientData?.patientName || ''}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, patientName: e.target.value } })}
+                                        placeholder="e.g. Ahmed Hassan"
+                                    />
+                                </label>
+                                <label>
+                                    <span>Age</span>
+                                    <input
+                                        type="number"
+                                        value={caseData.patientData?.age || ''}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, age: parseInt(e.target.value) || '' } })}
+                                        placeholder="e.g. 35"
+                                    />
+                                </label>
+                                <label>
+                                    <span>Gender</span>
+                                    <select
+                                        value={caseData.patientData?.gender || ''}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, gender: e.target.value } })}
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Pain Intensity (0-10)</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="10"
+                                        value={caseData.patientData?.painIntensity || 0}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, painIntensity: Math.min(10, Math.max(0, parseInt(e.target.value) || 0)) } })}
+                                    />
+                                </label>
+                                <label style={{ gridColumn: '1 / -1' }}>
+                                    <span>Chief Complaint</span>
+                                    <input
+                                        value={caseData.patientData?.chiefComplaint || ''}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, chiefComplaint: e.target.value } })}
+                                        placeholder="e.g. ألم في الركبة اليمنى"
+                                    />
+                                </label>
+                                <label style={{ gridColumn: '1 / -1' }}>
+                                    <span>Patient Description</span>
+                                    <textarea
+                                        value={caseData.patientData?.description || ''}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, description: e.target.value } })}
+                                        rows={2}
+                                        placeholder="Brief clinical description..."
+                                    />
+                                </label>
+                                <label style={{ gridColumn: '1 / -1' }}>
+                                    <span>Patient Image URL</span>
+                                    <input
+                                        value={caseData.patientData?.imageUrl || ''}
+                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, imageUrl: e.target.value } })}
+                                        placeholder="https://..."
+                                    />
+                                </label>
+                            </div>
                         </div>
                         <div className="form-actions" style={{ display: 'flex', gap: '1rem' }}>
                             <button className="btn-primary" onClick={handleSaveBasic}>

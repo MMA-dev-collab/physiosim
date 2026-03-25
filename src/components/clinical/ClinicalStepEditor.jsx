@@ -2,7 +2,9 @@ import React, { useState } from 'react'
 import { useToast } from '../../context/ToastContext'
 import { CLINICAL_PHASES, PHASE_CATEGORIES, getCategoryById } from '../../config/clinicalPhases'
 import { HistoryPhaseEditor } from './HistoryPhaseEditor'
+import CompositeHistoryEditor from './CompositeHistoryEditor'
 import { AssessmentPhaseEditor } from './AssessmentPhaseEditor'
+import CompositeAssessmentEditor from './CompositeAssessmentEditor'
 import { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor } from './ClinicalPhaseEditors'
 import './PhaseEditors.css'
 
@@ -113,8 +115,15 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
 
         switch (editedStep.phase) {
             case 'history_presentation':
+                if (editedStep.category === 'composite_history') {
+                    return <CompositeHistoryEditor step={editedStep} onUpdate={handleStepUpdate} />
+                }
                 return <HistoryPhaseEditor {...editorProps} />
             case 'assessment':
+                // Composite assessment: step has content.sections[]
+                if (editedStep.content?.sections || editedStep.category === 'composite') {
+                    return <CompositeAssessmentEditor step={editedStep} onUpdate={handleStepUpdate} />
+                }
                 return <AssessmentPhaseEditor {...editorProps} />
             case 'diagnosis':
                 return <DiagnosisPhaseEditor {...editorProps} />

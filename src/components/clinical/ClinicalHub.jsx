@@ -34,43 +34,51 @@ export default function ClinicalHub({ step, viewedSubSteps = new Set(), onStepVi
 
     // Determine Hub Title & Icon based on phase
     const isHistory = step.phase === 'history_presentation'
-    const hubTitle = step.title || (isHistory ? 'Patient History' : 'Physical Assessment')
+    const hubTitle = step.title || (isHistory ? 'Patient History' : 'Objective Examination')
     const hubIcon = isHistory ? '📋' : '🔍'
 
-    return (
-        <div className="flex flex-col h-[calc(100vh-140px)] max-h-[800px] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Header */}
-            <div className="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <span>{hubIcon}</span> {hubTitle}
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-1">Select an item to view details</p>
+    // If there is ONLY ONE step inside the hub, skip the hub sidebar layout completely and render the content directly
+    if (step.subSteps.length === 1) {
+        return (
+            <div className="animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-3xl font-bold text-slate-800">{hubTitle}</h2>
                 </div>
-                <div className="text-right">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Progress</div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <ClinicalStepRunner step={currentSubStep} hideHeader={true} />
+            </div>
+        )
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)', background: '#fff', borderRadius: 'var(--cf-radius)', border: '1px solid var(--cf-border)', overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ background: '#f8fafc', borderBottom: '1px solid var(--cf-border)', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--cf-text)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '24px' }}>{hubIcon}</span> {hubTitle}
+                    </h2>
+                    <p style={{ fontSize: '13px', color: 'var(--cf-text-muted)', marginTop: '4px', fontWeight: '500' }}>Select an assessment item to view detailed findings</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                    <div className="flex items-center gap-4">
+                        <div style={{ width: '120px', height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
                             <div
-                                className="h-full bg-teal-500 transition-all duration-500"
-                                style={{ width: `${progress}%` }}
+                                style={{ height: '100%', background: 'var(--cf-primary)', transition: 'all 0.5s ease', width: `${progress}%` }}
                             />
                         </div>
-                        <span className="text-sm font-bold text-slate-700">{Math.round(progress)}%</span>
+                        <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--cf-primary)' }}>{Math.round(progress)}%</span>
                     </div>
                 </div>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar */}
-                <div className="w-64 bg-slate-50 border-r border-slate-200 overflow-y-auto">
-                    <div className="p-2 space-y-1">
+                <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto" style={{ padding: '16px' }}>
+                    <div className="space-y-3">
                         {step.subSteps.map((subStep) => {
                             const isSelected = subStep.id === selectedStepId
                             const isViewed = viewedSubSteps.has(subStep.id)
                             const categoryLabel = subStep.category?.replace(/_/g, ' ') || 'Step'
 
-                            // Try to get a nicer label
                             const phaseInfo = getCategoriesForPhase(subStep.phase)?.find(c => c.id === subStep.category)
                             const label = phaseInfo?.label || categoryLabel
 
@@ -78,17 +86,20 @@ export default function ClinicalHub({ step, viewedSubSteps = new Set(), onStepVi
                                 <button
                                     key={subStep.id}
                                     onClick={() => setSelectedStepId(subStep.id)}
-                                    className={`w-full text-left p-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-between group
+                                    className={`w-full text-left p-4 rounded-xl text-sm transition-all duration-300 flex items-center justify-between group
                                         ${isSelected
-                                            ? 'bg-white shadow-sm ring-1 ring-slate-200 text-teal-700'
-                                            : 'text-slate-600 hover:bg-slate-100'
+                                            ? 'bg-white shadow-md border-l-4 border-l-primary font-bold text-slate-900'
+                                            : 'text-slate-500 hover:bg-white/50 border-l-4 border-l-transparent'
                                         }`}
+                                    style={isSelected ? { borderColor: 'var(--cf-primary)' } : {}}
                                 >
                                     <span className="capitalize truncate">{label}</span>
                                     {isViewed && (
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-teal-100 text-teal-700' : 'bg-slate-200 text-slate-500'}`}>
-                                            ✓
-                                        </span>
+                                        <div style={{ backgroundColor: isSelected ? 'var(--cf-primary)' : '#cbd5e1', borderRadius: '50%', padding: '2px' }}>
+                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4">
+                                                <path d="M20 6L9 17l-5-5" />
+                                             </svg>
+                                        </div>
                                     )}
                                 </button>
                             )

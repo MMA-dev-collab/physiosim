@@ -1,9 +1,11 @@
 import React from 'react'
 import { getCategoriesForPhase } from '../../config/clinicalPhases'
 import { ClinicalCard, ClinicalTable, StatusBadge, KeyValueRow, SectionHeader } from './ClinicalComponents'
-import './PhaseEditors.css' // Reuse styles but they might be overridden by Tailwind classes
+import CompositeAssessmentRunner from './CompositeAssessmentRunner'
+import CompositeHistoryRunner from './CompositeHistoryRunner'
+import './PhaseEditors.css'
 
-export default function ClinicalStepRunner({ step }) {
+export default function ClinicalStepRunner({ step, hideHeader = false }) {
     const { phase, category, content } = step
 
     // Helper to render specific content types
@@ -32,26 +34,33 @@ export default function ClinicalStepRunner({ step }) {
     const renderHistory = (catId, data) => {
         if (!data) return <p className="text-slate-500 italic p-4">No history data recorded.</p>
 
+        if (catId === 'composite_history') {
+            return <CompositeHistoryRunner step={{ content: data }} />
+        }
+
         // Present History
         if (catId === 'present_history') {
             return (
                 <div className="space-y-6">
-                    {data.chief_complaint && (
-                        <ClinicalCard title="Chief Complaint">
-                            <p className="text-slate-800 text-lg leading-relaxed">{data.chief_complaint}</p>
-                        </ClinicalCard>
-                    )}
-                    {data.chief_complaint_arabic && (
-                        <ClinicalCard title="شكوى المريض" className="text-right" dir="rtl">
-                            <p className="text-slate-800 text-lg leading-relaxed">{data.chief_complaint_arabic}</p>
-                        </ClinicalCard>
-                    )}
-                    {data.notes && (
-                        <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 text-amber-900 text-sm">
-                            <strong>Notes:</strong> {data.notes}
+                    {(data.chief_complaint || data.chief_complaint_arabic) && (
+                        <div className="history-section-box">
+                            <div className="history-section-title">Chief Complaint</div>
+                            <div className="history-section-content" style={{ fontSize: '18px', fontWeight: '500' }}>
+                                {data.chief_complaint}
+                            </div>
+                            {data.chief_complaint_arabic && (
+                                <div className="history-section-content mt-4 text-right" dir="rtl" style={{ fontSize: '20px', fontFamily: 'inherit' }}>
+                                    {data.chief_complaint_arabic}
+                                </div>
+                            )}
                         </div>
                     )}
-                    {!data.chief_complaint && !data.chief_complaint_arabic && <p className="text-slate-400 italic">No details provided.</p>}
+                    {data.notes && (
+                        <div className="history-section-box" style={{ background: '#fffbeb', borderColor: '#fef3c7' }}>
+                            <div className="history-section-title" style={{ color: '#92400e' }}>Notes</div>
+                            <div className="history-section-content" style={{ color: '#92400e' }}>{data.notes}</div>
+                        </div>
+                    )}
                 </div>
             )
         }
@@ -62,53 +71,49 @@ export default function ClinicalStepRunner({ step }) {
             if (Object.keys(pain).length === 0) return <p className="text-slate-500">No pain history recorded.</p>
 
             return (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <ClinicalCard className="text-center">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Intensity</span>
-                            <div className="flex items-baseline justify-center gap-1">
-                                <span className={`text-3xl font-bold ${pain.intensity > 7 ? 'text-rose-600' : 'text-slate-800'}`}>
+                <div className="space-y-8">
+                    <div className="history-cards-grid">
+                        <div className="history-card">
+                            <span className="history-card-label">Intensity</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="history-card-value" style={{ color: pain.intensity > 7 ? 'var(--cf-danger)' : 'var(--cf-primary)' }}>
                                     {pain.intensity ?? '-'}
                                 </span>
                                 <span className="text-slate-400 font-medium">/ 10</span>
                             </div>
-                        </ClinicalCard>
-                        <ClinicalCard className="text-center">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Frequency</span>
-                            <span className="text-lg font-medium text-slate-800 capitalize">{pain.frequency || '-'}</span>
-                        </ClinicalCard>
-                        <ClinicalCard className="text-center">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Onset</span>
-                            <span className="text-lg font-medium text-slate-800 capitalize">{pain.onset?.replace('_', ' ') || '-'}</span>
-                        </ClinicalCard>
-                        <ClinicalCard className="text-center">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Course</span>
-                            <span className="text-lg font-medium text-slate-800 capitalize">{pain.course || '-'}</span>
-                        </ClinicalCard>
+                        </div>
+                        <div className="history-card">
+                            <span className="history-card-label">Frequency</span>
+                            <span className="history-card-value text-slate-800">{pain.frequency || '-'}</span>
+                        </div>
+                        <div className="history-card">
+                            <span className="history-card-label">Onset</span>
+                            <span className="history-card-value text-slate-800">{pain.onset?.replace('_', ' ') || '-'}</span>
+                        </div>
+                        <div className="history-card">
+                            <span className="history-card-label">Course</span>
+                            <span className="history-card-value text-slate-800">{pain.course || '-'}</span>
+                        </div>
                     </div>
 
-                    {pain.time_of_day && (
-                        <ClinicalCard>
-                            <KeyValueRow label="Time of Day" value={pain.time_of_day} />
-                        </ClinicalCard>
-                    )}
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <ClinicalCard title="Aggravating Factors" className="border-l-4 border-l-rose-500">
+                        <div className="history-section-box" style={{ borderLeft: '4px solid var(--cf-danger)' }}>
+                            <div className="history-section-title">Aggravating Factors</div>
                             {pain.aggravating_factors && pain.aggravating_factors.length > 0 ? (
                                 <ul className="list-disc pl-5 space-y-2 text-slate-700">
                                     {pain.aggravating_factors.map((f, i) => <li key={i}>{f}</li>)}
                                 </ul>
                             ) : <p className="text-slate-400 italic text-sm">None recorded</p>}
-                        </ClinicalCard>
+                        </div>
 
-                        <ClinicalCard title="Relieving Factors" className="border-l-4 border-l-emerald-500">
+                        <div className="history-section-box" style={{ borderLeft: '4px solid var(--cf-success)' }}>
+                            <div className="history-section-title">Relieving Factors</div>
                             {pain.relieving_factors && pain.relieving_factors.length > 0 ? (
                                 <ul className="list-disc pl-5 space-y-2 text-slate-700">
                                     {pain.relieving_factors.map((f, i) => <li key={i}>{f}</li>)}
                                 </ul>
                             ) : <p className="text-slate-400 italic text-sm">None recorded</p>}
-                        </ClinicalCard>
+                        </div>
                     </div>
                 </div>
             )
@@ -344,46 +349,49 @@ export default function ClinicalStepRunner({ step }) {
             )
         }
 
+        // Composite / Multi-section support
+        if (data.sections && Array.isArray(data.sections)) {
+            return <CompositeAssessmentRunner step={{ content: data }} />
+        }
+
         // Generic fallback
-        return <ClinicalCard><pre className="text-xs text-slate-500">{JSON.stringify(data, null, 2)}</pre></ClinicalCard>
+        return (
+            <div className="car-section-box p-6 bg-slate-50 border border-slate-200 rounded-xl">
+                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Raw Data (Fallback)</div>
+                 <pre className="text-[11px] text-slate-500 overflow-auto max-h-96">
+                    {JSON.stringify(data, null, 2)}
+                 </pre>
+            </div>
+        )
     }
 
     const renderDiagnosis = (data) => {
         const diagnoses = data.diagnoses || []
 
-        // Handle legacy flat format if present
-        if (!diagnoses.length && data.condition) {
-            return (
-                <ClinicalCard className="border-l-4 border-l-purple-500 bg-purple-50/30">
-                    <h3 className="text-lg font-bold text-purple-900 mb-2">Primary Diagnosis</h3>
-                    <p className="text-lg text-purple-800">{data.condition}</p>
-                </ClinicalCard>
-            )
-        }
-
         if (diagnoses.length === 0) return <p className="text-slate-500 italic">No diagnosis recorded.</p>
 
         return (
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {diagnoses.map((d, i) => (
-                    <ClinicalCard key={i} className="border-l-4 border-l-purple-500 shadow-md">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">{d.label}</h3>
-                                {d.code && <span className="text-xs text-slate-400 font-mono bg-slate-100 px-2 py-1 rounded inline-block mt-1">{d.code}</span>}
+                    <div key={i} className="history-section-box p-0 overflow-hidden" style={{ borderLeft: '6px solid var(--cf-primary)' }}>
+                        <div className="px-8 py-6 flex justify-between items-start">
+                            <div className="space-y-2">
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Diagnosis {i + 1}</div>
+                                <h3 className="text-2xl font-black text-slate-900">{d.label}</h3>
+                                {d.code && <span className="text-xs text-slate-400 font-mono bg-slate-100 px-2 py-1 rounded inline-block">{d.code}</span>}
                             </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-black text-purple-600 leading-none">{d.confidence}%</div>
-                                <div className="text-[10px] uppercase text-purple-400 font-bold tracking-wider mt-1">Confidence</div>
+                            <div className="text-center bg-slate-50 p-4 rounded-2xl border border-slate-100 min-w-[100px]">
+                                <div className="text-3xl font-black text-primary leading-none" style={{ color: 'var(--cf-primary)' }}>{d.confidence}%</div>
+                                <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mt-1">Confidence</div>
                             </div>
                         </div>
 
                         {d.supporting_findings && d.supporting_findings.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-slate-100">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-2">Supporting Findings</span>
+                            <div className="px-8 py-4 bg-slate-50 border-t border-slate-100">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-3">Supporting Findings</span>
                                 <div className="flex flex-wrap gap-2">
                                     {d.supporting_findings.map((sf, idx) => (
-                                        <span key={idx} className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-medium border border-purple-100">
+                                        <span key={idx} className="bg-white text-slate-700 px-4 py-1.5 rounded-full text-xs font-bold border border-slate-200 shadow-sm">
                                             + {sf}
                                         </span>
                                     ))}
@@ -391,8 +399,12 @@ export default function ClinicalStepRunner({ step }) {
                             </div>
                         )}
 
-                        {d.notes && <p className="mt-4 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">{d.notes}</p>}
-                    </ClinicalCard>
+                        {d.notes && (
+                            <div className="px-8 py-4 border-t border-slate-100">
+                                <p className="text-sm text-slate-500 italic leading-relaxed">{d.notes}</p>
+                            </div>
+                        )}
+                    </div>
                 ))}
             </div>
         )
@@ -456,33 +468,22 @@ export default function ClinicalStepRunner({ step }) {
 
     return (
         <div className="w-full">
-            <div className="mb-8">
-                <span className="inline-block px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-bold uppercase tracking-wider mb-2 border border-teal-100">
-                    {phase.replace('_', ' ')}
-                </span>
-                <SectionHeader
-                    title={phaseInfo?.label || category?.replace(/_/g, ' ') || 'Clinical Step'}
-                    subtitle={phaseInfo?.description}
-                />
-            </div>
+            {!hideHeader && (
+                <div className="mb-8">
+                    <span className="inline-block px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-bold uppercase tracking-wider mb-2 border border-teal-100">
+                        {phase.replace('_', ' ')}
+                    </span>
+                    <SectionHeader
+                        title={phaseInfo?.label || category?.replace(/_/g, ' ') || 'Clinical Step'}
+                        subtitle={phaseInfo?.description}
+                    />
+                </div>
+            )}
 
             <div className="min-h-[200px]">
                 {renderContent()}
             </div>
 
-            {step.logic && (
-                <div className="mt-12 p-6 bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-xl relative overflow-hidden shadow-sm">
-                    <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <span className="text-8xl">💡</span>
-                    </div>
-                    <div className="relative z-10">
-                        <h4 className="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
-                            <span>🧪</span> Clinical Reasoning
-                        </h4>
-                        <p className="text-indigo-900/80 leading-relaxed text-sm font-medium max-w-2xl">{step.logic.reasoning}</p>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

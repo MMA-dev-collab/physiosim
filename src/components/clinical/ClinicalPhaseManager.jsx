@@ -443,6 +443,71 @@ export default function ClinicalPhaseManager({
                                         })}
                                     </div>
 
+                                    {/* Composite Assessment Step button — only in assessment phase */}
+                                    {phase.id === 'assessment' && (
+                                        <div style={{ marginTop: '12px', padding: '12px', background: '#eef2ff', borderRadius: '10px', border: '1px dashed #818cf8' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div>
+                                                    <strong style={{ color: '#4338ca', fontSize: '0.9rem' }}>🔬 Composite Assessment Step</strong>
+                                                    <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#6366f1' }}>
+                                                        Create a named step with multiple sections (Observation, ROM, Special Tests, etc.) displayed on one page.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    className="btn-small"
+                                                    style={{ background: '#4338ca', color: '#fff', whiteSpace: 'nowrap' }}
+                                                    onClick={() => {
+                                                        onAddStep({
+                                                            stepIndex: steps.length,
+                                                            type: 'clinical',
+                                                            phase: 'assessment',
+                                                            category: 'composite',
+                                                            title: 'New Assessment Step',
+                                                            content: { sections: [], clinicalTip: '' },
+                                                            logic: null
+                                                        })
+                                                    }}
+                                                >
+                                                    ＋ Add Composite Step
+                                                </button>
+                                            </div>
+
+                                            {/* List existing composite steps */}
+                                            {steps.filter(s => s.phase === 'assessment' && s.category === 'composite').map(cStep => (
+                                                <div key={cStep.id} style={{
+                                                    marginTop: '8px', padding: '10px 12px', background: '#fff',
+                                                    borderRadius: '8px', border: '1px solid #e0e7ff',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                                                }}>
+                                                    {editingStepId === cStep.id ? (
+                                                        <div className="category-editor-wrapper" style={{ width: '100%' }}>
+                                                            <ClinicalStepEditor
+                                                                step={cStep}
+                                                                onSave={handleStepSave}
+                                                                onCancel={() => setEditingStepId(null)}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div>
+                                                                <strong style={{ fontSize: '0.85rem', color: '#1e293b' }}>
+                                                                    {cStep.title || 'Composite Step'}
+                                                                </strong>
+                                                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '8px' }}>
+                                                                    {(cStep.content?.sections || []).length} sections
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                                <button className="btn-edit" onClick={() => setEditingStepId(cStep.id)}>✏️ Edit</button>
+                                                                <button className="btn-delete" onClick={() => onDeleteStep(cStep.id)}>🗑</button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     {/* Phase completion hint */}
                                     {progress.filled === 0 && (
                                         <div className="phase-hint">
