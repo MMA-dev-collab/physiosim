@@ -1,4 +1,6 @@
 import React from 'react'
+import McqStep from './McqStep'
+import EssayStep from './EssayStep'
 
 /**
  * CompositeAssessmentRunner
@@ -9,7 +11,7 @@ import React from 'react'
  *   step.content.clinicalTip - optional clinical tip text
  *   step.title - admin-given name of this Main Step
  */
-export default function CompositeAssessmentRunner({ step }) {
+export default function CompositeAssessmentRunner({ step, mcqProps, essayProps }) {
   const content = step?.content || {}
   const sections = content.sections || []
   const clinicalTip = content.clinicalTip || null
@@ -35,15 +37,34 @@ export default function CompositeAssessmentRunner({ step }) {
       {/* Render each section */}
       {sections.map((section, idx) => (
         <div key={idx} className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm mb-6">
-          {renderSection(section)}
+          {renderSection(section, mcqProps, essayProps)}
         </div>
       ))}
 
+      {/* Clinical Tip Callout (Always visible) */}
+      {clinicalTip && (
+        <div className="bg-amber-50 border-2 border-dashed border-amber-200 rounded-[24px] p-8 flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-700 mt-6">
+           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-3xl shrink-0">
+             💡
+           </div>
+           <div className="flex-1">
+             <h4 className="text-amber-900 font-black uppercase tracking-widest text-sm mb-3">Clinical Tip / Assessment Guide</h4>
+             <div className="space-y-3 text-slate-700 font-bold leading-relaxed">
+               {clinicalTip.split('\n').map((line, i) => (
+                 <p key={i} className="flex items-start gap-2">
+                   <span className="text-amber-400 mt-1.5">•</span>
+                   <span>{line}</span>
+                 </p>
+               ))}
+             </div>
+           </div>
+        </div>
+      )}
     </div>
   )
 }
 
-function renderSection(section) {
+function renderSection(section, mcqProps, essayProps) {
   switch (section.type) {
     case 'observation':
       return <ObservationSection section={section} />
@@ -59,6 +80,10 @@ function renderSection(section) {
       return <MmtSection section={section} />
     case 'palpation':
       return <PalpationSection section={section} />
+    case 'mcq':
+      return <McqStep step={section} {...mcqProps} />
+    case 'essay':
+      return <EssayStep step={section} {...essayProps} />
     default:
       return <GenericSection section={section} />
   }
@@ -205,41 +230,57 @@ function FlexibilitySection({ section }) {
 
   return (
     <div className="car-flex">
-      <h3 className="car-section-title">{section.title || 'Flexibility Findings'}</h3>
+      <h3 className="car-section-title mb-6">{section.title || 'Flexibility Findings'}</h3>
 
       {/* Tag pills */}
       {tags.length > 0 && (
-        <div className="car-flex-tags">
+        <div className="flex flex-wrap gap-2 mb-8">
           {tags.map((tag, i) => (
-            <span key={i} className="car-flex-tag">{tag}</span>
+            <span key={i} className="px-5 py-2.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-2xl text-[13px] font-bold shadow-sm">
+              {tag}
+            </span>
           ))}
         </div>
       )}
 
-      {/* Entry cards */}
+      {/* Horizontal divider if tags exist */}
+      {tags.length > 0 && entries.length > 0 && (
+        <hr className="border-slate-50 mb-8" />
+      )}
+
+      {/* Entry cards - Strict 3-column grid */}
       {entries.length > 0 && (
-        <div className="car-flex-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {entries.map((entry, i) => (
-            <div key={i} className="car-flex-card" style={{ background: '#fff', textAlign: 'center' }}>
-              <div className="car-flex-card-body" style={{ background: '#f8fafc', borderBottom: '1px solid var(--cf-border)', padding: '12px' }}>
-                <div className="car-flex-card-label" style={{ fontSize: '14px', fontWeight: '700' }}>
-                  {entry.label || entry.test_name}
+            <div key={i} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
+              {/* Header bar */}
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-100">
+                <div className="text-[13px] font-black text-slate-800 uppercase tracking-tight">
+                  {entry.test_name || entry.label}
                 </div>
               </div>
+
+              {/* Image */}
               {entry.image_url && (
-                <div className="car-flex-img-wrap" style={{ padding: '16px' }}>
+                <div className="aspect-[4/3] w-full bg-white flex items-center justify-center p-2">
                   <img
                     src={entry.image_url}
-                    alt={entry.label || entry.test_name || 'Flexibility test'}
-                    className="car-flex-img"
-                    style={{ borderRadius: '8px' }}
+                    alt={entry.test_name || 'Flexibility test'}
+                    className="h-full w-full object-cover rounded-lg"
                     loading="lazy"
                   />
                 </div>
               )}
-              {entry.result && (
-                <div style={{ padding: '0 12px 16px', color: 'var(--cf-primary)', fontWeight: '600' }}>
-                  {entry.result}
+
+              {/* Result/Footer */}
+              {(entry.result || entry.notes) && (
+                <div className="p-4 bg-white border-t border-slate-50 space-y-1">
+                   {entry.result && (
+                     <div className="text-sm font-bold text-blue-600">{entry.result}</div>
+                   )}
+                   {entry.notes && (
+                     <div className="text-[11px] text-slate-400 font-medium italic">{entry.notes}</div>
+                   )}
                 </div>
               )}
             </div>

@@ -23,6 +23,8 @@ const SECTION_TYPES = [
   { value: 'special_tests', label: '🧪 Special Tests', desc: 'Positive/negative clinical tests' },
   { value: 'palpation', label: '🤲 Palpation', desc: 'Palpation findings by tissue type' },
   { value: 'investigations', label: '🩻 Investigations', desc: 'X-ray, MRI, imaging studies' },
+  { value: 'mcq', label: '❓ MCQ', desc: 'Multiple choice clinical decision question' },
+  { value: 'essay', label: '📝 Essay', desc: 'Short answer / reflective question' },
 ]
 
 export default function CompositeAssessmentEditor({ step, onUpdate }) {
@@ -119,6 +121,8 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
                     {section.type === 'special_tests' && `${(section.entries || []).length} tests`}
                     {section.type === 'palpation' && `${(section.entries || []).length} entries`}
                     {section.type === 'investigations' && `${(section.entries || []).length} studies`}
+                    {section.type === 'mcq' && `Questions & ${(section.options || []).length} options`}
+                    {section.type === 'essay' && `Short answer question`}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }} onClick={e => e.stopPropagation()}>
@@ -202,7 +206,7 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
       </div>
 
       {/* Clinical Tip */}
-      <div style={{ padding: '14px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a' }}>
+      <div style={{ padding: '14px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', marginBottom: '20px' }}>
         <label>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#92400e', textTransform: 'uppercase' }}>
             💡 Clinical Tip (shown at bottom)
@@ -238,6 +242,10 @@ function createDefaultSection(type) {
       return { ...base, entries: [] }
     case 'investigations':
       return { ...base, entries: [] }
+    case 'mcq':
+      return { ...base, question: '', options: [{ id: 'a', text: '', isCorrect: true }], explanationOnFail: '', explanationOnSuccess: '', hint: '' }
+    case 'essay':
+      return { ...base, question: '', expectedKeywords: [], hint: '' }
     default:
       return { ...base, data: {} }
   }
@@ -253,6 +261,8 @@ function SectionEditor({ section, onUpdate }) {
     case 'special_tests': return <SpecialTestsSectionEditor section={section} onUpdate={onUpdate} />
     case 'palpation': return <PalpationSectionEditor section={section} onUpdate={onUpdate} />
     case 'investigations': return <InvestigationsSectionEditor section={section} onUpdate={onUpdate} />
+    case 'mcq': return <McqSectionEditor section={section} onUpdate={onUpdate} />
+    case 'essay': return <EssaySectionEditor section={section} onUpdate={onUpdate} />
     default: return <div style={{ color: '#94a3b8' }}>Unknown section type: {section.type}</div>
   }
 }
@@ -382,25 +392,57 @@ function MmtSectionEditor({ section, onUpdate }) {
 /* ── Flexibility Test Editor ── */
 function FlexibilityTestSectionEditor({ section, onUpdate }) {
   const entries = section.entries || []
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { test_name: '', result: '', notes: '', link: '' }] })
+  const tags = section.tags || []
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { test_name: '', result: '', image_url: '', notes: '', link: '' }] })
   const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
   const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
 
+  const [tagInput, setTagInput] = useState('')
+  const addTag = () => { if (tagInput.trim()) { onUpdate({ ...section, tags: [...tags, tagInput.trim()] }); setTagInput('') } }
+  const removeTag = (tIdx) => onUpdate({ ...section, tags: tags.filter((_, i) => i !== tIdx) })
+
   return (
     <div>
-      <div className="section-header"><h5>Tests</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add</button></div>
+      {/* Tags management */}
+      <div style={{ marginBottom: '20px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        <div className="section-header"><h5>Flexibility Findings (Tags)</h5></div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+          {tags.map((tag, i) => (
+            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: '#e2e8f0', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
+              {tag}
+              <button type="button" onClick={() => removeTag(i)} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: '1rem', lineHeight: 1, color: '#94a3b8' }}>×</button>
+            </span>
+          ))}
+          {tags.length === 0 && <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No tags added.</span>}
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input 
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+            placeholder="Add finding tag..." 
+            style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+          />
+          <button type="button" className="btn-small" onClick={addTag}>Add</button>
+        </div>
+      </div>
+
+      <div className="section-header"><h5>Detailed Test Cards (with Images)</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add Test</button></div>
       {entries.map((e, idx) => (
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="e.g. Upper Trap" /></label>
-            <label>Result<input value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)} placeholder="e.g. Tight, Normal" /></label>
+            <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="e.g. 1. Upper Trap Tight" /></label>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <ImageUpload label="Test Image" folderType="flexibility" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
+            </div>
+            <label>Result<input value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)} placeholder="e.g. Positive / Tight" /></label>
             <label>Link<input value={e.link || ''} onChange={ev => updateEntry(idx, 'link', ev.target.value)} placeholder="https://..." /></label>
-            <label>Notes<input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} /></label>
+            <label style={{ gridColumn: '1 / -1' }}>Notes<textarea value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} rows={1} /></label>
           </div>
         </div>
       ))}
-      {entries.length === 0 && <div className="empty-state-box">No flexibility tests.</div>}
+      {entries.length === 0 && <div className="empty-state-box">No flexibility test cards.</div>}
     </div>
   )
 }
@@ -493,6 +535,176 @@ function InvestigationsSectionEditor({ section, onUpdate }) {
         </div>
       ))}
       {entries.length === 0 && <div className="empty-state-box">No imaging studies.</div>}
+    </div>
+  )
+}
+/* ── MCQ Section Editor ── */
+function McqSectionEditor({ section, onUpdate }) {
+  const options = section.options || []
+  const addOption = () => onUpdate({ ...section, options: [...options, { id: String.fromCharCode(97 + options.length), text: '', isCorrect: false }] })
+  const updateOption = (idx, field, val) => { const u = [...options]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, options: u }) }
+  const removeOption = (idx) => onUpdate({ ...section, options: options.filter((_, i) => i !== idx) })
+
+  return (
+    <div className="space-y-4">
+      <label className="block text-sm font-bold text-slate-700">
+        Question Text *
+        <textarea
+          value={section.question || ''}
+          onChange={e => onUpdate({ ...section, question: e.target.value })}
+          rows={2}
+          className="w-full mt-1 p-2 border border-slate-300 rounded-md font-medium"
+          placeholder="Ask a clinical question..."
+        />
+      </label>
+
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <div className="flex justify-between items-center mb-4">
+          <h6 className="text-xs font-black text-slate-500 uppercase tracking-widest">Options</h6>
+          <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+        </div>
+        <div className="space-y-3">
+          {options.map((opt, idx) => (
+            <div key={idx} className="flex gap-3 items-start bg-white p-3 rounded-lg border border-slate-200">
+              <input
+                type="radio"
+                name={`mcq-correct-${section.title || 'sect'}`}
+                checked={opt.isCorrect}
+                onChange={() => {
+                  const u = options.map((o, i) => ({ ...o, isCorrect: i === idx }))
+                  onUpdate({ ...section, options: u })
+                }}
+                className="mt-2"
+              />
+              <input
+                value={opt.text}
+                onChange={e => updateOption(idx, 'text', e.target.value)}
+                placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                className="flex-1 p-1.5 text-sm border-b border-slate-100 focus:border-blue-400 outline-none"
+              />
+              <button type="button" className="text-slate-400 hover:text-red-500 transition-colors" onClick={() => removeOption(idx)}>×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label className="block text-sm font-bold text-green-700">
+          Explanation on Success
+          <textarea
+            value={section.explanationOnSuccess || ''}
+            onChange={e => onUpdate({ ...section, explanationOnSuccess: e.target.value })}
+            rows={2}
+            className="w-full mt-1 p-2 border border-green-200 rounded-md text-xs"
+          />
+        </label>
+        <label className="block text-sm font-bold text-red-700">
+          Explanation on Fail
+          <textarea
+            value={section.explanationOnFail || ''}
+            onChange={e => onUpdate({ ...section, explanationOnFail: e.target.value })}
+            rows={2}
+            className="w-full mt-1 p-2 border border-red-200 rounded-md text-xs"
+          />
+        </label>
+      </div>
+
+      <div className="flex gap-4">
+        <label className="block text-sm font-bold text-amber-700 flex-1">
+          Hint / Guidance
+          <input
+            value={section.hint || ''}
+            onChange={e => onUpdate({ ...section, hint: e.target.value })}
+            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
+            placeholder="Optional hint for the student..."
+          />
+        </label>
+        <label className="block text-sm font-bold text-amber-700 w-32">
+          Delay (sec)
+          <input
+            type="number"
+            min="0"
+            value={section.hintDelaySeconds || 0}
+            onChange={e => onUpdate({ ...section, hintDelaySeconds: parseInt(e.target.value) || 0 })}
+            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
+          />
+        </label>
+      </div>
+    </div>
+  )
+}
+
+/* ── Essay Section Editor ── */
+function EssaySectionEditor({ section, onUpdate }) {
+  const [keywordInput, setKeywordInput] = useState('')
+  const keywords = section.expectedKeywords || []
+
+  const addKeyword = () => {
+    if (keywordInput.trim()) {
+      onUpdate({ ...section, expectedKeywords: [...keywords, keywordInput.trim()] })
+      setKeywordInput('')
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <label className="block text-sm font-bold text-slate-700">
+        Question Text *
+        <textarea
+          value={section.question || ''}
+          onChange={e => onUpdate({ ...section, question: e.target.value })}
+          rows={3}
+          className="w-full mt-1 p-3 border border-slate-300 rounded-md font-medium"
+          placeholder="Ask a reflective or analytical question..."
+        />
+      </label>
+
+      <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+        <div className="section-header !mb-2">
+            <h6 className="text-xs font-black text-blue-600 uppercase tracking-widest">Expected Keywords (Auto-scoring)</h6>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {keywords.map((kw, i) => (
+            <span key={i} className="flex items-center gap-2 px-3 py-1 bg-white border border-blue-200 text-blue-700 rounded-full text-xs font-bold shadow-sm">
+              {kw}
+              <button type="button" onClick={() => onUpdate({ ...section, expectedKeywords: keywords.filter((_, idx) => idx !== i) })} className="text-blue-300 hover:text-red-500">×</button>
+            </span>
+          ))}
+          {keywords.length === 0 && <p className="text-[11px] text-blue-400 italic">No keywords added. System will accept any thoughtful answer.</p>}
+        </div>
+        <div className="flex gap-2">
+           <input
+             value={keywordInput}
+             onChange={e => setKeywordInput(e.target.value)}
+             onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
+             placeholder="Add keyword..."
+             className="flex-1 p-2 text-xs border border-blue-200 rounded-md"
+           />
+           <button type="button" className="btn-small" onClick={addKeyword}>Add</button>
+        </div>
+      </div>
+
+      <div className="flex gap-4">
+        <label className="block text-sm font-bold text-amber-700 flex-1">
+          Hint / Guidance
+          <input
+            value={section.hint || ''}
+            onChange={e => onUpdate({ ...section, hint: e.target.value })}
+            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
+            placeholder="Optional hint for the student..."
+          />
+        </label>
+        <label className="block text-sm font-bold text-amber-700 w-32">
+          Delay (sec)
+          <input
+            type="number"
+            min="0"
+            value={section.hintDelaySeconds || 0}
+            onChange={e => onUpdate({ ...section, hintDelaySeconds: parseInt(e.target.value) || 0 })}
+            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
+          />
+        </label>
+      </div>
     </div>
   )
 }

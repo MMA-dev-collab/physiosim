@@ -7,6 +7,8 @@ import HintModal from '@/components/common/HintModal'
 import { ClinicalStepRunner } from '@/components/clinical'
 import ClinicalHub from '@/components/clinical/ClinicalHub'
 import CompositeAssessmentRunner from '@/components/clinical/CompositeAssessmentRunner'
+import McqStep from '@/components/clinical/McqStep'
+import EssayStep from '@/components/clinical/EssayStep'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 
@@ -265,6 +267,116 @@ function CaseRunnerPage({ auth }) {
     return Math.round(((currentStepIndex + 1) / steps.length) * 100)
   }, [steps.length, currentStepIndex])
 
+  const activeSubStep = useMemo(() => {
+    if (currentStep?.type !== 'clinical_hub') return null
+    const sub = currentStep.subSteps?.find(s => s.id === activeSubStepId) || currentStep.subSteps?.[0]
+    return sub
+  }, [currentStep, activeSubStepId])
+
+  // Reset MCQ/Essay state on sub-step change
+  useEffect(() => {
+    if (activeSubStepId) {
+      setSelectedOption(null)
+      setFeedback(null)
+      setIsCorrect(null)
+      setEssayAnswer('')
+      setEssayFeedback(null)
+      setEssayScore(null)
+    }
+  }, [activeSubStepId])
+
+  const renderStepContent = (step) => {
+    if (!step) return null
+
+    switch (step.type) {
+      case 'info':
+        return <PatientInfoStep content={step.content} />
+      case 'history':
+        return <HistoryStep step={step} />
+      case 'mcq':
+        return (
+          <McqStep
+            step={step}
+            selectedOption={selectedOption}
+            feedback={feedback}
+            isCorrect={isCorrect}
+            onAnswer={handleAnswer}
+          />
+        )
+      case 'essay':
+        return (
+          <EssayStep
+            step={step}
+            essayAnswer={essayAnswer}
+            setEssayAnswer={setEssayAnswer}
+            essayFeedback={essayFeedback}
+            essayScore={essayScore}
+            isReviewMode={caseData?.isCompleted}
+            onSubmit={handleEssaySubmit}
+          />
+        )
+      case 'investigation':
+        return <InvestigationsStep step={step} />
+      case 'clinical':
+        if (step.category === 'composite_history') {
+             return (
+               <div className="animate-in fade-in duration-500">
+                  <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective History</h2>
+                  <ClinicalStepRunner step={step} hideHeader={true} />
+               </div>
+             )
+        }
+        if (step.content?.sections) {
+          return (
+            <CompositeAssessmentRunner 
+                step={step} 
+                mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
+                essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
+            />
+          )
+        }
+        return <ClinicalStepRunner step={step} />
+      default:
+        return null
+    }
+  }
+
+  const handleEssaySubmit = async () => {
+    if (caseData.isCompleted) return
+    const currentStepToSubmit = activeSubStep || currentStep
+    const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+    try {
+      const isFinal = currentStepIndex === steps.length - 1
+      const res = await fetch(
+        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStepToSubmit.id}/answer-essay`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify({
+            essayAnswer,
+            isFinalStep: isFinal,
+            timeSpent,
+            hintShown,
+            attemptNumber
+          }),
+        }
+      )
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Failed to submit answer')
+
+      setEssayScore(data.score)
+      setEssayFeedback(data.feedback)
+      setIsCorrect(data.correct)
+      if (data.final) setFinalSummary(data)
+    } catch (e) {
+      setEssayFeedback(e.message)
+    }
+  }
+
   const handleAnswer = async (optionId) => {
     if (!caseData || !currentStep || !optionId) return
     setSelectedOption(optionId)
@@ -274,8 +386,9 @@ function CaseRunnerPage({ auth }) {
 
     try {
       const isFinal = currentStepIndex === steps.length - 1
+      const currentStepToSubmit = activeSubStep || currentStep
       const res = await fetch(
-        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStep.id}/answer`,
+        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStepToSubmit.id}/answer`,
         {
           method: 'POST',
           headers: {
@@ -311,29 +424,43 @@ function CaseRunnerPage({ auth }) {
     }
   }
 
+  const isStepCompleted = useCallback((step) => {
+    if (!step) return true
+    
+    // Check main types
+    if (step.type === 'mcq') {
+      return selectedOption !== null && isCorrect === true
+    }
+    if (step.type === 'essay') {
+      return essayScore !== null
+    }
+
+    // Check Composite Assessment sections
+    if (step.content?.sections) {
+      const sections = step.content.sections
+      const hasMcq = sections.some(s => s.type === 'mcq')
+      const hasEssay = sections.some(s => s.type === 'essay')
+
+      if (hasMcq && (selectedOption === null || isCorrect !== true)) return false
+      if (hasEssay && essayScore === null) return false
+    }
+
+    return true
+  }, [selectedOption, isCorrect, essayScore])
+
   // Logic to check if user can proceed
   const canGoNext = useMemo(() => {
     if (caseData?.isCompleted) return true
     if (!currentStep) return false
 
-    // MCQ: Must select correct option
-    if (currentStep.type === 'mcq') {
-      return selectedOption !== null && isCorrect === true
-    }
-
-    // Essay: Must submit
-    if (currentStep.type === 'essay') {
-      return essayScore !== null
-    }
-
-    // Clinical Hub: the Next button just progresses through sub-steps then advances
+    // If we're in a hub, the sub-step must be completed
     if (currentStep.type === 'clinical_hub') {
-      return true
+      return isStepCompleted(activeSubStep)
     }
 
-    // Default: Open
-    return true
-  }, [caseData, currentStep, selectedOption, isCorrect, essayScore, hubProgress])
+    // Standard check
+    return isStepCompleted(currentStep)
+  }, [caseData, currentStep, activeSubStep, isStepCompleted])
 
   const handleNext = () => {
     // If we're in a clinical_hub, check if there are more sub-steps to view
@@ -417,6 +544,7 @@ function CaseRunnerPage({ auth }) {
     )
   if (!caseData) return null
 
+
   return (
     <div className="page" style={{ padding: 0 }}> {/* Reset padding for full-screen layout */}
       <HintModal
@@ -438,7 +566,7 @@ function CaseRunnerPage({ auth }) {
         onNext={handleNext}
         onBack={handleBack}
         isNextDisabled={!canGoNext}
-        clinicalTip={currentStep?.content?.clinicalTip || currentStep?.logic?.reasoning}
+        clinicalTip={activeSubStep?.content?.clinicalTip || currentStep?.content?.clinicalTip || currentStep?.logic?.reasoning}
         // Sub-step accordion props
         activeSubStepId={activeSubStepId}
         onSubStepClick={setActiveSubStepId}
@@ -452,124 +580,21 @@ function CaseRunnerPage({ auth }) {
         {/* Step Content */}
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
 
-          {/* Special Header for non-clinical steps that still need context */}
-          {(currentStep?.type !== 'clinical' && currentStep?.type !== 'clinical_hub') && (
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                {currentStep?.content?.title ||
-                  (currentStep?.type === 'mcq' ? 'Clinical Decision' :
-                    currentStep?.type === 'history' ? 'History Taking' :
-                      currentStep?.type === 'investigation' ? 'Investigations' :
-                        currentStep?.type === 'essay' ? 'Essay Question' :
-                          'Step Content')}
-              </h2>
-            </div>
-          )}
-
-          {currentStep?.type === 'info' && (
-            <PatientInfoStep content={currentStep.content} />
-          )}
-
-          {currentStep?.type === 'history' && (
-            <HistoryStep step={currentStep} />
-          )}
-
-          {currentStep?.type === 'mcq' && (
-            <McqStep
-              step={currentStep}
-              selectedOption={selectedOption}
-              feedback={feedback}
-              isCorrect={isCorrect}
-              onAnswer={handleAnswer}
-            />
-          )}
-
-          {currentStep?.type === 'clinical' && currentStep?.category === 'composite_history' && (
-            <div className="animate-in fade-in duration-500">
-               <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective History</h2>
-               <ClinicalStepRunner step={currentStep} hideHeader={true} />
-            </div>
-          )}
-
-          {currentStep?.type === 'clinical' && currentStep?.category !== 'composite_history' && !currentStep?.content?.sections && (
-            <ClinicalStepRunner step={currentStep} />
-          )}
-
-          {currentStep?.type === 'clinical_hub' && (
+          {currentStep?.type === 'clinical_hub' ? (
             <div className="animate-in fade-in duration-300">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-3xl font-bold text-slate-800">
                       {currentStep.title === 'Physical Assessment' ? 'Objective Examination' : currentStep.title === 'Patient History' ? 'Subjective History' : currentStep.title}
                     </h2>
                 </div>
-                {/* Render the specific sub-step directly */}
-                {(() => {
-                   const sub = currentStep.subSteps?.find(s => s.id === activeSubStepId) || currentStep.subSteps?.[0];
-                   return sub ? <ClinicalStepRunner step={sub} hideHeader={true} /> : null
-                })()}
+                {renderStepContent(activeSubStep)}
             </div>
-          )}
-
-          {currentStep?.type === 'investigation' && (
-            <InvestigationsStep step={currentStep} />
-          )}
-
-          {/* Composite Assessment (new: sections-based) */}
-          {currentStep?.type === 'clinical' && currentStep?.content?.sections && (
-            <CompositeAssessmentRunner step={currentStep} />
-          )}
-
-          {currentStep?.type === 'essay' && (
-            <EssayStep
-              step={currentStep}
-              essayAnswer={essayAnswer}
-              setEssayAnswer={setEssayAnswer}
-              essayFeedback={essayFeedback}
-              essayScore={essayScore}
-              isReviewMode={caseData.isCompleted}
-              onSubmit={async () => {
-                if (caseData.isCompleted) return // Block submission in review mode
-                const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
-                try {
-                  const isFinal = currentStepIndex === steps.length - 1
-                  const res = await fetch(
-                    `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStep.id}/answer-essay`,
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${auth.token}`,
-                        'ngrok-skip-browser-warning': 'true'
-                      },
-                      body: JSON.stringify({
-                        essayAnswer,
-                        isFinalStep: isFinal,
-                        timeSpent,
-                        hintShown,
-                        attemptNumber
-                      }),
-                    }
-                  )
-                  const data = await res.json()
-                  if (!res.ok) {
-                    throw new Error(data.message || 'Failed to submit answer')
-                  }
-
-                  setEssayScore(data.score)
-                  setEssayFeedback(data.feedback)
-                  setIsCorrect(data.correct)
-                  if (data.final) {
-                    setFinalSummary(data)
-                  }
-                } catch (e) {
-                  setEssayFeedback(e.message)
-                }
-              }}
-            />
+          ) : (
+            renderStepContent(currentStep)
           )}
 
           {/* MCQ Retry button */}
-          {feedback && currentStep?.type === 'mcq' && (
+          {feedback && (currentStep?.type === 'mcq' || activeSubStep?.type === 'mcq') && (
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
               <button
                 className="cf-btn cf-btn-secondary"
@@ -615,89 +640,6 @@ function PatientInfoStep({ content }) {
   )
 }
 
-function McqStep({ step, selectedOption, feedback, isCorrect, onAnswer }) {
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
-  const [localSelection, setLocalSelection] = React.useState(null)
-
-  const getOptionIcon = (index) => {
-    const icons = ['📋', '🔬', '💊', '📝', '🏥', '💡']
-    return icons[index % icons.length]
-  }
-
-  const handleOptionClick = (optionId) => {
-    if (!isSubmitted) {
-      setLocalSelection(optionId)
-    }
-  }
-
-  const handleSubmit = () => {
-    if (localSelection && !isSubmitted) {
-      setIsSubmitted(true)
-      onAnswer(localSelection)
-    }
-  }
-
-  // Reset submission state when step changes or when retry/load happens
-  React.useEffect(() => {
-    if (!selectedOption) {
-      setIsSubmitted(false)
-      setLocalSelection(null)
-    } else {
-      setIsSubmitted(true)
-    }
-  }, [step.id, selectedOption])
-
-  // Determine which selection to show: submitted answer or local selection
-  const displaySelection = isSubmitted ? (selectedOption || localSelection) : localSelection
-
-  return (
-    <div>
-      <div className="section-title" style={{ marginBottom: '1.5rem' }}>
-        {step.content?.prompt || step.question || 'Choose the best next step'}
-      </div>
-      <div className="mcq-options-grid">
-        {step.options.map((opt, index) => {
-          const isSelected = displaySelection === opt.id
-          let statusClass = ''
-
-          if (isSelected && isSubmitted) {
-            if (isCorrect === false) {
-              statusClass = ' wrong'
-            } else if (isCorrect === true) {
-              statusClass = ' correct'
-            }
-          }
-
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              className={`mcq-option-card${statusClass}${isSelected ? ' selected' : ''}`}
-              onClick={() => handleOptionClick(opt.id)}
-              disabled={isSubmitted}
-            >
-              <div className="mcq-option-icon">{getOptionIcon(index)}</div>
-              <div className="mcq-option-text">{opt.label}</div>
-            </button>
-          )
-        })}
-      </div>
-      {!isSubmitted && (
-        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-          <button
-            className="btn-primary"
-            style={{ minWidth: '200px' }}
-            disabled={!localSelection}
-            onClick={handleSubmit}
-          >
-            Submit Answer
-          </button>
-        </div>
-      )}
-      {feedback && <div className="mcq-feedback">{feedback}</div>}
-    </div>
-  )
-}
 
 function HistoryStep({ step }) {
   const questions = step.content?.questions || []
@@ -866,195 +808,6 @@ function InvestigationsStep({ step }) {
   )
 }
 
-function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit, isReviewMode }) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
-    await onSubmit()
-    setIsSubmitting(false)
-  }
-
-  const essayQuestions = step.essayQuestions || []
-
-  return (
-    <div className="essay-step">
-      <div className="section-title" style={{ marginBottom: '1rem' }}>
-        Essay Questions
-      </div>
-      <p className="section-description" style={{ marginBottom: '1.5rem' }}>
-        Please provide a detailed answer to the following question(s). Your answer will be automatically scored based on key concepts.
-      </p>
-
-      {essayQuestions.map((eq, idx) => (
-        <div key={idx} style={{ marginBottom: '2rem' }}>
-          <div style={{
-            background: '#f8fafc',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            marginBottom: '1rem',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontWeight: 600, fontSize: '1.05rem', marginBottom: '0.5rem', color: '#1e293b' }}>
-              Question {idx + 1}
-            </div>
-            <div style={{ color: '#475569', lineHeight: '1.6' }}>
-              {eq.question_text}
-            </div>
-          </div>
-
-          {isReviewMode ? (
-            <div style={{
-              padding: '1.5rem',
-              borderRadius: '12px',
-              background: '#f1f5f9',
-              border: '2px solid #e2e8f0',
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '1rem',
-                fontSize: '1.05rem',
-                fontWeight: 600,
-                color: '#334155'
-              }}>
-                <span style={{ fontSize: '1.3rem' }}>👤</span>
-                Your Submitted Answer
-              </div>
-              <div style={{
-                color: '#475569',
-                lineHeight: '1.7',
-                whiteSpace: 'pre-wrap',
-                fontSize: '0.95rem'
-              }}>
-                {essayAnswer || <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>No answer submitted.</span>}
-              </div>
-            </div>
-          ) : (
-            <>
-              <textarea
-                value={essayAnswer}
-                onChange={(e) => setEssayAnswer(e.target.value)}
-                rows={10}
-                placeholder="Type your answer here... (Maximum 1000 characters)"
-                maxLength={1000}
-                disabled={essayScore !== null}
-                style={{
-                  width: '100%',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  border: '2px solid #e2e8f0',
-                  fontSize: '1rem',
-                  fontFamily: 'inherit',
-                  lineHeight: '1.6',
-                  resize: 'vertical',
-                  minHeight: '200px',
-                  opacity: essayScore !== null ? 0.6 : 1,
-                  cursor: essayScore !== null ? 'not-allowed' : 'text'
-                }}
-              />
-              <div style={{
-                textAlign: 'right',
-                fontSize: '0.875rem',
-                color: '#64748b',
-                marginTop: '0.5rem'
-              }}>
-                {essayAnswer.length} / 1000 characters
-              </div>
-            </>
-          )}
-        </div>
-      ))}
-
-      {essayScore === null && !isReviewMode && (
-        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-          <button
-            className="btn-primary"
-            style={{ minWidth: '200px' }}
-            onClick={handleSubmit}
-            disabled={!essayAnswer || essayAnswer.trim().length === 0 || isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Answer'}
-          </button>
-        </div>
-      )}
-
-      {essayFeedback && (
-        <div style={{
-          marginTop: '1.5rem',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          background: essayScore >= (step.maxScore * 0.6) ? '#f0fdf4' : '#fef2f2',
-          border: `2px solid ${essayScore >= (step.maxScore * 0.6) ? '#86efac' : '#fca5a5'}`,
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            marginBottom: '1rem',
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            color: essayScore >= (step.maxScore * 0.6) ? '#166534' : '#991b1b'
-          }}>
-            <span style={{ fontSize: '1.5rem' }}>
-              {essayScore >= (step.maxScore * 0.6) ? '✓' : '⚠️'}
-            </span>
-            Score: {essayScore} / {step.maxScore}
-          </div>
-          <div style={{
-            color: essayScore >= (step.maxScore * 0.6) ? '#166534' : '#991b1b',
-            lineHeight: '1.6'
-          }}>
-            {essayFeedback}
-          </div>
-        </div>
-      )}
-
-      {(essayScore !== null || isReviewMode) && essayQuestions.length > 0 && essayQuestions[0].perfect_answer && (
-        <div style={{
-          marginTop: '1.5rem',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          background: '#f8fafc',
-          border: '2px solid #e2e8f0',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-            fontSize: '1.05rem',
-            fontWeight: 600,
-            color: '#1e293b'
-          }}>
-            <span style={{ fontSize: '1.3rem' }}>📝</span>
-            Perfect Answer
-          </div>
-          <div style={{
-            color: '#475569',
-            lineHeight: '1.7',
-            whiteSpace: 'pre-wrap',
-            fontSize: '0.95rem'
-          }}>
-            {essayQuestions[0].perfect_answer}
-          </div>
-          <div style={{
-            marginTop: '1rem',
-            padding: '0.75rem',
-            background: '#e0e7ff',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            color: '#3730a3',
-            fontStyle: 'italic'
-          }}>
-            💡 Compare your answer with this model answer to identify areas for improvement.
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default CaseRunnerPage
 

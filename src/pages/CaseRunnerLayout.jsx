@@ -117,19 +117,26 @@ export default function CaseRunnerLayout({
 
         {/* ─── CLINICAL TIP ─── */}
         {clinicalTip && (
-          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 m-4 mt-2 flex flex-col gap-4 animate-in slide-in-from-left-4 duration-500">
+          <div className="bg-[#fff9e6] border border-[#fde68a] rounded-2xl p-5 m-4 mt-2 mb-6 flex flex-col gap-4 animate-in slide-in-from-left-4 duration-500 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-amber-500 shrink-0">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-amber-500 shrink-0 text-xl">
+                💡
               </div>
-              <h4 className="font-bold text-amber-900 uppercase tracking-wider text-sm">Clinical Tip</h4>
+              <h4 className="font-black text-[#92400e] uppercase tracking-widest text-[11px]">Clinical Tip</h4>
             </div>
-            <div className="space-y-1 text-sm font-bold text-slate-700">
-              {clinicalTip.split('\n').map((line, i) => (
-                <p key={i}>{line}</p>
-              ))}
+            <div className="space-y-2 text-[13px] font-bold text-slate-700">
+              {clinicalTip.split('\n').map((line, i) => {
+                const parts = line.split('=')
+                if (parts.length === 2) {
+                  return (
+                    <p key={i} className="leading-tight">
+                      <span className="text-slate-800">{parts[0]} =</span>
+                      <span className="text-blue-600 ml-1.5">{parts[1]}</span>
+                    </p>
+                  )
+                }
+                return <p key={i} className="leading-tight">{line}</p>
+              })}
             </div>
           </div>
         )}

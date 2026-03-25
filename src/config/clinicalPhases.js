@@ -186,6 +186,18 @@ export const CATEGORY_TEMPLATES = {
     },
     treatment_table: {
         treatments: [] // [{ problem_id, problem_label, intervention, benefit, links }]
+    },
+    mcq: {
+        question: '',
+        options: [{ id: 'a', text: '', isCorrect: true }],
+        explanationOnFail: '',
+        explanationOnSuccess: '',
+        hint: ''
+    },
+    essay: {
+        question: '',
+        expectedKeywords: [],
+        hint: ''
     }
 }
 
