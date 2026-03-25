@@ -267,7 +267,7 @@ export default function CaseRunnerLayout({
                   borderRadius: '3px', 
                   transition: 'all 0.5s ease',
                   width: idx === currentStepIndex ? '48px' : '32px',
-                  background: idx === currentStepIndex ? 'var(--cf-primary)' : (idx < currentStepIndex ? 'var(--cf-primary-light)' : '#f1f5f9')
+                  background: idx <= currentStepIndex ? 'var(--cf-primary)' : '#f1f5f9'
                 }}
               />
             ))}

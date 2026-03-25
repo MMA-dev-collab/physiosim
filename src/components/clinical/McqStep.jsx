@@ -93,7 +93,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
         <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
           <button
             className="cf-btn cf-btn-primary"
-            style={{ minWidth: '200px' }}
+            
             disabled={!localSelection}
             onClick={handleSubmit}
           >

@@ -135,7 +135,7 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
         <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
           <button
             className="cf-btn cf-btn-primary"
-            style={{ minWidth: '200px' }}
+            
             onClick={handleSubmit}
             disabled={!essayAnswer || essayAnswer.trim().length === 0 || isSubmitting}
           >
