@@ -684,14 +684,24 @@ export default function CaseEditorPage({ auth }) {
                                         placeholder="Brief clinical description..."
                                     />
                                 </label>
-                                <label style={{ gridColumn: '1 / -1' }}>
-                                    <span>Patient Image URL</span>
-                                    <input
-                                        value={caseData.patientData?.imageUrl || ''}
-                                        onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, imageUrl: e.target.value } })}
-                                        placeholder="https://..."
+                                <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#4b5563', marginBottom: '0.5rem' }}>Patient Avatar <span style={{ color: 'red' }}>*</span></h4>
+                                    <ImageUpload
+                                        label="Upload Patient Avatar"
+                                        folderType="patient-avatars"
+                                        initialUrl={caseData.patientData?.imageUrl}
+                                        onUpload={(url) => setCaseData({ ...caseData, patientData: { ...caseData.patientData, imageUrl: url } })}
                                     />
-                                </label>
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <label style={{ fontSize: '0.875rem', color: '#4b5563' }}>Or enter URL manually:</label>
+                                        <input
+                                            value={caseData.patientData?.imageUrl || ''}
+                                            onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, imageUrl: e.target.value } })}
+                                            placeholder="https://..."
+                                            style={{ marginTop: '0.25rem', width: '100%' }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="form-actions" style={{ display: 'flex', gap: '1rem' }}>
