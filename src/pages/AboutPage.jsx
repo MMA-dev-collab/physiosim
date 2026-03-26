@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './AboutPage.css'
 import { Footer } from '../components/ui/footer'
-import { Activity, Twitter, Users } from 'lucide-react'
+import { Activity, Instagram, Facebook, Linkedin } from 'lucide-react'
 
 function AboutPage() {
 
@@ -222,12 +222,12 @@ function AboutPage() {
         mainLinks={[
           { href: "/membership", label: "Membership" },
           { href: "/cases", label: "Cases" },
-          { href: "/pricing", label: "Pricing" },
+          { href: "/membership", label: "Pricing" },
           { href: "/about", label: "About Us" },
         ]}
         legalLinks={[
-          { href: "/privacy", label: "Privacy" },
-          { href: "/terms", label: "Terms of Service" },
+          { href: "#", label: "Privacy" },
+          { href: "#", label: "Terms of Service" },
         ]}
         copyright={{
           text: `© 2077 PhysioSim All rights reserved.`,

@@ -13,6 +13,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import PerformanceDashboard from './pages/PerformanceDashboard'
+import ComponentShowcase from './pages/ComponentShowcase'
 
 import { API_BASE_URL } from './config'
 
@@ -155,6 +156,7 @@ function App() {
                 path="/performance"
                 element={auth ? <PerformanceDashboard auth={auth} /> : <Navigate to="/login" />}
               />
+              <Route path="/showcase" element={<ComponentShowcase />} />
             </Routes>
           </main>
         </div>

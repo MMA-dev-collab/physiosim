@@ -1,4 +1,11 @@
 /* AboutPage.css */
+:root {
+    --hp-primary: var(--primary);
+    --hp-primary-light: var(--accent-light);
+    --hp-bg-light: var(--bg-secondary);
+    --hp-text-muted: var(--text-secondary);
+    --hp-primary-dark: var(--primary-active);
+}
 
 /* --- Global / Base --- */
 .about-page {

@@ -128,7 +128,7 @@ function HomePage() {
               <Link to="/cases" className="hp-btn-outline">
                 See Case Library
               </Link>
-              <Link to="/register" className="hp-btn-primary">
+              <Link to="/cases" className="hp-btn-primary">
                 Start Free Case
               </Link>
             </div>
@@ -244,7 +244,7 @@ function HomePage() {
               <Link to="/about" className="hp-btn-outline">
                 Learn more
               </Link>
-              <Link to="/register" className="hp-btn-primary">
+              <Link to="/cases" className="hp-btn-primary">
                 Start Free Trial
               </Link>
             </div>
@@ -287,12 +287,12 @@ function HomePage() {
         mainLinks={[
           { href: "/membership", label: "Membership" },
           { href: "/cases", label: "Cases" },
-          { href: "/pricing", label: "Pricing" },
+          { href: "/membership", label: "Pricing" },
           { href: "/about", label: "About Us" },
         ]}
         legalLinks={[
-          { href: "/privacy", label: "Privacy" },
-          { href: "/terms", label: "Terms of Service" },
+          { href: "#", label: "Privacy" },
+          { href: "#", label: "Terms of Service" },
         ]}
         copyright={{
           text: `© 2077 PhysioSim All rights reserved.`,

@@ -493,8 +493,8 @@
 
 .cases-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
 }
 
 .case-library-card {
@@ -514,19 +514,15 @@
 }
 
 .case-card-link-icon {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
   width: 2rem;
   height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  font-size: 1rem;
-  color: #6b7280;
-  z-index: 2;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  color: #9ca3af;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -592,27 +588,78 @@
   flex: 1;
 }
 
+.case-card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
 .case-card-title {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .case-card-description {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   color: #6b7280;
-  line-height: 1.5;
+  line-height: 1.4;
   margin: 0;
-  flex: 1;
 }
 
-.case-card-footer {
+.case-status-box {
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  padding: 1rem;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.case-status-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.case-status-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #4b5563;
+  letter-spacing: 0.05em;
+}
+
+.case-card-difficulty {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.case-card-timer {
+  display: flex;
   align-items: center;
-  margin-top: auto;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.timer-icon {
+  font-size: 1.2rem;
+}
+
+.case-card-plan-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  width: fit-content;
 }
 
 .case-card-difficulty {
@@ -623,19 +670,10 @@
   letter-spacing: 0.05em;
 }
 
-.difficulty-beginner {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.difficulty-intermediate {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.difficulty-advanced {
-  background: #fee2e2;
-  color: #991b1b;
+/* Difficulty styles handled in label now */
+.difficulty-beginner, .difficulty-intermediate, .difficulty-advanced {
+  background: transparent;
+  padding: 0;
 }
 
 .case-card-duration {
@@ -653,21 +691,21 @@
 
 .case-card-button {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  padding: 1rem;
+  background: #2563eb;
   color: #ffffff;
   border: none;
   border-radius: 0.5rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 0.5rem;
 }
 
 .case-card-button:hover:not(:disabled) {
+  background: #1d4ed8;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .case-card-button:disabled {

@@ -155,15 +155,14 @@ function CasesPage({ auth }) {
         <div className="cases-grid">
           {filteredCases.map((c) => (
             <div key={c.id} className="case-library-card">
-              <div className="case-card-link-icon">↗</div>
-              {c.isLocked && !c.isCompleted && (
-                <div className="case-card-locked-overlay">
-                  <span className="case-card-locked-badge">
-                    {c.isLockedByPlan ? `🔒 ${c.requiredPlanName || 'Plan'} Required` : 'Locked'}
-                  </span>
-                </div>
-              )}
               <div className="case-card-thumbnail">
+                {c.isLocked && !c.isCompleted && (
+                  <div className="case-card-locked-overlay">
+                    <span className="case-card-locked-badge">
+                      {c.isLockedByPlan ? `🔒 ${c.requiredPlanName || 'Plan'} Required` : 'Locked'}
+                    </span>
+                  </div>
+                )}
                 {c.thumbnailUrl ? (
                   <img src={c.thumbnailUrl} alt={c.title} />
                 ) : (
@@ -173,37 +172,37 @@ function CasesPage({ auth }) {
                 )}
               </div>
               <div className="case-card-content">
-                <h3 className="case-card-title">{c.title}</h3>
+                <div className="case-card-title-row">
+                  <h3 className="case-card-title">{c.title}</h3>
+                  <div className="case-card-link-icon" onClick={() => navigate(`/cases/${c.id}`)}>↗</div>
+                </div>
+                
                 <p className="case-card-description">
-                  {c.metadata?.brief || 'Physical Therapy Case'}
+                  {c.metadata?.brief || 'I have had knee pain for a few months'}
                 </p>
-                {c.categoryName && (
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                    {c.categoryIcon} {c.categoryName}
+
+                {c.requiredPlanName && (
+                  <div className="case-card-plan-badge">
+                    {c.requiredPlanName} Plan
                   </div>
                 )}
-                {c.requiredPlanName && (
-                  <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem' }}>
-                    <span style={{
-                      background: '#eff6ff',
-                      color: '#2563eb',
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '4px',
-                      fontWeight: '500'
-                    }}>
-                      {c.requiredPlanName} Plan
+
+                <div className="case-status-box">
+                  <div className="case-status-group">
+                    <span className="case-status-label">DIFFICULTY</span>
+                    <span className={`case-card-difficulty difficulty-${c.difficulty?.toLowerCase() || 'intermediate'}`}>
+                      {c.difficulty?.toUpperCase() || 'INTERMEDIATE'}
                     </span>
                   </div>
-                )}
-                <div className="case-card-footer">
-                  <span className={`case-card-difficulty difficulty-${c.difficulty?.toLowerCase() || 'intermediate'}`}>
-                    {c.difficulty?.toUpperCase() || 'INTERMEDIATE'}
-                  </span>
-                  <span className="case-card-duration">
-                    <span className="duration-icon">🕐</span>
-                    {c.duration || 10} min
-                  </span>
+                  <div className="case-status-group">
+                    <span className="case-status-label">DURATION</span>
+                    <div className="case-card-duration">
+                      <span className="duration-icon">🕒</span>
+                      {c.duration || 10} min
+                    </div>
+                  </div>
                 </div>
+
                 <button
                   className="case-card-button"
                   disabled={(c.isLocked && !c.isCompleted) || !auth}
