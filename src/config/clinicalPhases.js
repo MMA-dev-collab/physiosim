@@ -4,15 +4,23 @@
  * Based on PhysioSim Steps 1.0 specification
  */
 
-// The 5 fixed clinical phases (in order)
+// The 6 fixed clinical phases (in order)
 export const CLINICAL_PHASES = [
+    {
+        id: 'case_overview',
+        label: 'Case Overview',
+        shortLabel: 'Overview',
+        icon: '🧑‍⚕️',
+        description: 'Patient overview and visual presentation',
+        order: 1
+    },
     {
         id: 'history_presentation',
         label: 'History Presentation',
         shortLabel: 'History',
         icon: '📋',
         description: 'Capture subjective patient story and structured pain metadata',
-        order: 1
+        order: 2
     },
     {
         id: 'assessment',
@@ -20,7 +28,7 @@ export const CLINICAL_PHASES = [
         shortLabel: 'Assessment',
         icon: '🔍',
         description: 'Objective exam — observations, palpation, ROM, tests, imaging',
-        order: 2
+        order: 3
     },
     {
         id: 'diagnosis',
@@ -28,7 +36,7 @@ export const CLINICAL_PHASES = [
         shortLabel: 'Diagnosis',
         icon: '🎯',
         description: 'Clinical interpretation and working diagnosis',
-        order: 3
+        order: 4
     },
     {
         id: 'problem_list',
@@ -36,7 +44,7 @@ export const CLINICAL_PHASES = [
         shortLabel: 'Problems',
         icon: '📝',
         description: 'Actionable problems mapped from findings',
-        order: 4
+        order: 5
     },
     {
         id: 'treatment',
@@ -44,12 +52,15 @@ export const CLINICAL_PHASES = [
         shortLabel: 'Treatment',
         icon: '💊',
         description: 'Interventions linked to problem IDs',
-        order: 5
+        order: 6
     }
 ]
 
 // Categories within each phase
 export const PHASE_CATEGORIES = {
+    case_overview: [
+        { id: 'overview_image', label: 'Overview Content (Image)', inputMode: 'author_only', dataTypes: ['image'] }
+    ],
     history_presentation: [
         { id: 'composite_history', label: 'Subjective History (Unified)', inputMode: 'composite', dataTypes: ['text', 'tags', 'numbers'] },
         { id: 'present_history', label: 'Present History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
@@ -95,6 +106,9 @@ export const ROM_CLINICAL_TIP = {
 
 // Default data templates for each category
 export const CATEGORY_TEMPLATES = {
+    overview_image: {
+        imageUrl: ''
+    },
     composite_history: {
         chief_complaint: '',
         key_findings: [],

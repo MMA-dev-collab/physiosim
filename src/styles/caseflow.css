@@ -21,7 +21,7 @@
   --cf-radius-sm: 12px;
   --cf-radius-xs: 8px;
   --cf-transition: 200ms ease;
-  --cf-sidebar-w: 280px;
+  --cf-sidebar-w: 250px;
   --cf-stepper-w: 240px;
   --cf-footer-h: 80px;
 }
@@ -80,6 +80,11 @@
 .cf-patient-card {
   padding: 24px 20px;
 }
+@media (max-width : 960px) {
+  .cf-patient-card {
+  padding: 24px 20px 24px 0;
+}
+}
 
 .cf-patient-avatar {
   width: 56px;
@@ -89,7 +94,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
   font-size: 24px;
   font-weight: 600;
   color: var(--cf-primary);
@@ -106,7 +110,6 @@
 .cf-patient-name {
   font-size: 16px;
   font-weight: 600;
-  text-align: center;
   margin-bottom: 4px;
 }
 
@@ -130,7 +133,7 @@
 }
 
 .cf-patient-field-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -139,7 +142,7 @@
 }
 
 .cf-patient-field-value {
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.5;
 }
 

@@ -65,22 +65,15 @@ export default function CaseEditorPage({ auth }) {
         if (isEdit) {
             const load = async () => {
                 try {
-                    // Load Case Info (Using the list endpoint for now and filtering, or we should add a GET /api/cases/:id endpoint for admin?)
-                    // Actually, the public GET /api/cases/:id exists but might be filtered.
-                    // Let's assume we can fetch from the list for now or add a specific endpoint.
-                    // Wait, server.js has GET /api/cases/:id for runner, but maybe we can use that.
-                    // Actually, let's just fetch the list and find it for simplicity, or add a proper endpoint.
-                    // Better: Use the runner endpoint but it might check for prerequisites.
-                    // Let's add a quick fetch to the list.
-                    const res = await fetch(`${API_BASE_URL}/api/admin/cases`, {
+                    // Fetch specific case details which includes patientData
+                    const res = await fetch(`${API_BASE_URL}/api/admin/cases/${id}`, {
                         headers: {
                             Authorization: `Bearer ${auth.token}`,
                             'ngrok-skip-browser-warning': 'true'
                         }
                     })
-                    const cases = await res.json()
-                    const found = cases.find(c => c.id === parseInt(id))
-                    if (found) {
+                    const found = await res.json()
+                    if (res.ok && found) {
                         setCaseData({
                             ...found,
                             metadata: found.metadata || { brief: '' },
@@ -95,7 +88,7 @@ export default function CaseEditorPage({ auth }) {
                             }
                         })
                     } else {
-                        throw new Error('Case not found')
+                        throw new Error(found.message || 'Case not found')
                     }
 
                     // Load Steps

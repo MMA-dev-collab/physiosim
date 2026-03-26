@@ -25,7 +25,8 @@ export default function CaseRunnerLayout({
   clinicalTip,
   activeSubStepId,
   onSubStepClick,
-  hubProgress
+  hubProgress,
+  hideSidebar = false
 }) {
   const painIntensity = patientData?.painIntensity || 0
   const painPercent = Math.min((painIntensity / 10) * 100, 100)
@@ -47,50 +48,52 @@ export default function CaseRunnerLayout({
   }
 
   return (
-    <div className="cf-layout">
-      {/* ─── LEFT SIDEBAR: Patient Card ─── */}
-      <aside className="cf-sidebar">
-        <div className="cf-patient-card text-left">
-          {/* Header */}
-          <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Patient Card</h3>
-          
-          <div className="flex items-center gap-4 mb-6">
-            {/* Avatar */}
-            <div className="cf-patient-avatar shrink-0 m-0" style={{ width: '64px', height: '64px', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              {patientData?.imageUrl ? (
-                <img src={patientData.imageUrl} alt={patientData.patientName || 'Patient'} />
-              ) : (
-                (patientData?.patientName || 'P').charAt(0).toUpperCase()
+    <div className="cf-page-wrapper flex flex-col min-h-screen bg-[#f8fafc]">
+      <div className="cf-layout flex-1 overflow-hidden" style={{ minHeight: '0', background: 'transparent' }}>
+        {/* ─── LEFT SIDEBAR: Patient Card ─── */}
+        {!hideSidebar && (
+          <aside className="cf-sidebar bg-white">
+            <div className="cf-patient-card text-left">
+              {/* Header */}
+              <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Patient Card</h3>
+              
+              <div className="flex gap-4 mb-6" style={{alignItems : "start" , flexDirection: "column"}}>
+                {/* Avatar */}
+                <div className="cf-patient-avatar shrink-0 m-0" style={{ width: '64px', height: '64px', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  {patientData?.imageUrl ? (
+                    <img src={patientData.imageUrl} alt={patientData.patientName || 'Patient'} />
+                  ) : (
+                    (patientData?.patientName || 'P').charAt(0).toUpperCase()
+                  )}
+                </div>
+
+                {/* Name & Demographics */}
+                <div className="flex flex-col text-left">
+                  <div className="cf-patient-name text-left m-0 text-slate-800 text-lg">{patientData?.patientName || 'Patient'}</div>
+                  <div className="cf-patient-info justify-start m-0 mt-1 text-slate-600 font-semibold text-sm">
+                    {patientData?.gender && <span>{patientData.gender},</span>}
+                    {patientData?.age && <span>{patientData.age} years old</span>}
+                  </div>
+                </div>
+              </div>
+
+              <hr className="cf-patient-divider" />
+
+              {/* Chief Complaint */}
+              {patientData?.chiefComplaint && (
+                <div className="cf-patient-field">
+                  <div className="cf-patient-field-label">Chief Complaint</div>
+                  <div className="cf-patient-field-value" style={{ border: '1px solid var(--cf-border)', padding: '12px 8px', borderRadius: '8px', marginTop: '8px', textAlign: 'right' }}>
+                    {patientData.chiefComplaint}
+                  </div>
+                </div>
               )}
-            </div>
-
-            {/* Name & Demographics */}
-            <div className="flex flex-col text-left">
-              <div className="cf-patient-name text-left m-0 text-slate-800 text-lg">{patientData?.patientName || 'Patient'}</div>
-              <div className="cf-patient-info justify-start m-0 mt-1 text-slate-600 font-semibold text-sm">
-                {patientData?.gender && <span>{patientData.gender},</span>}
-                {patientData?.age && <span>{patientData.age} years old</span>}
-              </div>
-            </div>
-          </div>
-
-          <hr className="cf-patient-divider" />
-
-          {/* Chief Complaint */}
-          {patientData?.chiefComplaint && (
-            <div className="cf-patient-field">
-              <div className="cf-patient-field-label">Chief Complaint</div>
-              <div className="cf-patient-field-value" style={{ border: '1px solid var(--cf-border)', padding: '12px', borderRadius: '8px', marginTop: '8px' }}>
-                {patientData.chiefComplaint}
-              </div>
-            </div>
-          )}
 
           {/* Description */}
           {patientData?.description && (
             <div className="cf-patient-field mt-4">
               <div className="cf-patient-field-label">Description</div>
-              <div className="cf-patient-field-value" style={{ color: 'var(--cf-text-muted)', fontSize: '13px' }}>{patientData.description}</div>
+              <div className="cf-patient-field-value" style={{ color: 'var(--cf-text-muted)', fontSize: '15px' }}>{patientData.description}</div>
             </div>
           )}
 
@@ -141,6 +144,7 @@ export default function CaseRunnerLayout({
           </div>
         )}
       </aside>
+      )}
 
       {/* ─── CENTER: Step Content ─── */}
       <div className="cf-main">
@@ -150,25 +154,29 @@ export default function CaseRunnerLayout({
       </div>
 
       {/* ─── RIGHT SIDEBAR: Progress Stepper ─── */}
-      <aside className="cf-stepper-col">
-        <div className="cf-stepper-header">Progress</div>
-        <div className="cf-stepper-meta">
-          {difficulty && (
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              {difficulty}
-            </span>
-          )}
-          {duration && (
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-              </svg>
-              {duration} min
-            </span>
-          )}
+      <aside className="cf-stepper-col bg-white">
+        <div className="px-4 py-4 border-b border-slate-100 mb-2">
+            <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Progress</h3>
+            <div className="flex items-center gap-4">
+                {difficulty && (
+                    <span className={`px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border ${
+                        difficulty.toLowerCase() === 'beginner' ? 'bg-sky-50 text-sky-600 border-sky-100' :
+                        difficulty.toLowerCase() === 'normal' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                        difficulty.toLowerCase() === 'intermediate' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                        'bg-slate-50 text-slate-600 border-slate-100'
+                    }`}>
+                        {difficulty}
+                    </span>
+                )}
+                {duration && (
+                    <div className="flex items-center gap-1.5 text-[13px] font-medium text-slate-600">
+                        <svg className="text-slate-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        {duration} min
+                    </div>
+                )}
+            </div>
         </div>
 
         <ul className="cf-step-list">
@@ -252,7 +260,7 @@ export default function CaseRunnerLayout({
       </aside>
 
       {/* ─── FOOTER: Navigation ─── */}
-      <div className="cf-footer">
+      <div className="cf-footer" style={{ left: hideSidebar ? 0 : undefined }}>
         <div className="cf-footer-progress">
           <div className="cf-footer-progress-text">
             Step {currentStepIndex + 1} of {totalSteps} <span>( {steps[currentStepIndex]?.title || getStepLabel(steps[currentStepIndex])} )</span>
@@ -285,16 +293,17 @@ export default function CaseRunnerLayout({
             Back
           </button>
           <button
-            className="cf-btn cf-btn-primary"
+            className="cf-btn cf-btn-primary bg-[#2563eb] text-white hover:bg-blue-700"
             onClick={onNext}
             disabled={isNextDisabled}
           >
-            {currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next Step'}
+            {currentStepIndex === 0 && (steps[0]?.type === 'info' || steps[0]?.phase === 'case_overview') ? 'Start Assessment' : currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next Step'}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
         </div>
+      </div>
       </div>
     </div>
   )
@@ -302,7 +311,7 @@ export default function CaseRunnerLayout({
 
 function getStepIcon(step) {
   const type = step.type
-  if (type === 'info') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 11V16M12 7H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" /></svg>
+  if (step.phase === 'case_overview' || type === 'info') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 11V16M12 7H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" /></svg>
   if (type === 'history') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" /></svg>
   if (type === 'clinical' || type === 'clinical_hub') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M9 22h6M12 11h.01M12 15h.01M12 18h.01M8 11h.01M8 15h.01M8 18h.01M16 11h.01M16 15h.01M16 18h.01" /></svg>
   if (type === 'diagnosis') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3" /></svg>
@@ -312,7 +321,7 @@ function getStepIcon(step) {
 
 function getStepLabel(step) {
   if (!step) return ''
-  if (step.type === 'info') return 'Overview'
+  if (step.phase === 'case_overview' || step.type === 'info') return 'Case Overview'
   if (step.type === 'history') return step.content?.title || 'Subjective'
   if (step.type === 'clinical') return step.category?.replace(/_/g, ' ') || 'Objective'
   if (step.type === 'clinical_hub') return 'Assessment'

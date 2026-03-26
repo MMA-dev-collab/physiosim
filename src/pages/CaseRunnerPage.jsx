@@ -285,7 +285,7 @@ function CaseRunnerPage({ auth }) {
     }
   }, [activeSubStepId])
 
-  const renderStepContent = (step) => {
+  const renderStepContent = (step, hideHeader = false) => {
     if (!step) return null
 
     switch (step.type) {
@@ -318,10 +318,24 @@ function CaseRunnerPage({ auth }) {
       case 'investigation':
         return <InvestigationsStep step={step} />
       case 'clinical':
+        if (step.phase === 'case_overview') {
+          return (
+            <div className="animate-in fade-in duration-700 slide-in-from-bottom-6">
+               <h1 className="text-4xl font-black text-slate-900 mb-8 tracking-tight">
+                  {caseData.title}
+               </h1>
+               <PatientInfoStep content={{ 
+                  ...(caseData.patientData || {}), 
+                  patientImageUrl: caseData.patientData?.imageUrl,
+                  illustrationUrl: step.content?.imageUrl 
+               }} />
+            </div>
+          )
+        }
         if (step.category === 'composite_history') {
              return (
                <div className="animate-in fade-in duration-500">
-                  <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective History</h2>
+                  {!hideHeader && <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective History</h2>}
                   <ClinicalStepRunner step={step} hideHeader={true} />
                </div>
              )
@@ -332,10 +346,11 @@ function CaseRunnerPage({ auth }) {
                 step={step} 
                 mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
                 essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
+                hideHeader={hideHeader}
             />
           )
         }
-        return <ClinicalStepRunner step={step} />
+        return <ClinicalStepRunner step={step} hideHeader={hideHeader} />
       default:
         return null
     }
@@ -567,6 +582,7 @@ function CaseRunnerPage({ auth }) {
         onBack={handleBack}
         isNextDisabled={!canGoNext}
         clinicalTip={activeSubStep?.content?.clinicalTip || currentStep?.content?.clinicalTip || currentStep?.logic?.reasoning}
+        hideSidebar={currentStep?.phase === 'case_overview' || currentStep?.type === 'info'}
         // Sub-step accordion props
         activeSubStepId={activeSubStepId}
         onSubStepClick={setActiveSubStepId}
@@ -587,7 +603,7 @@ function CaseRunnerPage({ auth }) {
                       {currentStep.title === 'Physical Assessment' ? 'Objective Examination' : currentStep.title === 'Patient History' ? 'Subjective History' : currentStep.title}
                     </h2>
                 </div>
-                {renderStepContent(activeSubStep)}
+                {renderStepContent(activeSubStep, true)}
             </div>
           ) : (
             renderStepContent(currentStep)
@@ -618,23 +634,49 @@ function CaseRunnerPage({ auth }) {
 function PatientInfoStep({ content }) {
   if (!content) return null
   return (
-    <div className="patient-card">
-      <div className="patient-details">
-        <div className="patient-label">Patient</div>
-        <div className="patient-text">
-          {content.patientName} • {content.age} years • {content.gender}
+    <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center mx-auto mt-4 px-4 h-full min-h-[500px]">
+      {/* Left: Patient Card */}
+      <div className="w-full md:w-[380px] shrink-0 bg-white border border-slate-200 rounded-2xl p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-6">
+        <div>
+          <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-6">Patient Card</h3>
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-full bg-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+               {content.patientImageUrl || content.imageUrl ? (
+                  <img src={content.patientImageUrl || content.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xl">
+                   {(content.patientName || 'P').charAt(0).toUpperCase()}
+                 </div>
+               )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[#1e293b] font-semibold text-lg leading-none">{content.patientName || 'Patient'}</span>
+              <span className="text-slate-600 font-medium text-[15px] leading-none">
+                {content.gender}{content.gender && content.age ? ', ' : ''}{content.age ? `${content.age} years old` : ''}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="patient-label">Brief</div>
-        <div className="patient-text">{content.description}</div>
-        <div className="patient-label">Chief complaint (Arabic)</div>
-        <div className="patient-quote">{content.chiefComplaint}</div>
-      </div>
-      <div className="patient-image-shell">
-        {content.imageUrl ? (
-          <img src={content.imageUrl} alt="Patient" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '1rem' }} />
-        ) : (
-          <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Patient illustration / knee diagram</div>
+
+        {content.chiefComplaint && (
+          <div className="mt-4">
+            <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Chief Complaint</h3>
+            <div className="border border-slate-200 rounded-xl p-6 bg-white text-right text-slate-800 text-[19px] leading-relaxed shadow-sm font-semibold" dir="rtl">
+              {content.chiefComplaint}
+            </div>
+          </div>
         )}
+      </div>
+
+      {/* Right: Main Image */}
+      <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-200 bg-white">
+         {content.illustrationUrl || content.imageUrl ? (
+            <img src={content.illustrationUrl || content.imageUrl} alt="Case Illustration" className="w-full h-full object-cover" />
+         ) : (
+            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400 font-medium">
+               Image / Diagram
+            </div>
+         )}
       </div>
     </div>
   )

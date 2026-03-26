@@ -11,7 +11,7 @@ import EssayStep from './EssayStep'
  *   step.content.clinicalTip - optional clinical tip text
  *   step.title - admin-given name of this Main Step
  */
-export default function CompositeAssessmentRunner({ step, mcqProps, essayProps }) {
+export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, hideHeader = false }) {
   const content = step?.content || {}
   const sections = content.sections || []
   const clinicalTip = content.clinicalTip || null
@@ -30,7 +30,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps }
   return (
     <div className="car-container">
       {/* Step Title */}
-      {step.title && (
+      {step.title && !hideHeader && (
         <h2 className="car-step-title">{step.title}</h2>
       )}
 

@@ -31,15 +31,19 @@ export default function ClinicalPhaseManager({
     // Initialize groups when entering reorder mode
     useEffect(() => {
         if (isReordering) {
-            // 1. Separate History (Pinned)
-            const hSteps = steps
-                .filter(s => s.phase === 'history_presentation')
-                .sort((a, b) => a.stepIndex - b.stepIndex)
-            setHistorySteps(hSteps)
+            // 1. Separate Case Overview & History (Pinned)
+            const pinnedSteps = steps
+                .filter(s => s.phase === 'case_overview' || s.phase === 'history_presentation')
+                .sort((a, b) => {
+                    if (a.phase === 'case_overview' && b.phase !== 'case_overview') return -1;
+                    if (b.phase === 'case_overview' && a.phase !== 'case_overview') return 1;
+                    return a.stepIndex - b.stepIndex;
+                })
+            setHistorySteps(pinnedSteps)
 
             // 2. Build a mixed list of phase groups + standalone MCQ/Essay steps
             // ordered by their actual stepIndex position
-            const otherPhases = CLINICAL_PHASES.filter(p => p.id !== 'history_presentation')
+            const otherPhases = CLINICAL_PHASES.filter(p => p.id !== 'case_overview' && p.id !== 'history_presentation')
             const eduSteps = steps.filter(s => s.type === 'mcq' || s.type === 'essay')
 
             // Create phase group items
@@ -81,7 +85,7 @@ export default function ClinicalPhaseManager({
             mixed.forEach(g => {
                 if (g.itemType === 'phase' && g.steps.length > 0) initialOpen[g.id] = true
             })
-            if (hSteps.length > 0) initialOpen['history_presentation'] = true
+            if (pinnedSteps.length > 0) initialOpen['history_presentation'] = true
 
             setOpenReorderGroups(initialOpen)
         }
@@ -186,7 +190,7 @@ export default function ClinicalPhaseManager({
                 </div>
 
                 <div className="reorder-list">
-                    {/* 1. Pinned History Steps */}
+                    {/* 1. Pinned Overview & History Steps */}
                     <div className="pinned-section">
                         <div
                             className="pinned-header"
@@ -194,17 +198,17 @@ export default function ClinicalPhaseManager({
                             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
                             <span>{openReorderGroups['history_presentation'] ? '▼' : '▶'}</span>
-                            🔒 History Phase (Pinned to Start)
+                            🔒 Overview & History Phases (Pinned to Start)
                         </div>
 
                         {openReorderGroups['history_presentation'] && (
                             <div className="phase-group-content">
                                 {historySteps.length === 0 ? (
-                                    <div className="empty-phase-msg">No steps in History</div>
+                                    <div className="empty-phase-msg">No steps in Overview or History</div>
                                 ) : (
                                     historySteps.map(step => (
                                         <div key={step.id} className="reorder-item pinned">
-                                            <span className="step-icon">📋</span>
+                                            <span className="step-icon">{step.phase === 'case_overview' ? '🧑‍⚕️' : '📋'}</span>
                                             <span className="step-label">{step.category || step.type}</span>
                                             {step.content?.title && <span className="step-subtitle"> - {step.content.title}</span>}
                                         </div>
@@ -310,7 +314,9 @@ export default function ClinicalPhaseManager({
 
     // 1. Sort Phases based on steps
     const sortedPhases = [...CLINICAL_PHASES].sort((a, b) => {
-        // Pins History to top
+        // Pins Overview & History to top
+        if (a.id === 'case_overview') return -1
+        if (b.id === 'case_overview') return 1
         if (a.id === 'history_presentation') return -1
         if (b.id === 'history_presentation') return 1
 
@@ -528,7 +534,7 @@ export default function ClinicalPhaseManager({
                         <h3>✏️ Educational Steps</h3>
                         <p>Add MCQ or Essay questions anywhere in the case flow</p>
                     </div>
-                    <div className="educational-actions">
+                    <div className="educational-actions flex gap-2">
                         <button
                             className="btn-add-mcq"
                             onClick={() => onAddStep('mcq')}
@@ -544,7 +550,7 @@ export default function ClinicalPhaseManager({
                     </div>
                 </div>
 
-                {/* List existing MCQ/Essay steps */}
+                {/* List existing Educational steps */}
                 {(() => {
                     const eduSteps = steps.filter(s => s.type === 'mcq' || s.type === 'essay')
                     if (eduSteps.length === 0) return (

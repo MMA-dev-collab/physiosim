@@ -6,6 +6,7 @@ import CompositeHistoryEditor from './CompositeHistoryEditor'
 import { AssessmentPhaseEditor } from './AssessmentPhaseEditor'
 import CompositeAssessmentEditor from './CompositeAssessmentEditor'
 import { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor } from './ClinicalPhaseEditors'
+import ImageUpload from '../common/ImageUpload'
 import './PhaseEditors.css'
 
 /**
@@ -114,6 +115,36 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
         }
 
         switch (editedStep.phase) {
+            case 'case_overview':
+                return (
+                    <div className="phase-editor case-overview-editor">
+                        <div className="editor-section">
+                            <h4>Visual Presentation</h4>
+                            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                Upload an image that represents the clinical scenario to be displayed alongside the patient card.
+                            </p>
+                            <div className="form-group">
+                                <label>Patient Image</label>
+                                <ImageUpload
+                                    label="Upload Image"
+                                    folderType="step-image"
+                                    initialUrl={editedStep.content?.imageUrl}
+                                    onUpload={(url) => handleStepUpdate({ ...editedStep, content: { ...editedStep.content, imageUrl: url } })}
+                                />
+                                <div style={{ marginTop: '1rem' }}>
+                                    <label style={{ fontSize: '0.85rem', color: '#64748b' }}>Or enter image URL manually:</label>
+                                    <input
+                                        type="url"
+                                        value={editedStep.content?.imageUrl || ''}
+                                        onChange={(e) => handleStepUpdate({ ...editedStep, content: { ...editedStep.content, imageUrl: e.target.value } })}
+                                        placeholder="https://..."
+                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '4px', marginTop: '0.25rem' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
             case 'history_presentation':
                 if (editedStep.category === 'composite_history') {
                     return <CompositeHistoryEditor step={editedStep} onUpdate={handleStepUpdate} />
@@ -177,6 +208,7 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
 // Helper function for phase colors
 function getPhaseColor(phase) {
     const colors = {
+        case_overview: 'linear-gradient(135deg, #a855f7, #9333ea)', // Purple gradient
         history_presentation: 'linear-gradient(135deg, #10b981, #059669)',
         assessment: 'linear-gradient(135deg, #3b82f6, #2563eb)',
         diagnosis: 'linear-gradient(135deg, #f59e0b, #d97706)',
