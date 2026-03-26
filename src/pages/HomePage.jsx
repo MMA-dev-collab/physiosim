@@ -1,174 +1,288 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Activity,
-  Brain,
-  CheckCircle,
   ChevronRight,
-  FileText,
-  BarChart2,
-  Play,
+  Monitor,
   Users,
-  Twitter
+  Wallet,
+  CheckCircle,
+  ArrowRight,
+  Linkedin,
+  Facebook,
+  Instagram,
+  Activity
 } from 'lucide-react'
-import TestimonialsSection from '../components/TestimonialsSection'
 import { Footer } from '../components/ui/footer'
 import './HomePage.css'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 function HomePage() {
+  const heroRef = useRef(null)
+  const featuresRef = useRef(null)
+  const processRef = useRef(null)
+  const testimonialRef = useRef(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Hero Animation
+      const heroTl = gsap.timeline()
+      heroTl.from(".hp-hero-title", {
+        y: 60,
+        opacity: 0,
+        duration: 1,
+        ease: "power4.out"
+      })
+      .from(".hp-hero-subtitle", {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out"
+      }, "-=0.6")
+      .from(".hp-hero-actions", {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out"
+      }, "-=0.4")
+      .from(".hp-hero-visual", {
+        x: 100,
+        opacity: 0,
+        duration: 1.2,
+        ease: "power4.out"
+      }, "-=1")
+
+      // Features Animation
+      gsap.from(".hp-feature-card", {
+        scrollTrigger: {
+          trigger: ".hp-features",
+          start: "top 90%",
+          toggleActions: "play none none none"
+        },
+        y: 50,
+        autoAlpha: 0,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: "power3.out",
+        clearProps: "all"
+      })
+
+      // Process Steps Animation
+      const steps = gsap.utils.toArray(".hp-process-step")
+      steps.forEach((step) => {
+        gsap.from(step, {
+          scrollTrigger: {
+            trigger: step,
+            start: "top 90%",
+            toggleActions: "play none none none"
+          },
+          y: 60,
+          autoAlpha: 0,
+          duration: 1,
+          ease: "power3.out",
+          clearProps: "all"
+        })
+      })
+
+      // Testimonial CTA Animation
+      gsap.from(".hp-cta-content", {
+        scrollTrigger: {
+          trigger: ".hp-testimonial-cta",
+          start: "top 80%",
+        },
+        x: -50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      })
+      gsap.from(".hp-cta-visual", {
+        scrollTrigger: {
+          trigger: ".hp-testimonial-cta",
+          start: "top 80%",
+        },
+        x: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      })
+    })
+
+    return () => ctx.revert()
+  }, [])
+
   return (
     <div className="home-page">
       {/* Hero Section */}
-      <section className="hp-hero animate-fade-in">
+      <section className="hp-hero" ref={heroRef}>
         <div className="hp-container">
           <div className="hp-hero-content">
-            <span className="hp-eyebrow">Physical Therapy Case Simulator</span>
             <h1 className="hp-hero-title">
-              Master Clinical Reasoning with AI-Powered Simulation
+              Enhance your clinical skills through interactive simulation cases
             </h1>
             <p className="hp-hero-subtitle">
-              Practice real-world cases, get instant feedback, and refine your diagnostic skills in a risk-free environment.
+              Join our platform to engage with realistic, locally relevant scenarios.
             </p>
             <div className="hp-hero-actions">
-              <Link to="/cases" className="hp-btn-primary">
-                Start Free Simulation <ChevronRight size={20} />
+              <Link to="/cases" className="hp-btn-outline">
+                See Case Library
               </Link>
-              <Link to="/about" className="hp-btn-secondary">
-                <Play size={18} fill="currentColor" /> View Demo
+              <Link to="/register" className="hp-btn-primary">
+                Start Free Case
               </Link>
             </div>
           </div>
 
-          <div className="hp-hero-visual delay-200 animate-fade-in">
-            <div className="hp-card-stack">
+          <div className="hp-hero-visual">
+            <div className="hp-hero-img-container">
               <img
-                src="/hero_visual.png"
-                alt="PhysioSim Hero"
-                className="w-full h-full object-contain rounded-3xl"
-                style={{ boxShadow: '0 20px 50px rgba(15, 118, 110, 0.2)' }}
+                src="/hero_therapy.png"
+                alt="Physical Therapy Simulation"
+                className="w-full h-auto"
               />
-
-              {/* Floating Card: Diagnosis */}
-              <div className="hp-glass-card" style={{ bottom: '10%', right: '-5%', zIndex: 10, width: '260px' }}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <CheckCircle color="#10b981" size={28} />
-                  <div>
-                    <div style={{ fontWeight: '800', fontSize: '0.9rem', color: '#065f46' }}>Diagnosis Correct</div>
-                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Patellofemoral Pain</div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="hp-features">
+      <section className="hp-features" ref={featuresRef}>
         <div className="hp-container">
-          <div className="hp-section-header">
-            <span className="hp-eyebrow">Why PhysioSim</span>
-            <h2 className="hp-section-title">Everything you need to excel</h2>
-            <p className="hp-section-desc">From patient history to final diagnosis, provide a complete clinical practice environment.</p>
-          </div>
-
+          <h2 className="hp-features-title">ONE PLATFORM DIFFERENT CASES</h2>
           <div className="hp-features-grid">
             <FeatureCard
-              icon={<FileText size={32} />}
-              title="Interactive Cases"
-              desc="Engage with diverse, realistic patient scenarios and case studies for hands-on learning."
+              icon={<Monitor size={24} className="text-blue-600" />}
+              iconBg="#eff6ff"
+              title="Simulation"
+              desc="Simulations that prepare you for real patients."
+              linkText="Start simulation"
+              linkTo="/cases"
             />
             <FeatureCard
-              icon={<Brain size={32} />}
-              title="Real-time Feedback"
-              desc="Receive instant, personalized performance analysis and guidance to improve decision-making."
+              icon={<Users size={24} className="text-indigo-600" />}
+              iconBg="#eef2ff"
+              title="Mentorship"
+              desc="Get personalized guidance from expert Physiotherapist."
+              linkText="Explore"
+              linkTo="/about"
+              isPrimary
             />
             <FeatureCard
-              icon={<BarChart2 size={32} />}
-              title="Progress Tracking"
-              desc="Monitor your clinical growth with detailed metrics and competency dashboards."
+              icon={<Wallet size={24} className="text-pink-600" />}
+              iconBg="#fdf2f8"
+              title="Affordable"
+              desc="Train smarter, spend less."
+              linkText="Pricing"
+              linkTo="/membership"
             />
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="hp-how-it-works">
+      {/* Process Section */}
+      <section className="hp-process" ref={processRef}>
         <div className="hp-container">
-          <div className="hp-section-header">
-            <span className="hp-eyebrow">Our Process</span>
-            <h2 className="hp-section-title">How It Works</h2>
-            <p className="hp-section-desc">Go from theory to practice in three simple steps.</p>
+          {/* Step 1 */}
+          <div className="hp-process-step">
+            <div className="hp-step-info">
+              <div className="hp-step-number">1</div>
+              <h3 className="hp-step-title">Browse Cases</h3>
+              <p className="hp-step-desc">
+                Access a wide range of realistic clinical scenarios
+              </p>
+            </div>
+            <div className="hp-step-visual">
+              <img src="/browse_cases.png" alt="Browse Cases" />
+            </div>
           </div>
 
-          <div className="hp-steps-container">
-            <StepRow
-              number="01"
-              title="Browse Cases"
-              desc="Choose from a diverse range of clinical scenarios categorized by specialty (MSK, Neuro, Cardiorespiratory) and difficulty level. Filter by body part or condition."
-              visualSrc="/step1_library.png"
-              visualLabel="Case Library"
-              isReversed={false}
-            />
-            <StepRow
-              number="02"
-              title="Practice Skills"
-              desc="Conduct subjective assessments, perform virtual physical exams, and request investigations just like in a real clinic. The interface mimics real patient interaction."
-              visualSrc="/step2_practice.png"
-              visualLabel="Examination Interface"
-              isReversed={true}
-            />
-            <StepRow
-              number="03"
-              title="Get Feedback"
-              desc="Receive immediate, evidence-based feedback on every decision you make. Understand what you missed and why, helping you refine your clinical reasoning."
-              visualSrc="/step3_feedback.png"
-              visualLabel="Performance Report"
-              isReversed={false}
-            />
+          {/* Step 2 */}
+          <div className="hp-process-step">
+            <div className="hp-step-visual">
+              <img src="/practice_skills.png" alt="Practice Skills" />
+            </div>
+            <div className="hp-step-info">
+              <div className="hp-step-number">2</div>
+              <h3 className="hp-step-title">Practice Skills</h3>
+              <p className="hp-step-desc">
+                Apply knowledge in simulations and build confidence
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="hp-process-step">
+            <div className="hp-step-info">
+              <div className="hp-step-number">3</div>
+              <h3 className="hp-step-title">Get Feedback</h3>
+              <p className="hp-step-desc">
+                Receive personalized guidance from expert mentors to improve
+              </p>
+            </div>
+            <div className="hp-step-visual">
+              <img src="/get_feedback.png" alt="Get Feedback" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <TestimonialsSection />
-
-      {/* Final CTA Strip (Full Width) */}
-      <section className="hp-cta-strip">
+      {/* Testimonial / CTA Section */}
+      <section className="hp-testimonial-cta" ref={testimonialRef}>
         <div className="hp-container">
           <div className="hp-cta-content">
-            <h2 className="hp-cta-title">Ready to elevate your clinical skills?</h2>
-            <p className="hp-cta-desc">Join thousands of physiotherapy students and professionals mastering their craft with PhysioSim.</p>
-            <Link to="/cases">
-              <button className="hp-btn-white">
-                Get Started Today
-              </button>
-            </Link>
+            <h2 className="hp-cta-quote">
+              “ Join 1,000+ students building real clinical confidence with <br />
+              <span>PhysioSim</span> ”
+            </h2>
+            <ul className="hp-cta-bullets">
+              <li><CheckCircle size={20} /> Free trial with basic cases</li>
+              <li><CheckCircle size={20} /> Personalized mentorship options</li>
+              <li><CheckCircle size={20} /> Full access for simulation features</li>
+            </ul>
+            <div className="hp-cta-actions">
+              <Link to="/about" className="hp-btn-outline">
+                Learn more
+              </Link>
+              <Link to="/register" className="hp-btn-primary">
+                Start Free Trial
+              </Link>
+            </div>
+          </div>
+          <div className="hp-cta-visual">
+            <div className="hp-hero-img-container">
+              <img src="/student_practice.png" alt="Professional Practice" className="w-full h-auto" />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <Footer
-        logo={<Activity className="h-8 w-8 text-teal-600" />}
+        logo={<Activity className="h-8 w-8 text-blue-600" />}
         brandName="PhysioSim"
         socialLinks={[
           {
-            icon: <Twitter className="h-5 w-5" />,
-            href: "https://twitter.com",
-            label: "Twitter",
+            icon: <Linkedin className="h-5 w-5" />,
+            href: "#",
+            label: "LinkedIn",
           },
           {
-            icon: <Users className="h-5 w-5" />,
-            href: "https://community.physiosim.com",
-            label: "Community",
+            icon: <Facebook className="h-5 w-5" />,
+            href: "#",
+            label: "Facebook",
+          },
+          {
+            icon: <Instagram className="h-5 w-5" />,
+            href: "#",
+            label: "Instagram",
           },
         ]}
         mainLinks={[
-          { href: "/cases", label: "Case Library" },
           { href: "/membership", label: "Membership" },
+          { href: "/cases", label: "Cases" },
+          { href: "/pricing", label: "Pricing" },
           { href: "/about", label: "About Us" },
-          { href: "/leaderboard", label: "Leaderboard" },
         ]}
         legalLinks={[
           { href: "/privacy", label: "Privacy Policy" },
@@ -183,48 +297,26 @@ function HomePage() {
   )
 }
 
-function FeatureCard({ icon, title, desc }) {
+function FeatureCard({ icon, iconBg, title, desc, linkText, linkTo, isPrimary }) {
   return (
     <div className="hp-feature-card">
-      <div className="hp-feature-icon-wrapper">{icon}</div>
-      <h3 className="hp-feature-title">{title}</h3>
-      <p className="hp-feature-text">{desc}</p>
+      <div 
+        className="hp-feature-icon-box" 
+        style={{ backgroundColor: iconBg }}
+      >
+        {icon}
+      </div>
+      <h3 className="hp-feature-title-card">{title}</h3>
+      <p className="hp-feature-desc">{desc}</p>
+      <Link 
+        to={linkTo} 
+        className={`hp-feature-link ${isPrimary ? 'hp-btn-primary text-white px-4 py-2 rounded-lg' : ''}`}
+        style={isPrimary ? { display: 'inline-flex', width: 'fit-content' } : {}}
+      >
+        {linkText} <ArrowRight size={16} />
+      </Link>
     </div>
   )
 }
-
-function StepRow({ number, title, desc, visualSrc, visualLabel, isReversed }) {
-  return (
-    <div className={`hp-step-row ${isReversed ? 'reversed' : ''}`}>
-      <div className="hp-step-content">
-        <div className="hp-step-number">{number}</div>
-        <h3 className="hp-step-title">{title}</h3>
-        <p className="hp-step-desc">{desc}</p>
-      </div>
-      <div className="hp-step-visual" style={{ overflow: 'hidden', padding: 0, position: 'relative' }}>
-        <img
-          src={visualSrc}
-          alt={visualLabel}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-        />
-        <div style={{
-          position: 'absolute',
-          bottom: '1rem',
-          right: '1rem',
-          background: 'rgba(255,255,255,0.9)',
-          padding: '0.5rem 1rem',
-          borderRadius: '99px',
-          fontSize: '0.8rem',
-          fontWeight: 700,
-          color: '#0f766e',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          {visualLabel}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 
 export default HomePage
