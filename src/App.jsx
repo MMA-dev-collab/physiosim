@@ -120,8 +120,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/membership" element={<MembershipPage auth={auth} />} />
               <Route path="/about" element={<AboutPage />} />
-              <Route path="/login" element={auth ? <Navigate to="/cases" /> : <LoginPage setAuth={setAuth} />} />
-              <Route path="/register" element={auth ? <Navigate to="/cases" /> : <RegisterPage setAuth={setAuth} />} />
+              <Route path="/login" element={auth ? <Navigate to="/" /> : <LoginPage setAuth={setAuth} />} />
+              <Route path="/register" element={auth ? <Navigate to="/" /> : <RegisterPage setAuth={setAuth} />} />
               <Route path="/verify-email" element={<VerifyEmailPage setAuth={setAuth} />} />
               <Route
                 path="/cases"

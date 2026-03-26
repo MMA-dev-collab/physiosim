@@ -52,7 +52,7 @@ function VerifyEmailPage({ setAuth }) {
 
             // On success, backend returns token + user
             setAuth(data)
-            navigate('/cases')
+            navigate('/')
         } catch (err) {
             setError(err.message)
         } finally {

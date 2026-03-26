@@ -10,7 +10,6 @@ function LoginPage({ setAuth }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [showPassword, setShowPassword] = useState(false)
-    const [isTyping, setIsTyping] = useState(false)
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault()
@@ -34,7 +33,7 @@ function LoginPage({ setAuth }) {
 
             const data = await res.json()
             setAuth(data)
-            navigate('/cases')
+            navigate('/')
         } catch (err) {
             setError(err.message)
         } finally {
@@ -53,8 +52,8 @@ function LoginPage({ setAuth }) {
             handleSubmit={handleSubmit}
             showPassword={showPassword}
             setShowPassword={setShowPassword}
-            onTypingStart={() => setIsTyping(true)}
-            onTypingEnd={() => setIsTyping(false)}
+            onTypingStart={() => {}}
+            onTypingEnd={() => {}}
         />
     )
 }
