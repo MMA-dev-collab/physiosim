@@ -257,10 +257,16 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
       <Footer
-        logo={<Activity className="h-8 w-8 text-blue-600" />}
+        logo={
+          <img 
+            src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
+            alt="PhysioSim" 
+            className="h-10 w-auto"
+          />
+        }
         brandName="PhysioSim"
+        description="Design amazing digital experiences that create more happy in the world."
         socialLinks={[
           {
             icon: <Linkedin className="h-5 w-5" />,
@@ -285,12 +291,11 @@ function HomePage() {
           { href: "/about", label: "About Us" },
         ]}
         legalLinks={[
-          { href: "/privacy", label: "Privacy Policy" },
+          { href: "/privacy", label: "Privacy" },
           { href: "/terms", label: "Terms of Service" },
         ]}
         copyright={{
-          text: `© ${new Date().getFullYear()} PhysioSim`,
-          license: "Advancing Clinical Excellence",
+          text: `© 2077 PhysioSim All rights reserved.`,
         }}
       />
     </div>

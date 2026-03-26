@@ -192,36 +192,47 @@ function AboutPage() {
       </section>
 
       {/* Footer */}
-            <Footer
-              logo={<Activity className="h-8 w-8 text-teal-600" />}
-              brandName="PhysioCaseLab"
-              socialLinks={[
-                {
-                  icon: <Twitter className="h-5 w-5" />,
-                  href: "https://twitter.com",
-                  label: "Twitter",
-                },
-                {
-                  icon: <Users className="h-5 w-5" />,
-                  href: "https://community.physiosim.com",
-                  label: "Community",
-                },
-              ]}
-              mainLinks={[
-                { href: "/cases", label: "Case Library" },
-                { href: "/membership", label: "Membership" },
-                { href: "/about", label: "About Us" },
-                { href: "/leaderboard", label: "Leaderboard" },
-              ]}
-              legalLinks={[
-                { href: "/privacy", label: "Privacy Policy" },
-                { href: "/terms", label: "Terms of Service" },
-              ]}
-              copyright={{
-                text: `© ${new Date().getFullYear()} PhysioSim`,
-                license: "Advancing Clinical Excellence",
-              }}
-            />
+      <Footer
+        logo={
+          <img 
+            src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
+            alt="PhysioSim" 
+            className="h-10 w-auto"
+          />
+        }
+        brandName="PhysioSim"
+        description="Design amazing digital experiences that create more happy in the world."
+        socialLinks={[
+          {
+            icon: <Linkedin className="h-5 w-5" />,
+            href: "#",
+            label: "LinkedIn",
+          },
+          {
+            icon: <Facebook className="h-5 w-5" />,
+            href: "#",
+            label: "Facebook",
+          },
+          {
+            icon: <Instagram className="h-5 w-5" />,
+            href: "#",
+            label: "Instagram",
+          },
+        ]}
+        mainLinks={[
+          { href: "/membership", label: "Membership" },
+          { href: "/cases", label: "Cases" },
+          { href: "/pricing", label: "Pricing" },
+          { href: "/about", label: "About Us" },
+        ]}
+        legalLinks={[
+          { href: "/privacy", label: "Privacy" },
+          { href: "/terms", label: "Terms of Service" },
+        ]}
+        copyright={{
+          text: `© 2077 PhysioSim All rights reserved.`,
+        }}
+      />
     </div>
   )
 }

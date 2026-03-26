@@ -4,6 +4,7 @@ import * as React from "react"
 interface FooterProps {
     logo: React.ReactNode
     brandName: string
+    description?: string
     socialLinks: Array<{
         icon: React.ReactNode
         href: string
@@ -26,48 +27,49 @@ interface FooterProps {
 export function Footer({
     logo,
     brandName,
+    description,
     socialLinks,
     mainLinks,
     legalLinks,
     copyright,
 }: FooterProps) {
     return (
-        <footer className="pb-6 pt-16 lg:pb-8 lg:pt-24 border-t bg-slate-50">
+        <footer className="footer-redesign pb-10 pt-16 border-t bg-white">
             <div className="hp-container">
-                <div className="md:flex md:items-start md:justify-between">
-                    <a
-                        href="/"
-                        className="flex items-center gap-x-2"
-                        aria-label={brandName}
-                    >
-                        {logo}
-                        <span className="font-bold text-xl text-slate-900">{brandName}</span>
-                    </a>
-                    <ul className="flex list-none mt-6 md:mt-0 space-x-3 p-0">
-                        {socialLinks.map((link, i) => (
-                            <li key={i} className="m-0">
-                                <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    className="h-10 w-10 rounded-full"
-                                    asChild
-                                >
-                                    <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.label}>
-                                        {link.icon}
-                                    </a>
-                                </Button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <div className="border-t border-slate-200 mt-6 pt-6 md:mt-4 md:pt-8 lg:grid lg:grid-cols-10">
-                    <nav className="lg:mt-0 lg:col-[4/11]">
-                        <ul className="list-none flex flex-wrap -my-1 -mx-2 lg:justify-end p-0">
+                {/* Top Section */}
+                <div className="flex flex-col md:flex-row md:justify-between items-start gap-10 mb-12">
+                    <div className="max-w-md">
+                        <a
+                            href="/"
+                            className="flex items-center gap-x-2 mb-4"
+                            aria-label={brandName}
+                        >
+                            {logo}
+                        </a>
+                        {description && (
+                            <p className="text-slate-500 text-sm leading-relaxed max-w-sm mt-4">
+                                {description}
+                            </p>
+                        )}
+                    </div>
+                    
+                    <nav>
+                        <ul className="flex flex-wrap list-none gap-x-8 gap-y-4 p-0 m-0">
                             {mainLinks.map((link, i) => (
-                                <li key={i} className="my-1 mx-2 shrink-0">
+                                <li key={i} className="m-0">
                                     <a
                                         href={link.href}
-                                        className="text-sm text-slate-600 hover:text-teal-600 transition-colors underline-offset-4 hover:underline"
+                                        className="text-slate-700 font-semibold hover:text-blue-600 transition-colors text-sm"
+                                    >
+                                        {link.label}
+                                    </a>
+                                </li>
+                            ))}
+                            {legalLinks.slice(0, 1).map((link, i) => (
+                                <li key={`legal-${i}`} className="m-0">
+                                    <a
+                                        href={link.href}
+                                        className="text-slate-700 font-semibold hover:text-blue-600 transition-colors text-sm"
                                     >
                                         {link.label}
                                     </a>
@@ -75,23 +77,30 @@ export function Footer({
                             ))}
                         </ul>
                     </nav>
-                    <div className="mt-6 lg:mt-0 lg:col-[4/11]">
-                        <ul className="list-none flex flex-wrap -my-1 -mx-3 lg:justify-end p-1">
-                            {legalLinks.map((link, i) => (
-                                <li key={i} className="my-1 mx-3 shrink-0">
-                                    <a
-                                        href={link.href}
-                                        className="text-sm text-slate-500 hover:text-slate-800 transition-colors underline-offset-4 hover:underline"
-                                    >
-                                        {link.label}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
+                </div>
+
+                {/* Divider Line */}
+                <div className="border-t border-slate-100 my-8"></div>
+
+                {/* Bottom Section */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="text-slate-400 text-sm font-medium order-2 md:order-1">
+                        {copyright.text}
                     </div>
-                    <div className="mt-6 text-sm leading-6 text-slate-500 whitespace-nowrap lg:mt-0 lg:row-[1/3] lg:col-[1/4]">
-                        <div className="font-medium text-slate-700">{copyright.text}</div>
-                        {copyright.license && <div className="text-xs opacity-75">{copyright.license}</div>}
+                    
+                    <div className="flex items-center gap-4 order-1 md:order-2">
+                        {socialLinks.map((link, i) => (
+                            <a 
+                                key={i} 
+                                href={link.href} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                aria-label={link.label}
+                                className="text-blue-600 hover:opacity-80 transition-opacity"
+                            >
+                                {link.icon}
+                            </a>
+                        ))}
                     </div>
                 </div>
             </div>
