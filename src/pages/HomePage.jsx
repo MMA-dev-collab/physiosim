@@ -212,6 +212,7 @@ const HowItWorks = () => (
               <div className="w-16 h-16 rounded-full border-2 border-blue-200 flex items-center justify-center text-2xl font-bold text-slate-800 bg-white z-10 relative">
                 3
               </div>
+              <div className="absolute top-16 left-1/2 -translate-x-1/2 w-0.5 h-32 border-l-2 border-dashed border-blue-200 hidden md:block" />
             </div>
             <div>
               <h3 className="text-3xl font-bold text-slate-800 mb-4">Get Feedback</h3>
