@@ -302,15 +302,15 @@ const Footer = () => (
       </div>
       
       {/* Bottom Section: Divider, Copyright, and Socials */}
-      <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p className="text-sm text-slate-400">
-          © 2077 PhysioSim All rights reserved.
-        </p>
-        <div className="flex items-center gap-6 text-slate-400">
-          <a href="#" className="hover:text-primary transition-colors"><Linkedin size={18} /></a>
-          <a href="#" className="hover:text-primary transition-colors"><Facebook size={18} /></a>
-          <a href="#" className="hover:text-primary transition-colors"><Instagram size={18} /></a>
+      <div className="pt-8 border-t border-slate-100 flex flex-col items-center gap-6">
+        <div className="flex items-center gap-8 text-slate-400">
+          <a href="#" className="hover:text-primary transition-all transform hover:scale-110"><Linkedin size={22} /></a>
+          <a href="#" className="hover:text-primary transition-all transform hover:scale-110"><Facebook size={22} /></a>
+          <a href="#" className="hover:text-primary transition-all transform hover:scale-110"><Instagram size={22} /></a>
         </div>
+        <p className="text-sm text-slate-400">
+          © {new Date().getFullYear()} PhysioSim. All rights reserved.
+        </p>
       </div>
     </div>
   </footer>
