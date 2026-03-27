@@ -30,12 +30,13 @@ export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen
             {/* Logo */}
             <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-admin-primary flex items-center justify-center text-white shrink-0">
-                        <span className="material-symbols-outlined">vital_signs</span>
-                    </div>
+                    <img 
+                        src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
+                        alt="PhysioSim Logo" 
+                        className="h-10 w-auto object-contain"
+                    />
                     <div>
-                        <h1 className="text-admin-primary font-bold text-lg leading-tight">PhysioSim</h1>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Admin Panel</p>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Admin Panel</p>
                     </div>
                 </div>
                 {/* Mobile Close Button */}

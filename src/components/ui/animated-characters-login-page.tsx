@@ -328,10 +328,11 @@ export function LoginPageComponent({
             <div className="relative hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary/90 via-primary to-primary/80 p-12 text-primary-foreground">
                 <div className="relative z-20">
                     <div className="flex items-center gap-2 text-lg font-semibold">
-                        <div className="size-8 rounded-lg bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center">
-                            <Sparkles className="size-4" />
-                        </div>
-                        <span>PhysioSim</span>
+                        <img 
+                            src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
+                            alt="PhysioSim Logo" 
+                            className="h-12 w-auto object-contain brightness-0 invert"
+                        />
                     </div>
                 </div>
 
@@ -529,10 +530,11 @@ export function LoginPageComponent({
                 <div className="w-full max-w-[420px]">
                     {/* Mobile Logo */}
                     <div className="lg:hidden flex items-center justify-center gap-2 text-lg font-semibold mb-12">
-                        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Sparkles className="size-4 text-primary" />
-                        </div>
-                        <span>PhysioSim</span>
+                        <img 
+                            src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
+                            alt="PhysioSim Logo" 
+                            className="h-10 w-auto object-contain"
+                        />
                     </div>
 
                     {/* Header */}

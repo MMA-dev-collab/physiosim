@@ -27,15 +27,14 @@ function Navbar({ auth, logout, menuOpen, toggleMenu, closeMenu, isAdmin, showDr
   return (
     <header className={`sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md transition-all duration-300 ${menuOpen ? 'h-screen' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/20">
-              P
-            </div>
-            <span className="font-bold text-xl tracking-tight text-slate-800 hidden sm:block">
-              PHYSIO<span className="text-primary">SIM</span>
-            </span>
+          <Link to="/" className="flex items-center" onClick={closeMenu}>
+            <img 
+              src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
+              alt="PhysioSim Logo" 
+              className="h-[6.5rem] w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}
