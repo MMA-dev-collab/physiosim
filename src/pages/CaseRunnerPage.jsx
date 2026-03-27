@@ -634,9 +634,9 @@ function CaseRunnerPage({ auth }) {
 function PatientInfoStep({ content }) {
   if (!content) return null
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center mx-auto mt-4 px-4 h-full min-h-[500px]">
+    <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center mx-auto mt-4 px-4 h-full min-h-[500px] w-full max-w-[1200px]">
       {/* Left: Patient Card */}
-      <div className="w-full md:w-[380px] shrink-0 bg-white border border-slate-200 rounded-2xl p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-6">
+      <div className="w-full lg:w-[40%] shrink-0 bg-white border border-slate-200 rounded-2xl p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-6">
         <div>
           <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-6">Patient Card</h3>
           <div className="flex items-center gap-5">
@@ -669,7 +669,7 @@ function PatientInfoStep({ content }) {
       </div>
 
       {/* Right: Main Image */}
-      <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-200 bg-white">
+      <div className="w-full lg:w-[60%] flex shrink-0 rounded-2xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-200 bg-white min-h-[400px]">
          {content.illustrationUrl || content.imageUrl ? (
             <img src={content.illustrationUrl || content.imageUrl} alt="Case Illustration" className="w-full h-full object-cover" />
          ) : (

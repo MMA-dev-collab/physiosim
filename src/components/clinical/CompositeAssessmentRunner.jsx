@@ -42,6 +42,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
       ))}
 
       {/* Clinical Tip Callout (Always visible) */}
+      {/* 
       {clinicalTip && (
         <div className="bg-amber-50 border-2 border-dashed border-amber-200 rounded-[24px] p-8 flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-700 mt-6">
            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-3xl shrink-0">
@@ -60,6 +61,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
            </div>
         </div>
       )}
+      */}
     </div>
   )
 }
