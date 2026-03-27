@@ -231,7 +231,7 @@ function createDefaultSection(type) {
     case 'observation':
       return { ...base, views: [], findings: [] }
     case 'rom':
-      return { ...base, subType: 'arom', entries: [] }
+      return { ...base, subType: 'arom', endFeelMode: 'overall', endFeel: '', entries: [] }
     case 'mmt':
       return { ...base, entries: [] }
     case 'flexibility_test':
@@ -326,36 +326,65 @@ function ObservationSectionEditor({ section, onUpdate }) {
 function RomSectionEditor({ section, onUpdate }) {
   const entries = section.entries || []
   const subType = section.subType || 'arom'
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { movement: '', value: '', pain: '', end_feel: '' }] })
+  const endFeelMode = section.endFeelMode || 'overall'
+  const endFeel = section.endFeel || ''
+
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { movement: '', value: '', pain: '', endFeel: '', image_url: '' }] })
   const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
   const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
 
   return (
     <div>
-      <label style={{ marginBottom: '12px', display: 'block' }}>
-        ROM Type
-        <select value={subType} onChange={e => onUpdate({ ...section, subType: e.target.value })} style={{ marginLeft: '8px' }}>
-          <option value="arom">AROM (Active)</option>
-          <option value="prom">PROM (Passive)</option>
-        </select>
-      </label>
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '16px' }}>
+        <label>
+          <span style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>ROM Type</span>
+          <select value={subType} onChange={e => onUpdate({ ...section, subType: e.target.value })} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }}>
+            <option value="arom">AROM (Active)</option>
+            <option value="prom">PROM (Passive)</option>
+          </select>
+        </label>
+        <label>
+          <span style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>End Feel Mode</span>
+          <select value={endFeelMode} onChange={e => onUpdate({ ...section, endFeelMode: e.target.value })} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }}>
+            <option value="overall">Single / Overall (Bottom)</option>
+            <option value="per_movement">Per Movement (Table Column)</option>
+          </select>
+        </label>
+      </div>
+
       <div className="section-header"><h5>Entries</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add</button></div>
       {entries.map((e, idx) => (
-        <div key={idx} className="list-item">
+        <div key={idx} className="list-item" style={{ marginBottom: '12px' }}>
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label>Movement *<input value={e.movement || ''} onChange={ev => updateEntry(idx, 'movement', ev.target.value)} placeholder="e.g. Flexion" /></label>
-            <label>ROM Value<input value={e.value || ''} onChange={ev => updateEntry(idx, 'value', ev.target.value)} placeholder="e.g. Limited, 45°" /></label>
+            <label style={{ gridColumn: 'span 2' }}>Movement *<input value={e.movement || ''} onChange={ev => updateEntry(idx, 'movement', ev.target.value)} placeholder="e.g. Flexion" /></label>
+            <label>ROM Value<input value={e.value || ''} onChange={ev => updateEntry(idx, 'value', ev.target.value)} placeholder="e.g. Normal, Limited" /></label>
             <label>Pain
               <select value={e.pain || ''} onChange={ev => updateEntry(idx, 'pain', ev.target.value)}>
                 <option value="">Select</option><option value="Absent">Absent</option><option value="Present">Present</option><option value="Slightly">Slightly</option>
               </select>
             </label>
-            {subType === 'prom' && <label>End Feel<input value={e.end_feel || ''} onChange={ev => updateEntry(idx, 'end_feel', ev.target.value)} placeholder="e.g. Firm, Empty" /></label>}
+            
+            <div style={{ gridColumn: '1 / -1' }}>
+              <ImageUpload label="Movement Image (Hover)" folderType="rom" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
+            </div>
+
+            {endFeelMode === 'per_movement' && (
+              <label style={{ gridColumn: '1 / -1' }}>End Feel<input value={e.endFeel || ''} onChange={ev => updateEntry(idx, 'endFeel', ev.target.value)} placeholder="e.g. Firm, Empty" /></label>
+            )}
           </div>
         </div>
       ))}
       {entries.length === 0 && <div className="empty-state-box">No ROM entries.</div>}
+
+      {endFeelMode === 'overall' && (
+        <div style={{ marginTop: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <label>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Overall End Feel</span>
+            <input value={endFeel} onChange={e => onUpdate({ ...section, endFeel: e.target.value })} placeholder="e.g. EMPTY" style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+          </label>
+        </div>
+      )}
     </div>
   )
 }
@@ -610,26 +639,13 @@ function McqSectionEditor({ section, onUpdate }) {
       </div>
 
       <div className="flex gap-4">
-        <label className="block text-sm font-bold text-amber-700 flex-1">
-          Hint / Guidance
-          <input
-            value={section.hint || ''}
-            onChange={e => onUpdate({ ...section, hint: e.target.value })}
-            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
-            placeholder="Optional hint for the student..."
-          />
-        </label>
-        <label className="block text-sm font-bold text-amber-700 w-32">
-          Delay (sec)
-          <input
-            type="number"
-            min="0"
-            value={section.hintDelaySeconds || 0}
-            onChange={e => onUpdate({ ...section, hintDelaySeconds: parseInt(e.target.value) || 0 })}
-            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
-          />
-        </label>
+        {/* Placeholder for future side-by-side elements if needed. Old single hint removed. */}
       </div>
+
+      <HintsEditor 
+        hints={section.hints || (section.hint ? [{ text: section.hint, delaySeconds: section.hintDelaySeconds || 0 }] : [])}
+        onUpdate={(newHints) => onUpdate({ ...section, hints: newHints, hint: null, hintDelaySeconds: null })}
+      />
     </div>
   )
 }
@@ -685,25 +701,85 @@ function EssaySectionEditor({ section, onUpdate }) {
       </div>
 
       <div className="flex gap-4">
-        <label className="block text-sm font-bold text-amber-700 flex-1">
-          Hint / Guidance
-          <input
-            value={section.hint || ''}
-            onChange={e => onUpdate({ ...section, hint: e.target.value })}
-            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
-            placeholder="Optional hint for the student..."
-          />
-        </label>
-        <label className="block text-sm font-bold text-amber-700 w-32">
-          Delay (sec)
-          <input
-            type="number"
-            min="0"
-            value={section.hintDelaySeconds || 0}
-            onChange={e => onUpdate({ ...section, hintDelaySeconds: parseInt(e.target.value) || 0 })}
-            className="w-full mt-1 p-2 border border-amber-200 rounded-md text-xs"
-          />
-        </label>
+        {/* Placeholder for future side-by-side elements if needed. Old single hint removed. */}
+      </div>
+
+      <HintsEditor 
+        hints={section.hints || (section.hint ? [{ text: section.hint, delaySeconds: section.hintDelaySeconds || 0 }] : [])}
+        onUpdate={(newHints) => onUpdate({ ...section, hints: newHints, hint: null, hintDelaySeconds: null })}
+      />
+    </div>
+  )
+}
+
+/* ── Multiple Hints Editor ── */
+function HintsEditor({ hints, onUpdate }) {
+  const addHint = () => {
+    onUpdate([...(hints || []), { text: '', delaySeconds: 0 }]);
+  };
+  const updateHint = (idx, field, value) => {
+    const updated = [...(hints || [])];
+    updated[idx][field] = value;
+    onUpdate(updated);
+  };
+  const removeHint = (idx) => {
+    onUpdate((hints || []).filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="mt-4 bg-[#eef2ff] p-4 border border-[#c7d2fe] rounded-xl flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <h6 className="text-[0.9rem] font-bold text-[#3730a3] flex items-center gap-2">
+          <span className="text-xl">💡</span> Multiple Hints
+        </h6>
+        <button type="button" onClick={addHint} className="text-xs bg-white text-[#4f46e5] px-4 py-2 rounded-lg hover:bg-[#e0e7ff] border border-[#a5b4fc] font-bold transition-all shadow-sm">
+          + Add Hint
+        </button>
+      </div>
+      
+      {(!hints || hints.length === 0) && (
+        <p className="text-sm text-[#818cf8] italic">No hints added. Students will not see any hints.</p>
+      )}
+
+      <div className="flex flex-col gap-3">
+        {(hints || []).map((hint, idx) => (
+          <div key={idx} className="flex gap-4 items-start bg-white p-4 rounded-xl border border-[#c7d2fe] shadow-sm relative group">
+            <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-[#eef2ff] text-[#4f46e5] font-bold text-sm">
+              {idx + 1}
+            </div>
+            
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Hint Text</label>
+              <textarea
+                value={hint.text || ''}
+                onChange={e => updateHint(idx, 'text', e.target.value)}
+                rows={2}
+                className="w-full p-2.5 border border-slate-200 rounded-lg text-[0.95rem] outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-all"
+                placeholder="What should the student consider?"
+              />
+            </div>
+            
+            <div className="w-28 shrink-0">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Delay (sec)</label>
+              <input
+                type="number"
+                min="0"
+                value={hint.delaySeconds || 0}
+                onChange={e => updateHint(idx, 'delaySeconds', parseInt(e.target.value) || 0)}
+                className="w-full p-2.5 border border-slate-200 rounded-lg text-[0.95rem] outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-all"
+              />
+            </div>
+            
+            <button 
+              type="button" 
+              onClick={() => removeHint(idx)} 
+              className="absolute -top-2 -right-2 w-7 h-7 bg-white border border-slate-200 rounded-full text-slate-400 hover:text-red-500 hover:border-red-200 flex items-center justify-center text-lg leading-none shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" 
+              title="Remove Hint"
+            >
+              ×
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   )

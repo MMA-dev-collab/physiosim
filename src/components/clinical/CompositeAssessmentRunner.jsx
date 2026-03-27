@@ -149,6 +149,7 @@ function ObservationSection({ section }) {
 ========================== */
 function RomSection({ section }) {
   const entries = section.entries || []
+  const endFeelMode = section.endFeelMode || 'overall'
   const endFeel = section.endFeel || section.end_feel || null
   const romType = section.subType || '' // 'arom' or 'prom'
 
@@ -169,40 +170,60 @@ function RomSection({ section }) {
     return 'bg-slate-300'
   }
 
+  const showPerMovementEndFeel = endFeelMode === 'per_movement' || (endFeelMode === 'overall' && romType === 'prom' && entries.some(e => e.end_feel))
+  const colCount = showPerMovementEndFeel ? 6 : 5
+
   return (
     <div className="car-rom">
       <h3 className="font-bold text-slate-800 mb-6">
         {section.title || `Range of Motion${romType ? ` (${romType.toUpperCase()})` : ''}`}
       </h3>
       {entries.length > 0 ? (
-        <div className="overflow-x-auto">
+        <div className="overflow-visible">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-slate-400 border-b border-slate-100">
-                <th className="text-left py-4 font-bold uppercase tracking-wider">Movement</th>
+                <th className="w-[5%] md:w-[15%] lg:w-[20%]"></th>
+                <th className="text-center py-4 font-bold uppercase tracking-wider">Movement</th>
                 <th className="text-center py-4 font-bold uppercase tracking-wider">{romType === 'prom' ? 'Passive ROM' : 'Active ROM'}</th>
-                <th className="text-left py-4 font-bold uppercase tracking-wider">Pain status</th>
-                {romType === 'prom' && <th className="text-left py-4 font-bold uppercase tracking-wider">End Feel</th>}
+                <th className="text-center py-4 font-bold uppercase tracking-wider">Pain status</th>
+                {showPerMovementEndFeel && <th className="text-center py-4 font-bold uppercase tracking-wider">End Feel</th>}
+                <th className="w-[5%] md:w-[15%] lg:w-[20%]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {entries.map((entry, i) => (
-                <tr key={i}>
-                  <td className="py-4 font-medium text-slate-700">{entry.movement}</td>
+                <tr key={i} className="group hover:bg-slate-50 transition-colors">
+                  <td></td>
+                  <td className="py-4 font-medium text-slate-700 text-center relative whitespace-nowrap">
+                    {/* Hover Image */}
+                    {entry.image_url && (
+                      <div className="absolute top-1/2 -translate-y-1/2 -left-6 w-32 h-32 bg-white border-2 border-slate-100 rounded-xl shadow-2xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 pointer-events-none flex items-center justify-center overflow-hidden" style={{ transform: 'translate(-100%, -50%)' }}>
+                        <img
+                          src={entry.image_url}
+                          alt={entry.movement}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    {entry.movement}
+                  </td>
                   <td className="py-4 text-center">
                     <span className={`px-3 py-1 rounded-md text-xs font-bold ${getRomBadgeColors(entry.rom || entry.value)}`}>
                       {entry.rom || entry.value || '—'}
                     </span>
                   </td>
                   <td className="py-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <div className={`w-3 h-3 rounded-full ${getPainDotColor(entry.pain)}`}></div>
-                      <span className="text-slate-600">{entry.pain || '—'}</span>
+                      <span className="text-slate-600 font-medium">{entry.pain || '—'}</span>
                     </div>
                   </td>
-                  {romType === 'prom' && (
-                    <td className="py-4 text-slate-600">{entry.end_feel || entry.endFeel || '—'}</td>
+                  {showPerMovementEndFeel && (
+                    <td className="py-4 text-slate-600 text-center font-medium">{entry.end_feel || entry.endFeel || '—'}</td>
                   )}
+                  <td></td>
                 </tr>
               ))}
             </tbody>
@@ -211,9 +232,12 @@ function RomSection({ section }) {
       ) : (
         <p className="text-slate-500 italic">No ROM data available</p>
       )}
-      {endFeel && (
+      {endFeelMode === 'overall' && endFeel && !showPerMovementEndFeel && (
         <div className="mt-6 pt-6 border-t border-slate-100">
-          <p className="text-sm font-bold text-slate-800">END FEEL: <span className="text-slate-400 font-medium uppercase">{endFeel}</span></p>
+           <div className="flex">
+              
+              <p className="text-sm font-bold text-slate-800">END FEEL: <span className="text-slate-600 font-medium uppercase tracking-widest ml-1">{endFeel}</span></p>
+           </div>
         </div>
       )}
     </div>

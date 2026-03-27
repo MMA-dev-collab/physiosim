@@ -28,7 +28,6 @@
 
 /* ──────────── 3-COLUMN LAYOUT ──────────── */
 .cf-layout {
-  display: flex;
   min-height: 100vh;
   background: var(--cf-bg);
   color: var(--cf-text);
@@ -36,44 +35,50 @@
 
 .cf-sidebar {
   width: var(--cf-sidebar-w);
-  flex-shrink: 0;
+  position: fixed;
+  top: var(--cf-sidebar-top, 80px); /* Synchronized with navbar scroll */
+  left: 0;
+  bottom: 0;
   background: var(--cf-surface);
   border-right: 1px solid var(--cf-border);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  position: sticky;
-  top: 0;
+  overflow: visible;
+  z-index: 50;
   justify-content: space-between;
   box-shadow: 1px 0 10px rgba(0,0,0,0.02);
 }
 
 .cf-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  margin-left: var(--cf-sidebar-w);
+  margin-right: var(--cf-stepper-w);
+  min-height: 100vh;
   padding-bottom: var(--cf-footer-h);
 }
 
 .cf-main-scroll {
-  flex: 1;
-  overflow-y: auto;
   padding: 32px 48px;
   width: 100%;
 }
 
 .cf-stepper-col {
   width: var(--cf-stepper-w);
-  flex-shrink: 0;
+  position: fixed;
+  top: var(--cf-sidebar-top, 80px); /* Synchronized with navbar scroll */
+  right: 0;
+  bottom: 0;
   background: var(--cf-surface);
   border-left: 1px solid var(--cf-border);
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
+  z-index: 50;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.cf-stepper-col::-webkit-scrollbar {
+  display: none;
 }
 
 /* ──────────── PATIENT CARD ──────────── */
@@ -128,9 +133,7 @@
   margin: 0 0 16px;
 }
 
-.cf-patient-field {
-  margin-bottom: 14px;
-}
+
 
 .cf-patient-field-label {
   font-size: 12px;

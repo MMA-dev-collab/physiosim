@@ -33,6 +33,26 @@ export default function CaseRunnerLayout({
   const painColor = painIntensity <= 3 ? 'var(--cf-success)' : painIntensity <= 6 ? 'var(--cf-warning)' : 'var(--cf-danger)'
 
   const [expandedHubs, setExpandedHubs] = React.useState({})
+  const [showClinicalTip, setShowClinicalTip] = React.useState(false)
+
+  React.useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // Adjust 80 based on your exact navbar height if needed
+          const newTop = Math.max(0, 80 - window.scrollY);
+          document.documentElement.style.setProperty('--cf-sidebar-top', `${newTop}px`);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    // init
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Automatically expand current step if it has sub-steps
   React.useEffect(() => {
@@ -48,8 +68,8 @@ export default function CaseRunnerLayout({
   }
 
   return (
-    <div className="cf-page-wrapper flex flex-col min-h-screen bg-[#f8fafc]">
-      <div className="cf-layout flex-1 overflow-hidden" style={{ minHeight: '0', background: 'transparent' }}>
+    <div className="cf-page-wrapper bg-[#f8fafc]">
+      <div className="cf-layout" style={{ background: 'transparent' }}>
         {/* ─── LEFT SIDEBAR: Patient Card ─── */}
         {!hideSidebar && (
           <aside className="cf-sidebar bg-white">
@@ -57,7 +77,7 @@ export default function CaseRunnerLayout({
               {/* Header */}
               <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Patient Card</h3>
               
-              <div className="flex gap-4 mb-6" style={{alignItems : "start" , flexDirection: "column"}}>
+              <div className="flex gap-4 " style={{alignItems : "start" , flexDirection: "column"}}>
                 {/* Avatar */}
                 <div className="cf-patient-avatar shrink-0 m-0" style={{ width: '64px', height: '64px', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                   {patientData?.imageUrl ? (
@@ -93,7 +113,7 @@ export default function CaseRunnerLayout({
           {patientData?.description && (
             <div className="cf-patient-field mt-4">
               <div className="cf-patient-field-label">Description</div>
-              <div className="cf-patient-field-value" style={{ color: 'var(--cf-text-muted)', fontSize: '15px' }}>{patientData.description}</div>
+              <div className="cf-patient-field-value" style={{ color: 'var(--cf-text-muted)', fontSize: '13px' }}>{patientData.description}</div>
             </div>
           )}
 
@@ -120,27 +140,46 @@ export default function CaseRunnerLayout({
 
         {/* ─── CLINICAL TIP ─── */}
         {clinicalTip && (
-          <div className="bg-[#fff9e6] border border-[#fde68a] rounded-2xl p-5 m-4 mt-2 mb-6 flex flex-col gap-4 animate-in slide-in-from-left-4 duration-500 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-amber-500 shrink-0 text-xl">
-                💡
+          <div className="mt-auto p-2 mb-2">
+            <button 
+              onClick={() => setShowClinicalTip(!showClinicalTip)}
+              className="w-full relative flex items-center justify-between p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 shadow-sm hover:bg-amber-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-amber-500 shrink-0 text-lg">💡</div>
+                <span className="font-bold text-sm">Clinical Tip</span>
               </div>
-              <h4 className="font-black text-[#92400e] uppercase tracking-widest text-[11px]">Clinical Tip</h4>
-            </div>
-            <div className="space-y-2 text-[13px] font-bold text-slate-700">
-              {clinicalTip.split('\n').map((line, i) => {
-                const parts = line.split('=')
-                if (parts.length === 2) {
-                  return (
-                    <p key={i} className="leading-tight">
-                      <span className="text-slate-800">{parts[0]} =</span>
-                      <span className="text-blue-600 ml-1.5">{parts[1]}</span>
-                    </p>
-                  )
-                }
-                return <p key={i} className="leading-tight">{line}</p>
-              })}
-            </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-amber-600 transition-transform duration-300 ${showClinicalTip ? 'rotate-180' : ''}`}>
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              
+              {/* Floating Popover */}
+              {showClinicalTip && (
+                <div 
+                  className="absolute left-full bottom-0 ml-4 w-[340px] bg-[#fff9e6] border-2 border-[#fde68a] rounded-2xl p-6 shadow-2xl z-[100] cursor-default text-left animate-in fade-in zoom-in-95 duration-200"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-amber-500 shrink-0 text-xl">💡</div>
+                    <h4 className="font-black text-[#92400e] uppercase tracking-widest text-[12px]">Clinical Tip</h4>
+                  </div>
+                  <div className="space-y-3 text-[13px] font-bold text-slate-700 leading-relaxed">
+                    {clinicalTip.split('\n').map((line, i) => {
+                      const parts = line.split('=')
+                      if (parts.length === 2) {
+                        return (
+                          <p key={i}>
+                            <span className="text-slate-800">{parts[0]} =</span>
+                            <span className="text-blue-600 ml-1.5">{parts[1]}</span>
+                          </p>
+                        )
+                      }
+                      return <p key={i}>{line}</p>
+                    })}
+                  </div>
+                </div>
+              )}
+            </button>
           </div>
         )}
       </aside>
