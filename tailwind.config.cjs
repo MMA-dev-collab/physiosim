@@ -12,6 +12,7 @@ module.exports = {
                 primary: {
                     DEFAULT: "var(--primary)",
                     hover: "var(--primary-hover)",
+                    dark: "var(--primary-hover)",
                     active: "var(--primary-active)",
                     foreground: "#FFFFFF",
                 },
