@@ -80,8 +80,12 @@ function renderSection(section, mcqProps, essayProps) {
       return <InvestigationsSection section={section} />
     case 'mmt':
       return <MmtSection section={section} />
+    case 'sensory_exam':
+      return <SensoryExamSection section={section} />
     case 'palpation':
       return <PalpationSection section={section} />
+    case 'cervical_curve':
+      return <CervicalCurveSection section={section} />
     case 'mcq':
       return <McqStep step={section} {...mcqProps} />
     case 'essay':
@@ -325,37 +329,81 @@ function SpecialTestsSection({ section }) {
   const entries = section.entries || []
 
   const getResultClass = (result) => {
-    if (!result) return ''
+    if (!result) return 'bg-slate-100 text-slate-500'
     const r = result.toLowerCase()
-    if (r === 'positive' || r === 'pos' || r === '+') return 'car-test-positive'
-    if (r === 'negative' || r === 'neg' || r === '-') return 'car-test-negative'
-    return ''
+    if (r.includes('positive') || r === 'pos' || r === '+') return 'bg-rose-50 text-rose-600 border border-rose-100'
+    if (r.includes('negative') || r === 'neg' || r === '-') return 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+    return 'bg-blue-50 text-blue-600 border border-blue-100'
   }
 
   return (
-    <div className="car-special">
-      <h3 className="car-section-title">{section.title || 'Special Tests'}</h3>
+    <div className="car-special mb-8">
+      <h3 className="text-xl font-black text-slate-800 mb-6 px-2">Special Tests:</h3>
       {entries.length > 0 ? (
-        <div className="car-special-list">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
           {entries.map((entry, i) => (
-            <div key={i} className="car-special-item">
-              <span className="car-special-name">{entry.test_name}</span>
-              <span className={`car-special-result ${getResultClass(entry.result)}`}>
-                {entry.result || '—'}
-              </span>
-              {entry.notes && <span className="car-special-notes">{entry.notes}</span>}
+            <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
+              <div className="w-full text-left">
+                <h4 className="font-bold text-slate-700 text-lg leading-tight">
+                  {i + 1}. {entry.test_name}
+                </h4>
+              </div>
+
+              <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
+                {entry.image_url ? (
+                  <img 
+                    src={entry.image_url} 
+                    alt={entry.test_name} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                  />
+                ) : (
+                  <div className="text-slate-300 flex flex-col items-center">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span className="text-[10px] font-bold uppercase tracking-widest mt-2">No Image</span>
+                  </div>
+                )}
+                
+                {entry.result && (
+                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${getResultClass(entry.result)}`}>
+                    {entry.result}
+                  </div>
+                )}
+              </div>
+
               {entry.link && (
-                <a href={entry.link} target="_blank" rel="noopener noreferrer" className="car-special-link">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                <a 
+                  href={entry.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{
+                                            border: "2px solid #F14722",
+                                            boxShadow: "0px 2px 0px #F14722",
+                                            borderRadius: "10px",
+                                        }}
+                  className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-800 font-bold text-sm transition-all hover:bg-rose-50 hover:scale-105"
+                >
+                  <svg width="20" height="20" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" />
+                    <path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" />
                   </svg>
+                  View
                 </a>
+              )}
+              
+              {entry.notes && (
+                <p className="w-full text-center text-xs text-slate-400 italic mt-auto pt-2 border-t border-slate-50">
+                  {entry.notes}
+                </p>
               )}
             </div>
           ))}
         </div>
       ) : (
-        <p className="car-no-data">No special test data available</p>
+        <p className="car-no-data px-2">No special test data available</p>
       )}
     </div>
   )
@@ -424,29 +472,148 @@ function InvestigationsSection({ section }) {
 }
 
 /* ==========================
+   SENSORY EXAM SECTION
+========================== */
+function SensoryExamSection({ section }) {
+  const entries = section.entries || []
+
+  return (
+    <div className="car-sensory">
+      <h3 className="car-section-title">{section.title || 'Sensory Examination - Dermatomes'}</h3>
+      {entries.length > 0 ? (
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Level</th>
+                <th className="px-6 py-4 text-right text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {entries.map((entry, i) => {
+                const isAbnormal = entry.status?.toLowerCase().includes('abnormal')
+                
+                return (
+                  <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center justify-center min-w-[44px] px-3 py-1 bg-blue-50 text-blue-600 font-bold rounded-full text-[13px]">
+                          {entry.level || '-'}
+                        </span>
+                        <span className="text-sm font-bold text-slate-600">
+                           {entry.sense ? `(${entry.sense})` : ''}
+                        </span>
+                      </div>
+                      {entry.notes && <div className="text-[10px] text-slate-400 italic mt-1 ml-[56px]">{entry.notes}</div>}
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-bold ${
+                        isAbnormal 
+                          ? 'bg-red-50 text-red-600 border border-red-100 shadow-sm' 
+                          : 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm'
+                      }`}>
+                        {entry.status || 'N/A'}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="car-no-data">No sensory data available</p>
+      )}
+    </div>
+  )
+}
+
+/* ==========================
    MMT SECTION (Manual Muscle Test)
 ========================== */
 function MmtSection({ section }) {
   const entries = section.entries || []
 
+  const getGradeWindow = (grade) => {
+    const g = parseInt(grade)
+    if (isNaN(g)) return [3, 4, 5]
+    if (g <= 1) return [0, 1, 2]
+    if (g >= 4) return [3, 4, 5]
+    return [g - 1, g, g + 1]
+  }
+
+  const getStatusColor = (status) => {
+    if (!status) return 'text-slate-400'
+    const s = status.toLowerCase()
+    if (s.includes('normal')) return '#22c55e'
+    if (s.includes('slight')) return '#f59e0b'
+    if (s.includes('weak')) return '#ef4444'
+    return 'text-slate-400'
+  }
+
   return (
     <div className="car-mmt">
-      <h3 className="car-section-title">{section.title || 'Manual Muscle Test (MMT)'}</h3>
+      <h3 className="car-section-title">{section.title || 'Motor Examination - Myotomes'}</h3>
       {entries.length > 0 ? (
-        <div className="car-mmt-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-          {entries.map((entry, i) => (
-            <div key={i} className="history-card" style={{ padding: '16px', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div className="space-y-1">
-                <div className="history-card-label" style={{ fontSize: '10px' }}>Muscle Group</div>
-                <div className="history-card-value" style={{ fontSize: '15px' }}>{entry.muscle}</div>
-                {entry.notes && <div className="text-[11px] text-slate-400 italic">{entry.notes}</div>}
-              </div>
-              <div className="text-center bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                <div className="text-xl font-black text-blue-600 leading-none">{entry.grade}</div>
-                <div className="text-[8px] uppercase text-blue-400 font-bold tracking-wider mt-1">/ 5</div>
-              </div>
-            </div>
-          ))}
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Level</th>
+                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Muscle action</th>
+                <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-widest">Grade ( 0-5 )</th>
+                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {entries.map((entry, i) => {
+                const gradeWindow = getGradeWindow(entry.grade)
+                const statusColor = getStatusColor(entry.status)
+                
+                return (
+                  <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center justify-center min-w-[40px] px-3 py-1 bg-blue-50 text-blue-600 font-bold rounded-full text-xs">
+                        {entry.level || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-bold text-slate-700">{entry.muscle_action || entry.muscle || '-'}</div>
+                      {entry.notes && <div className="text-[10px] text-slate-400 italic mt-0.5">{entry.notes}</div>}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {gradeWindow.map(g => {
+                          const isSelected = String(g) === String(entry.grade)
+                          return (
+                            <div 
+                              key={g}
+                              className={`w-7 h-7 flex items-center justify-center rounded-md text-xs font-bold transition-all ${
+                                isSelected 
+                                  ? 'bg-blue-600 text-white shadow-md shadow-blue-200 scale-110' 
+                                  : 'bg-white border border-slate-200 text-slate-400'
+                              }`}
+                            >
+                              {g}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-2.5 h-2.5 rounded-full" 
+                          style={{ backgroundColor: statusColor !== 'text-slate-400' ? statusColor : '#cbd5e1' }}
+                        />
+                        <span className="text-sm font-bold text-slate-600">{entry.status || 'N/A'}</span>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       ) : (
         <p className="car-no-data">No MMT data available</p>
@@ -460,36 +627,176 @@ function MmtSection({ section }) {
 ========================== */
 function PalpationSection({ section }) {
   const entries = section.entries || []
+  const hasImage = !!section.image_url
+  const statusOptions = section.status_options || []
+
+  const getStatusLabel = (val) => {
+    const opt = statusOptions.find(o => o.value === val)
+    return opt ? opt.label : val
+  }
+
+  const getStatusBadgeClass = (val) => {
+    const opt = statusOptions.find(o => o.value === val)
+    if (!opt) return 'bg-slate-100 text-slate-600'
+    
+    switch (opt.type) {
+        case 'normal': return 'bg-emerald-100 text-emerald-700'
+        case 'mid': return 'bg-amber-100 text-amber-700'
+        case 'extreme': return 'bg-rose-100 text-rose-700'
+        default: return 'bg-slate-100 text-slate-600'
+    }
+  }
 
   return (
     <div className="car-palpation">
       <h3 className="car-section-title">{section.title || 'Palpation'}</h3>
-      {entries.length > 0 ? (
-        <div className="car-palp-list space-y-4">
-          {entries.map((entry, i) => (
-            <div key={i} className="history-section-box" style={{ padding: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-xl shrink-0">
-                📍
+      
+      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-start`}>
+        {hasImage && (
+          <div className="w-full lg:w-1/2 shrink-0">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
+                <img src={section.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 w-full overflow-x-auto">
+          {entries.length > 0 ? (
+            (() => {
+              const hasAnyNotes = entries.some(e => e.notes && e.notes.trim() !== '');
+              return (
+                <table className="w-full text-left border-separate border-spacing-y-2">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
+                      <th className={`px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
+                        {section.status_title || 'Status'}
+                      </th>
+                      {hasAnyNotes && (
+                        <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[30%] text-right font-inter">Notes</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entries.map((entry, i) => (
+                      <tr key={i} className="bg-white border border-slate-100 shadow-sm rounded-xl">
+                        <td className="px-4 py-4 first:rounded-l-xl border-y border-l border-slate-100 align-middle w-px whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-[13px] font-black text-indigo-600 border border-indigo-100 shadow-sm">
+                              {entry.level || '-'}
+                            </div>
+                          </div>
+                        </td>
+                        <td className={`px-6 py-4 border-y border-slate-100 align-middle ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
+                          <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
+                            {getStatusLabel(entry.status_value)}
+                          </span>
+                        </td>
+                        {hasAnyNotes && (
+                          <td className="px-4 py-4 border-y border-r border-slate-100 text-[11px] text-slate-500 italic last:rounded-r-xl align-middle text-right font-inter">
+                            <div className="max-w-[180px] ml-auto truncate font-medium">
+                                {entry.notes || '-'}
+                            </div>
+                          </td>
+                        )}
+                        {!hasAnyNotes && (
+                          <td className="border-y border-r border-slate-100 last:rounded-r-xl w-1"></td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            })()
+          ) : (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 font-medium font-inter">
+                No palpation data recorded
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ==========================
+   CERVICAL CURVE SECTION
+   Visual selection grid with highlighting for detected finding
+========================== */
+function CervicalCurveSection({ section }) {
+  const options = section.options || []
+  const selectedId = section.selected_option_id
+
+  const getDefaultImage = (title) => {
+    const t = title?.toLowerCase() || ''
+    if (t.includes('flattened')) return '/img/clinical/flattened.png'
+    if (t.includes('normal')) return '/img/clinical/normal_lordosis.png'
+    if (t.includes('reversed')) return '/img/clinical/reversed_curve.png'
+    return null
+  }
+
+  return (
+    <div className="car-cervical max-w-6xl mx-auto">
+      <h3 className="car-section-title mb-10 text-center">{section.title || 'Cervical Curve Assessment'}</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+        {options.map((opt, i) => {
+          const isSelected = opt.id === selectedId
+          const displayImage = opt.image_url || getDefaultImage(opt.title)
+
+          return (
+            <div 
+              key={i} 
+              className={`flex flex-col items-center transition-all duration-500 rounded-3xl p-5 border-2 ${
+                isSelected 
+                  ? 'bg-blue-50/50 border-blue-500 scale-105 shadow-xl shadow-blue-100 z-10' 
+                  : 'border-slate-100 opacity-50 scale-[0.85]'
+              }`}
+            >
+              {/* Header */}
+              <h4 className={`text-lg font-black uppercase tracking-tight mb-8 text-center min-h-[56px] flex items-center justify-center ${
+                isSelected ? 'text-blue-600' : 'text-slate-400'
+              }`}>
+                {opt.title}
+              </h4>
+
+              {/* Image Container */}
+              <div className={`w-full aspect-square bg-white rounded-[2rem] overflow-hidden border mb-8 flex items-center justify-center p-6 transition-all duration-500 ${
+                isSelected ? 'border-blue-200 shadow-inner' : 'border-slate-100'
+              }`}>
+                {displayImage ? (
+                  <img 
+                    src={displayImage} 
+                    alt={opt.title} 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-slate-200">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                    <div className="font-bold text-slate-900">{entry.location}</div>
-                    {entry.severity && (
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
-                            entry.severity.toLowerCase().includes('severe') ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
-                        }`}>
-                            {entry.severity}
-                        </span>
-                    )}
-                </div>
-                <div className="text-sm text-slate-600 font-medium">{entry.finding}</div>
-                {entry.notes && <div className="text-xs text-slate-400 mt-2 italic">Note: {entry.notes}</div>}
+
+              {/* Status Footer */}
+              <div className="mt-auto pt-2 text-center">
+                <p className={`text-[13px] font-black uppercase tracking-widest leading-relaxed ${
+                  isSelected ? 'text-red-500' : 'text-slate-400'
+                }`}>
+                  {isSelected ? (opt.selected_footer_text || 'Detected in this patient') : (opt.footer_text || 'Not present')}
+                </p>
+                {isSelected && (
+                   <div className="mt-3 h-1.5 w-12 bg-red-500 mx-auto rounded-full shadow-sm shadow-red-200"></div>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <p className="car-no-data">No palpation data available</p>
+          )
+        })}
+      </div>
+
+      {options.length === 0 && (
+        <p className="car-no-data text-center py-10">No assessment options configured.</p>
       )}
     </div>
   )

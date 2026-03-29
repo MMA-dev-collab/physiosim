@@ -29,6 +29,17 @@ function CaseRunnerPage({ auth }) {
 
   // Progress state for Clinical Hubs 
   const [hubProgress, setHubProgress] = useState({})
+
+  // Track which sub-steps have been answered/completed (for navigation blocking)
+  const [completedSubSteps, setCompletedSubSteps] = useState({})
+
+  // High-water mark: the furthest step index the user has reached
+  const [maxReachedIndex, setMaxReachedIndex] = useState(
+    () => {
+      // Will be updated on load from caseData.currentStepIndex when available
+      return 0
+    }
+  )
   
   // Track active sub-step for hubs so Layout accordion can control it
   const [activeSubStepId, setActiveSubStepId] = useState(null)
@@ -60,6 +71,7 @@ function CaseRunnerPage({ auth }) {
         // Resume from saved step index
         if (data.currentStepIndex && data.currentStepIndex > 0 && !data.isCompleted) {
           setCurrentStepIndex(data.currentStepIndex)
+          setMaxReachedIndex(data.currentStepIndex)
         }
       } catch (e) {
         setError(e.message)
@@ -86,13 +98,14 @@ function CaseRunnerPage({ auth }) {
           group.push(rawSteps[i])
           i++
         }
+        const hubTitle = group.length === 1 && group[0].title ? group[0].title : 'Physical Assessment'
         processed.push({
           id: `assessment-hub-${group[0].id}`,
           type: 'clinical_hub',
           phase: 'assessment',
-          title: 'Physical Assessment',
+          title: hubTitle,
           subSteps: group,
-          content: { title: 'Physical Assessment' }
+          content: { title: hubTitle }
         })
         continue;
       }
@@ -104,13 +117,14 @@ function CaseRunnerPage({ auth }) {
           group.push(rawSteps[i])
           i++
         }
+        const hubTitle = group.length === 1 && group[0].title ? group[0].title : 'Patient History'
         processed.push({
           id: `history-hub-${group[0].id}`,
           type: 'clinical_hub',
           phase: 'history_presentation',
-          title: 'Patient History',
+          title: hubTitle,
           subSteps: group,
-          content: { title: 'Patient History' }
+          content: { title: hubTitle }
         })
         continue;
       }
@@ -360,6 +374,10 @@ function CaseRunnerPage({ auth }) {
     if (caseData.isCompleted) return
     const currentStepToSubmit = activeSubStep || currentStep
     const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+    
+    setIsCorrect(null)
+    setEssayFeedback(null)
+    setEssayScore(null)
     try {
       const isFinal = currentStepIndex === steps.length - 1
       const res = await fetch(
@@ -387,6 +405,16 @@ function CaseRunnerPage({ auth }) {
       setEssayFeedback(data.feedback)
       setIsCorrect(data.correct)
       if (data.final) setFinalSummary(data)
+
+      // If essay submitted inside a hub, mark sub-step as completed
+      if (activeSubStep && currentStep?.type === 'clinical_hub') {
+        setCompletedSubSteps(prev => {
+          const hubId = currentStep.id
+          const existing = prev[hubId] ? [...prev[hubId]] : []
+          if (!existing.includes(activeSubStep.id)) existing.push(activeSubStep.id)
+          return { ...prev, [hubId]: existing }
+        })
+      }
     } catch (e) {
       setEssayFeedback(e.message)
     }
@@ -395,6 +423,8 @@ function CaseRunnerPage({ auth }) {
   const handleAnswer = async (optionId) => {
     if (!caseData || !currentStep || !optionId) return
     setSelectedOption(optionId)
+    setIsCorrect(null)
+    setFeedback(null)
 
     // Calculate time spent on this step
     const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
@@ -433,6 +463,16 @@ function CaseRunnerPage({ auth }) {
       } else {
         setFeedback(null)
       }
+
+      // If MCQ answered correctly inside a hub, mark sub-step as completed
+      if (data.correct && activeSubStep && currentStep?.type === 'clinical_hub') {
+        setCompletedSubSteps(prev => {
+          const hubId = currentStep.id
+          const existing = prev[hubId] ? [...prev[hubId]] : []
+          if (!existing.includes(activeSubStep.id)) existing.push(activeSubStep.id)
+          return { ...prev, [hubId]: existing }
+        })
+      }
     } catch (e) {
       setFeedback(e.message)
       setIsCorrect(false)
@@ -443,10 +483,11 @@ function CaseRunnerPage({ auth }) {
     if (!step) return true
     
     // Check main types
-    if (step.type === 'mcq') {
+    const stepType = step.category || step.type
+    if (stepType === 'mcq') {
       return selectedOption !== null && isCorrect === true
     }
-    if (step.type === 'essay') {
+    if (stepType === 'essay') {
       return essayScore !== null
     }
 
@@ -482,6 +523,16 @@ function CaseRunnerPage({ auth }) {
     if (currentStep?.type === 'clinical_hub' && currentStep.subSteps?.length > 0) {
       const subIndex = currentStep.subSteps.findIndex(s => s.id === activeSubStepId)
       if (subIndex !== -1 && subIndex < currentStep.subSteps.length - 1) {
+        // Mark current sub-step as reached/completed (for non-MCQ/Essay sub-steps)
+        const subStep = currentStep.subSteps[subIndex]
+        if (subStep && (subStep.type !== 'mcq' && subStep.category !== 'mcq' && subStep.type !== 'essay')) {
+          setCompletedSubSteps(prev => {
+            const hubId = currentStep.id
+            const existing = prev[hubId] ? [...prev[hubId]] : []
+            if (!existing.includes(subStep.id)) existing.push(subStep.id)
+            return { ...prev, [hubId]: existing }
+          })
+        }
         // Go to next sub-step
         setActiveSubStepId(currentStep.subSteps[subIndex + 1].id)
         return
@@ -491,6 +542,8 @@ function CaseRunnerPage({ auth }) {
     if (currentStepIndex < steps.length - 1) {
       const nextIdx = currentStepIndex + 1
       setCurrentStepIndex(nextIdx)
+      // Advance the high-water mark
+      setMaxReachedIndex(prev => Math.max(prev, nextIdx))
       // Persist progress for mid-case resume
       saveProgress(nextIdx)
     }
@@ -587,6 +640,9 @@ function CaseRunnerPage({ auth }) {
         activeSubStepId={activeSubStepId}
         onSubStepClick={setActiveSubStepId}
         hubProgress={hubProgress}
+        // Navigation guard props
+        maxReachedIndex={caseData?.isCompleted ? steps.length - 1 : maxReachedIndex}
+        completedSubSteps={completedSubSteps}
       >
         {/* Watermark — absolute inside the case content box */}
         {/* <WatermarkOverlay

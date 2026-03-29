@@ -79,6 +79,8 @@ export const PHASE_CATEGORIES = {
         { id: 'rom_arom', label: 'ROM - AROM', inputMode: 'author_only', dataTypes: ['numbers', 'text'] },
         { id: 'rom_prom', label: 'ROM - PROM', inputMode: 'author_only', dataTypes: ['numbers', 'text'] },
         { id: 'mmt', label: 'Manual Muscle Test', inputMode: 'author_only', dataTypes: ['text', 'numbers', 'links'] },
+        { id: 'sensory_exam', label: 'Sensory Examination', inputMode: 'author_only', dataTypes: ['text'] },
+        { id: 'cervical_curve', label: 'Cervical Curve Assessment', inputMode: 'author_only', dataTypes: ['image', 'text'] },
         { id: 'flexibility_test', label: 'Flexibility Test', inputMode: 'user_input', dataTypes: ['text', 'links'] },
         { id: 'special_tests', label: 'Special Tests', inputMode: 'user_input', dataTypes: ['text', 'links'] },
         { id: 'investigations', label: 'Investigations (Imaging)', inputMode: 'author_only', dataTypes: ['image', 'text', 'numbers'] }
@@ -169,10 +171,26 @@ export const CATEGORY_TEMPLATES = {
         entries: [] // [{ location, finding, severity, image_url, notes }]
     },
     palpation_muscles: {
-        entries: []
+        title: 'Muscle Palpation',
+        image_url: '',
+        status_title: 'Status',
+        status_options: [
+            { label: 'Normal', value: 'normal', type: 'normal' },
+            { label: 'Tender', value: 'tender', type: 'mid' },
+            { label: 'Tender++', value: 'tender_plus', type: 'extreme' }
+        ],
+        entries: [] // [{ level, status_value, notes }]
     },
     palpation_bone: {
-        entries: []
+        title: 'Joint / Bone Palpation',
+        image_url: '',
+        status_title: 'Status',
+        status_options: [
+            { label: 'Normal', value: 'normal', type: 'normal' },
+            { label: 'Tender', value: 'tender', type: 'mid' },
+            { label: 'Tender++', value: 'tender_plus', type: 'extreme' }
+        ],
+        entries: [] // [{ level, status_value, notes }]
     },
     rom_arom: {
         entries: [] // [{ movement, value, pain, notes }]
@@ -181,7 +199,10 @@ export const CATEGORY_TEMPLATES = {
         entries: [] // [{ movement, value, pain, end_feel, notes }]
     },
     mmt: {
-        entries: [] // [{ muscle, grade (0-5), notes, link }]
+        entries: [] // [{ level, muscle_action, grade (0-5), status, notes, link }]
+    },
+    sensory_exam: {
+        entries: [] // [{ level, sense, status (Normal/Abnormal), notes }]
     },
     flexibility_test: {
         entries: [] // [{ test_name, result, notes, link }]
@@ -191,6 +212,15 @@ export const CATEGORY_TEMPLATES = {
     },
     investigations: {
         entries: [] // [{ modality, image_url, report_text, numeric_measures }]
+    },
+    cervical_curve: {
+        title: 'Cervical Curve Assessment',
+        options: [
+            { id: 'flattened', title: 'Flattened', image_url: '/img/clinical/flattened.png', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' },
+            { id: 'normal', title: 'Normal Lordosis', image_url: '/img/clinical/normal_lordosis.png', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' },
+            { id: 'reversed', title: 'Reversed Curve', image_url: '/img/clinical/reversed_curve.png', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' }
+        ],
+        selected_option_id: 'normal'
     },
     diagnosis_entry: {
         diagnoses: [] // [{ code, label, confidence, supporting_findings, notes, image_url }]

@@ -97,12 +97,39 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
               <button
                 key={opt.id}
                 type="button"
-                className={`mcq-option-card${statusClass}${isSelected ? ' selected' : ''}`}
+                className={`mcq-option-card${opt.imageUrl ? ' mcq-rich-card' : ''}${statusClass}${isSelected ? ' selected' : ''}`}
                 onClick={() => handleOptionClick(opt.id)}
                 disabled={isSubmitted}
               >
-                <div className="mcq-option-icon">{getOptionIcon(index)}</div>
-                <div className="mcq-option-text">{opt.text || opt.label}</div>
+                {opt.imageUrl ? (
+                   <div className="mcq-rich-content">
+                     <div className="mcq-rich-header">{opt.text || opt.label}</div>
+                     <div className="mcq-rich-image">
+                       <img src={opt.imageUrl} alt={opt.text || opt.label} />
+                     </div>
+                     {(opt.subtext || opt.videoUrl) && (
+                       <div className="mcq-rich-footer">
+                         {opt.videoUrl ? (
+                           <a href={opt.videoUrl} target="_blank" rel="noopener noreferrer" className="mcq-video-btn" onClick={(e) => e.stopPropagation()}>
+                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" color="#ef4444">
+                               <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                             </svg>
+                             View
+                           </a>
+                         ) : (
+                           <span className={`mcq-rich-subtext ${opt.subtext.toLowerCase().includes('detected') ? 'detected' : ''}`}>
+                             {opt.subtext}
+                           </span>
+                         )}
+                       </div>
+                     )}
+                   </div>
+                ) : (
+                  <>
+                    <div className="mcq-option-icon">{getOptionIcon(index)}</div>
+                    <div className="mcq-option-text">{opt.text || opt.label}</div>
+                  </>
+                )}
               </button>
             )
           })}
@@ -118,13 +145,31 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             </button>
           </div>
         )}
-        {feedback && <div className="mcq-feedback">{feedback}</div>}
+        {isSubmitted && isCorrect !== undefined && isCorrect !== null && (
+          <div className={`mt-6 p-3.5 rounded-lg flex items-center gap-3 ${
+            isCorrect ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
+          }`}>
+            <div className={`w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0 ${
+              isCorrect ? 'text-[#10b981]' : 'text-[#ef4444]'
+            }`}>
+              {isCorrect ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              )}
+            </div>
+            <span className="text-[1.05rem] font-medium">
+              {isCorrect ? 'Correct Answer' : 'Incorrect Answer'}
+            </span>
+          </div>
+        )}
+        {feedback && <div className="mcq-feedback mt-4">{feedback}</div>}
       </div>
 
       {hints.length > 0 && (
         <div 
           className="absolute -right-8 top-0 w-80 flex flex-col gap-4 z-[10] pointer-events-none"
-          style={{ transform: 'translateX(10%)',transform:"translateY(-20%)" }}
+          style={{ transform: 'translateX(10%) translateY(-20%)' }}
         >
           {hints.map((hint, idx) => {
             if (!visibleHints[idx]) return null;

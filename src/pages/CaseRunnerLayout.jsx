@@ -26,7 +26,9 @@ export default function CaseRunnerLayout({
   activeSubStepId,
   onSubStepClick,
   hubProgress,
-  hideSidebar = false
+  hideSidebar = false,
+  maxReachedIndex = 0,
+  completedSubSteps = {}
 }) {
   const painIntensity = patientData?.painIntensity || 0
   const painPercent = Math.min((painIntensity / 10) * 100, 100)
@@ -222,6 +224,8 @@ export default function CaseRunnerLayout({
           {steps.map((step, idx) => {
             const isCompleted = idx < currentStepIndex
             const isCurrent = idx === currentStepIndex
+            // isAccessible: can navigate to this step (either past it OR reached it before)
+            const isAccessible = idx <= maxReachedIndex || isReviewMode
             const icon = getStepIcon(step)
             const hasSubSteps = step.type === 'clinical_hub' && step.subSteps?.length > 0
             const isExpanded = expandedHubs[step.id]
@@ -229,10 +233,14 @@ export default function CaseRunnerLayout({
             return (
               <React.Fragment key={idx}>
                 <li
-                  className={`cf-step-item ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                  className={`cf-step-item ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${
+                    !isAccessible && !isCurrent ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                   onClick={() => {
-                    if (isCompleted || isReviewMode) onStepClick?.(idx)
-                    if (hasSubSteps) setExpandedHubs(prev => ({ ...prev, [step.id]: true }))
+                    if (isAccessible || isCurrent) {
+                      onStepClick?.(idx)
+                      if (hasSubSteps) setExpandedHubs(prev => ({ ...prev, [step.id]: true }))
+                    }
                   }}
                 >
                   <div className="cf-step-dot">
@@ -272,19 +280,41 @@ export default function CaseRunnerLayout({
                     <ul className="pl-[26px] pr-2 py-2 space-y-4 relative before:absolute before:left-[11px] before:top-0 before:bottom-0 before:w-[2px] before:bg-slate-100">
                       {step.subSteps.map((sub, sIdx) => {
                         const isSubActive = activeSubStepId === sub.id
-                        const isSubCompleted = hubProgress?.[step.id]?.includes(sub.id)
+                        const hubCompletedList = completedSubSteps?.[step.id] || []
+                        const isSubCompleted = hubCompletedList.includes(sub.id) || hubProgress?.[step.id]?.includes(sub.id)
+
+                        // A sub-step is accessible if:
+                        // 1. It has been completed before, OR
+                        // 2. It is the first sub-step (index 0), OR
+                        // 3. The previous sub-step has been completed (and we're in this hub)
+                        // 4. The whole hub step is already completed (user moved past it)
+                        // 5. In review mode — all are accessible
+                        const prevSubCompleted = sIdx === 0 || hubCompletedList.includes(step.subSteps[sIdx - 1]?.id)
+                        const isSubAccessible = isReviewMode || isCompleted || isSubCompleted || (isCurrent && prevSubCompleted)
+
                         return (
                           <li 
                             key={sub.id}
-                            className={`flex items-center gap-3 text-[13px] font-medium cursor-pointer transition-colors ${isSubActive ? 'text-blue-600 font-bold' : isSubCompleted ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+                            style={{cursor: "pointer"}}
+                            className={`flex items-center gap-3 text-[13px] font-medium transition-colors ${
+                              isSubActive ? 'text-blue-600 font-bold' :
+                              isSubCompleted ? 'text-slate-800' :
+                              isSubAccessible ? 'text-slate-500 hover:text-slate-700' :
+                              'text-slate-300 cursor-not-allowed'
+                            }`}
                             onClick={() => {
-                              if (isCurrent || isCompleted || isReviewMode) {
+                              if (isSubAccessible && (isCurrent || isCompleted || isReviewMode)) {
                                 if (!isCurrent) onStepClick?.(idx);
                                 onSubStepClick?.(sub.id);
                               }
                             }}
                           >
-                            <div className={`w-2.5 h-2.5 shrink-0 rounded-full border z-10 bg-white ${isSubActive ? 'border-[3px] border-blue-600 bg-white' : isSubCompleted ? 'bg-slate-300 border-slate-300' : 'border-slate-300'}`} />
+                            <div className={`w-2.5 h-2.5 shrink-0 rounded-full border z-10 bg-white ${
+                              isSubActive ? 'border-[3px] border-blue-600 bg-white' :
+                              isSubCompleted ? 'bg-slate-300 border-slate-300' :
+                              isSubAccessible ? 'border-slate-400' :
+                              'border-slate-200 bg-slate-50'
+                            }`} />
                             <span className="truncate">{sub.title || sub.category?.replace(/_/g, ' ') || `Sub Step ${sIdx + 1}`}</span>
                           </li>
                         )

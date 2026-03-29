@@ -19,9 +19,11 @@ const SECTION_TYPES = [
   { value: 'observation', label: '👁️ Observation', desc: 'Posture observation with image views' },
   { value: 'rom', label: '📐 ROM (AROM / PROM)', desc: 'Range of motion entries' },
   { value: 'mmt', label: '💪 MMT', desc: 'Manual muscle test grades' },
+  { value: 'sensory_exam', label: '🫀 Sensory Exam', desc: 'Dermatome sensory testing' },
   { value: 'flexibility_test', label: '🧘 Flexibility Tests', desc: 'Flexibility test entries' },
   { value: 'special_tests', label: '🧪 Special Tests', desc: 'Positive/negative clinical tests' },
   { value: 'palpation', label: '🤲 Palpation', desc: 'Palpation findings by tissue type' },
+  { value: 'cervical_curve', label: '🦴 Cervical Curve', desc: 'Visual assessment of spinal curvature' },
   { value: 'investigations', label: '🩻 Investigations', desc: 'X-ray, MRI, imaging studies' },
   { value: 'mcq', label: '❓ MCQ', desc: 'Multiple choice clinical decision question' },
   { value: 'essay', label: '📝 Essay', desc: 'Short answer / reflective question' },
@@ -234,12 +236,34 @@ function createDefaultSection(type) {
       return { ...base, subType: 'arom', endFeelMode: 'overall', endFeel: '', entries: [] }
     case 'mmt':
       return { ...base, entries: [] }
+    case 'sensory_exam':
+      return { ...base, entries: [] }
     case 'flexibility_test':
       return { ...base, entries: [], tags: [] }
     case 'special_tests':
       return { ...base, entries: [] }
     case 'palpation':
-      return { ...base, entries: [] }
+      return { 
+        ...base, 
+        image_url: '',
+        status_title: 'Status',
+        status_options: [
+          { label: 'Normal', value: 'normal', type: 'normal' },
+          { label: 'Tender', value: 'tender', type: 'mid' },
+          { label: 'Tender++', value: 'tender_plus', type: 'extreme' }
+        ],
+        entries: [] 
+      }
+    case 'cervical_curve':
+      return {
+        ...base,
+        options: [
+            { id: 'reversed', title: 'Reversed Curve', image_url: '', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' },
+            { id: 'normal', title: 'Normal Lordosis', image_url: '', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' },
+            { id: 'flattened', title: 'Flattened', image_url: '', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' }
+        ],
+        selected_option_id: 'normal'
+      }
     case 'investigations':
       return { ...base, entries: [] }
     case 'mcq':
@@ -257,9 +281,11 @@ function SectionEditor({ section, onUpdate }) {
     case 'observation': return <ObservationSectionEditor section={section} onUpdate={onUpdate} />
     case 'rom': return <RomSectionEditor section={section} onUpdate={onUpdate} />
     case 'mmt': return <MmtSectionEditor section={section} onUpdate={onUpdate} />
+    case 'sensory_exam': return <SensoryExamSectionEditor section={section} onUpdate={onUpdate} />
     case 'flexibility_test': return <FlexibilityTestSectionEditor section={section} onUpdate={onUpdate} />
     case 'special_tests': return <SpecialTestsSectionEditor section={section} onUpdate={onUpdate} />
     case 'palpation': return <PalpationSectionEditor section={section} onUpdate={onUpdate} />
+    case 'cervical_curve': return <CervicalCurveEditor section={section} onUpdate={onUpdate} />
     case 'investigations': return <InvestigationsSectionEditor section={section} onUpdate={onUpdate} />
     case 'mcq': return <McqSectionEditor section={section} onUpdate={onUpdate} />
     case 'essay': return <EssaySectionEditor section={section} onUpdate={onUpdate} />
@@ -392,21 +418,30 @@ function RomSectionEditor({ section, onUpdate }) {
 /* ── MMT Editor ── */
 function MmtSectionEditor({ section, onUpdate }) {
   const entries = section.entries || []
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { muscle: '', grade: '', notes: '' }] })
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', muscle_action: '', grade: '', status: '', notes: '' }] })
   const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
   const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
 
   return (
     <div>
-      <div className="section-header"><h5>Muscles</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add</button></div>
+      <div className="section-header"><h5>Muscle Actions</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add</button></div>
       {entries.map((e, idx) => (
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label>Muscle *<input value={e.muscle || ''} onChange={ev => updateEntry(idx, 'muscle', ev.target.value)} placeholder="e.g. Quadriceps" /></label>
+            <label>Level (e.g. C5)<input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C5" /></label>
+            <label>Muscle Action *<input value={e.muscle_action || e.muscle || ''} onChange={ev => updateEntry(idx, 'muscle_action', ev.target.value)} placeholder="e.g. Shoulder abduction" /></label>
             <label>Grade (0-5)
               <select value={e.grade || ''} onChange={ev => updateEntry(idx, 'grade', ev.target.value)}>
                 <option value="">Select</option>{[0,1,2,3,4,5].map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </label>
+            <label>Status
+              <select value={e.status || ''} onChange={ev => updateEntry(idx, 'status', ev.target.value)}>
+                <option value="">Select status</option>
+                <option value="Normal">Normal</option>
+                <option value="Slightly Weak">Slightly Weak</option>
+                <option value="Weak">Weak</option>
               </select>
             </label>
             <label style={{ gridColumn: '1/-1' }}>Notes<input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} /></label>
@@ -414,6 +449,38 @@ function MmtSectionEditor({ section, onUpdate }) {
         </div>
       ))}
       {entries.length === 0 && <div className="empty-state-box">No MMT entries.</div>}
+    </div>
+  )
+}
+
+/* ── Sensory Exam Editor ── */
+function SensoryExamSectionEditor({ section, onUpdate }) {
+  const entries = section.entries || []
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', sense: '', status: '', notes: '' }] })
+  const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
+  const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
+
+  return (
+    <div>
+      <div className="section-header"><h5>Sensory Entries</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add</button></div>
+      {entries.map((e, idx) => (
+        <div key={idx} className="list-item">
+          <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
+          <div className="form-grid">
+            <label>Level (e.g. C5, Thumb)<input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C5, Web space, Thumb..." /></label>
+            <label>Sense / Area *<input value={e.sense || ''} onChange={ev => updateEntry(idx, 'sense', ev.target.value)} placeholder="e.g. Light touch, Pin prick" /></label>
+            <label>Status
+              <select value={e.status || ''} onChange={ev => updateEntry(idx, 'status', ev.target.value)}>
+                <option value="">Select status</option>
+                <option value="Normal">Normal</option>
+                <option value="Abnormal">Abnormal</option>
+              </select>
+            </label>
+            <label style={{ gridColumn: '1/-1' }}>Notes<input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} /></label>
+          </div>
+        </div>
+      ))}
+      {entries.length === 0 && <div className="empty-state-box">No sensory entries.</div>}
     </div>
   )
 }
@@ -479,7 +546,7 @@ function FlexibilityTestSectionEditor({ section, onUpdate }) {
 /* ── Special Tests Editor ── */
 function SpecialTestsSectionEditor({ section, onUpdate }) {
   const entries = section.entries || []
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { test_name: '', result: '', notes: '', link: '' }] })
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { test_name: '', result: '', notes: '', link: '', image_url: '' }] })
   const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
   const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
 
@@ -490,14 +557,17 @@ function SpecialTestsSectionEditor({ section, onUpdate }) {
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="e.g. Spurling" /></label>
+            <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="e.g. Spurling" /></label>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <ImageUpload label="Test Image" folderType="special_tests" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
+            </div>
             <label>Result
               <select value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)}>
                 <option value="">Select</option><option value="positive">Positive (+)</option><option value="negative">Negative (-)</option><option value="n/a">N/A</option>
               </select>
             </label>
-            <label>Link<input value={e.link || ''} onChange={ev => updateEntry(idx, 'link', ev.target.value)} placeholder="https://..." /></label>
-            <label>Notes<input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} /></label>
+            <label>Link (YouTube)<input value={e.link || ''} onChange={ev => updateEntry(idx, 'link', ev.target.value)} placeholder="https://youtube.com/..." /></label>
+            <label style={{ gridColumn: '1 / -1' }}>Notes<input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} /></label>
           </div>
         </div>
       ))}
@@ -509,29 +579,191 @@ function SpecialTestsSectionEditor({ section, onUpdate }) {
 /* ── Palpation Editor ── */
 function PalpationSectionEditor({ section, onUpdate }) {
   const entries = section.entries || []
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { location: '', finding: '', severity: '', notes: '' }] })
+  const statusOptions = section.status_options || []
+  
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', status_value: '', notes: '' }] })
   const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
   const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
 
+  const addOption = () => onUpdate({ 
+    ...section, 
+    status_options: [...statusOptions, { label: 'New Option', value: 'new_' + Date.now(), type: 'normal' }] 
+  })
+  const updateOption = (idx, field, val) => { 
+    const u = [...statusOptions]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, status_options: u }) 
+  }
+  const removeOption = (idx) => onUpdate({ 
+    ...section, 
+    status_options: statusOptions.filter((_, i) => i !== idx) 
+  })
+
   return (
-    <div>
-      <div className="section-header"><h5>Entries</h5><button type="button" className="btn-small" onClick={addEntry}>+ Add</button></div>
-      {entries.map((e, idx) => (
-        <div key={idx} className="list-item">
-          <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
-          <div className="form-grid">
-            <label>Location *<input value={e.location || ''} onChange={ev => updateEntry(idx, 'location', ev.target.value)} placeholder="e.g. Spinous process" /></label>
-            <label>Finding *<input value={e.finding || ''} onChange={ev => updateEntry(idx, 'finding', ev.target.value)} placeholder="e.g. Tenderness" /></label>
-            <label>Severity
-              <select value={e.severity || ''} onChange={ev => updateEntry(idx, 'severity', ev.target.value)}>
-                <option value="">Select</option><option value="mild">Mild</option><option value="moderate">Moderate</option><option value="severe">Severe</option>
-              </select>
-            </label>
-            <label>Notes<input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} /></label>
-          </div>
+    <div className="space-y-6">
+      <div className="form-grid">
+        <label style={{ gridColumn: '1 / -1' }}>
+          Status Column Title
+          <input 
+            value={section.status_title || 'Status'} 
+            onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
+            placeholder="e.g. Rotation status, Tender status" 
+          />
+        </label>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <ImageUpload 
+            label="Section Image (Reference)" 
+            folderType="palpation" 
+            initialUrl={section.image_url} 
+            onUpload={url => onUpdate({ ...section, image_url: url })} 
+          />
         </div>
-      ))}
-      {entries.length === 0 && <div className="empty-state-box">No palpation entries.</div>}
+      </div>
+
+      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div className="section-header !mb-4">
+          <h5 style={{ fontSize: '0.85rem', color: '#475569' }}>Status Options & Colors</h5>
+          <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+        </div>
+        <div className="space-y-2">
+          {statusOptions.map((opt, oIdx) => (
+            <div key={oIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input 
+                value={opt.label} 
+                onChange={e => updateOption(oIdx, 'label', e.target.value)} 
+                placeholder="Label (Normal)" 
+                style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              />
+              <select 
+                value={opt.type} 
+                onChange={e => updateOption(oIdx, 'type', e.target.value)}
+                style={{ width: '100px', padding: '6px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              >
+                <option value="normal">Normal</option>
+                <option value="mid">Mid</option>
+                <option value="extreme">Extreme</option>
+              </select>
+              <button type="button" className="btn-delete-small" onClick={() => removeOption(oIdx)}>×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-header">
+        <h5>Entries (Patient Data)</h5>
+        <button type="button" className="btn-small" onClick={addEntry}>+ Add Level</button>
+      </div>
+      <div className="space-y-3">
+        {entries.map((e, idx) => (
+          <div key={idx} className="list-item">
+            <div className="item-header">
+              <span>{idx + 1}</span>
+              <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
+            </div>
+            <div className="form-grid">
+              <label>
+                Level (e.g. C3-C4)
+                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C4" />
+              </label>
+              <label>
+                {section.status_title || 'Status'}
+                <select 
+                  value={e.status_value || ''} 
+                  onChange={ev => updateEntry(idx, 'status_value', ev.target.value)}
+                >
+                  <option value="">Select status</option>
+                  {statusOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ gridColumn: '1 / -1' }}>
+                Notes
+                <input value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} />
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+      {entries.length === 0 && <div className="empty-state-box">No palpation entries. Click "+ Add Level".</div>}
+    </div>
+  )
+}
+
+/* ── Cervical Curve Editor ── */
+function CervicalCurveEditor({ section, onUpdate }) {
+  const options = section.options || []
+  
+  const addOption = () => onUpdate({ 
+    ...section, 
+    options: [...options, { id: 'opt_' + Date.now(), title: 'New Option', image_url: '', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' }] 
+  })
+  
+  const updateOption = (idx, field, val) => {
+    const u = [...options]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, options: u })
+  }
+  
+  const removeOption = (idx) => onUpdate({ ...section, options: options.filter((_, i) => i !== idx) })
+
+  return (
+    <div className="space-y-4">
+      <div className="section-header">
+        <h5>Assessment Options</h5>
+        <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {options.map((opt, idx) => (
+          <div key={idx} className={`p-4 rounded-xl border-2 transition-all ${section.selected_option_id === opt.id ? 'border-blue-500 bg-blue-50' : 'border-slate-100 bg-white'}`}>
+            <div className="flex justify-between items-start mb-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name={`selected-curve-${section.id || 'curr'}`}
+                  checked={section.selected_option_id === opt.id}
+                  onChange={() => onUpdate({ ...section, selected_option_id: opt.id })}
+                />
+                <span className="text-sm font-bold text-slate-700">Set as Finding</span>
+              </label>
+              <button type="button" className="text-slate-400 hover:text-red-500" onClick={() => removeOption(idx)}>×</button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Title</span>
+                <input 
+                  value={opt.title} 
+                  onChange={e => updateOption(idx, 'title', e.target.value)} 
+                  className="w-full mt-1 p-2 border border-slate-200 rounded-md font-medium text-sm"
+                />
+              </label>
+              <ImageUpload 
+                label="Option Image" 
+                folderType="clinical" 
+                initialUrl={opt.image_url} 
+                onUpload={url => updateOption(idx, 'image_url', url)} 
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Footer (Unselected)</span>
+                  <input 
+                    value={opt.footer_text} 
+                    onChange={e => updateOption(idx, 'footer_text', e.target.value)} 
+                    className="w-full mt-1 p-2 border border-slate-200 rounded-md text-[11px]"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Footer (Selected)</span>
+                  <input 
+                    value={opt.selected_footer_text} 
+                    onChange={e => updateOption(idx, 'selected_footer_text', e.target.value)} 
+                    className="w-full mt-1 p-2 border border-slate-200 rounded-md text-[11px]"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {options.length === 0 && <div className="empty-state-box">No options defined. Click "+ Add Option".</div>}
     </div>
   )
 }
@@ -594,30 +826,85 @@ function McqSectionEditor({ section, onUpdate }) {
         </div>
         <div className="space-y-3">
           {options.map((opt, idx) => (
-            <div key={idx} className="flex gap-3 items-start bg-white p-3 rounded-lg border border-slate-200">
-              <input
-                type="radio"
-                name={`mcq-correct-${section.title || 'sect'}`}
-                checked={opt.isCorrect}
-                onChange={() => {
-                  const u = options.map((o, i) => ({ ...o, isCorrect: i === idx }))
-                  onUpdate({ ...section, options: u })
-                }}
-                className="mt-2"
-              />
-              <input
-                value={opt.text}
-                onChange={e => updateOption(idx, 'text', e.target.value)}
-                placeholder={`Option ${String.fromCharCode(65 + idx)}`}
-                className="flex-1 p-1.5 text-sm border-b border-slate-100 focus:border-blue-400 outline-none"
-              />
-              <button type="button" className="text-slate-400 hover:text-red-500 transition-colors" onClick={() => removeOption(idx)}>×</button>
+            <div key={idx} className="flex flex-col gap-3 bg-white p-3 rounded-lg border border-slate-200">
+              <div className="flex gap-3 items-start">
+                <input
+                  type="radio"
+                  name={`mcq-correct-${section.title || 'sect'}`}
+                  checked={opt.isCorrect}
+                  onChange={() => {
+                    const u = options.map((o, i) => ({ ...o, isCorrect: i === idx }))
+                    onUpdate({ ...section, options: u })
+                  }}
+                  className="mt-2"
+                />
+                <input
+                  value={opt.text}
+                  onChange={e => updateOption(idx, 'text', e.target.value)}
+                  placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                  className="flex-1 p-1.5 text-sm border-b border-slate-100 focus:border-blue-400 outline-none"
+                />
+                <button type="button" className="text-slate-400 hover:text-red-500 transition-colors" onClick={() => removeOption(idx)}>×</button>
+              </div>
+              
+              <div className="bg-slate-50 p-3 rounded border border-slate-100 text-sm ml-6">
+                 <h6 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Rich Content (Optional)</h6>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                   <div className="col-span-1 md:col-span-2">
+                     <ImageUpload
+                       label="Option Image"
+                       folderType="step-image"
+                       initialUrl={opt.imageUrl}
+                       onUpload={url => updateOption(idx, 'imageUrl', url)}
+                     />
+                     <div className="mt-2">
+                       <label className="text-[11px] text-slate-500">Or enter Image URL manually:</label>
+                       <input
+                         value={opt.imageUrl || ''}
+                         onChange={e => updateOption(idx, 'imageUrl', e.target.value)}
+                         placeholder="https://..."
+                         className="w-full mt-1 p-1.5 border border-slate-200 rounded outline-none focus:border-blue-400"
+                       />
+                     </div>
+                   </div>
+                   <div>
+                     <label className="text-[11px] text-slate-500 font-bold">Subtext (under image)</label>
+                     <input
+                       value={opt.subtext || ''}
+                       onChange={e => updateOption(idx, 'subtext', e.target.value)}
+                       placeholder="Detected in this patient"
+                       className="w-full mt-1 p-1.5 border border-slate-200 rounded outline-none focus:border-blue-400"
+                     />
+                   </div>
+                   <div>
+                     <label className="text-[11px] text-slate-500 font-bold">Video URL/Link</label>
+                     <input
+                       value={opt.videoUrl || ''}
+                       onChange={e => updateOption(idx, 'videoUrl', e.target.value)}
+                       placeholder="https://youtube.com/watch?v=..."
+                       className="w-full mt-1 p-1.5 border border-slate-200 rounded outline-none focus:border-blue-400"
+                     />
+                   </div>
+                 </div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <label className="block text-sm font-bold text-slate-700">
+          Max Score
+          <input
+            type="number"
+            min="1"
+            max="100"
+            value={section.maxScore || ''}
+            onChange={e => onUpdate({ ...section, maxScore: parseInt(e.target.value) || '' })}
+            placeholder="e.g. 10"
+            className="w-full mt-1 p-2 border border-slate-300 rounded-md text-sm"
+          />
+        </label>
         <label className="block text-sm font-bold text-green-700">
           Explanation on Success
           <textarea
@@ -699,6 +986,19 @@ function EssaySectionEditor({ section, onUpdate }) {
            <button type="button" className="btn-small" onClick={addKeyword}>Add</button>
         </div>
       </div>
+
+      <label className="block text-sm font-bold text-slate-700 mt-4">
+        Max Score
+        <input
+          type="number"
+          min="1"
+          max="100"
+          value={section.maxScore || ''}
+          onChange={e => onUpdate({ ...section, maxScore: parseInt(e.target.value) || '' })}
+          placeholder="e.g. 20"
+          className="w-full md:w-1/3 mt-1 p-2 border border-slate-300 rounded-md text-sm"
+        />
+      </label>
 
       <div className="flex gap-4">
         {/* Placeholder for future side-by-side elements if needed. Old single hint removed. */}

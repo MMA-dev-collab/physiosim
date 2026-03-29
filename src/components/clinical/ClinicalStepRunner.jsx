@@ -218,21 +218,93 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
         // Palpation
         if (catId?.startsWith('palpation_')) {
             const entries = data.entries || []
-            if (entries.length === 0) return <p className="text-slate-500 italic">No entries recorded.</p>
+            const hasImage = !!data.image_url
+            const statusOptions = data.status_options || []
+
+            const getStatusLabel = (val) => {
+                const opt = statusOptions.find(o => o.value === val)
+                return opt ? opt.label : val
+            }
+
+            const getStatusBadgeClass = (val) => {
+                const opt = statusOptions.find(o => o.value === val)
+                if (!opt) return 'bg-slate-100 text-slate-600'
+                
+                switch (opt.type) {
+                    case 'normal': return 'bg-emerald-100 text-emerald-700'
+                    case 'mid': return 'bg-amber-100 text-amber-700'
+                    case 'extreme': return 'bg-rose-100 text-rose-700'
+                    default: return 'bg-slate-100 text-slate-600'
+                }
+            }
 
             return (
-                <ClinicalTable headers={['Location', 'Finding', 'Severity', 'Notes']}>
-                    {entries.map((e, i) => (
-                        <tr key={i} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 font-medium text-slate-900">{e.location}</td>
-                            <td className="px-4 py-3 text-slate-600">{e.finding}</td>
-                            <td className="px-4 py-3">
-                                {e.severity && <StatusBadge status={e.severity} />}
-                            </td>
-                            <td className="px-4 py-3 text-slate-500 italic text-xs max-w-xs truncate">{e.notes}</td>
-                        </tr>
-                    ))}
-                </ClinicalTable>
+                <div className="car-palpation mb-8">
+                    <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-start px-2`}>
+                        {hasImage && (
+                            <div className="w-full lg:w-1/2 shrink-0">
+                                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
+                                    <img src={data.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex-1 w-full overflow-x-auto">
+                            {entries.length > 0 ? (
+                                (() => {
+                                    const hasAnyNotes = entries.some(e => e.notes && e.notes.trim() !== '');
+                                    return (
+                                        <table className="w-full text-left border-separate border-spacing-y-2">
+                                            <thead>
+                                                <tr>
+                                                    <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
+                                                    <th className={`px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
+                                                        {data.status_title || 'Status'}
+                                                    </th>
+                                                    {hasAnyNotes && (
+                                                        <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[30%] text-right font-inter">Notes</th>
+                                                    )}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {entries.map((entry, i) => (
+                                                    <tr key={i} className="bg-white border border-slate-100 shadow-sm rounded-xl">
+                                                        <td className="px-4 py-4 first:rounded-l-xl border-y border-l border-slate-100 align-middle w-px whitespace-nowrap">
+                                                            <div className="flex items-center">
+                                                                <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-[13px] font-black text-indigo-600 border border-indigo-100 shadow-sm">
+                                                                    {entry.level || '-'}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className={`px-6 py-4 border-y border-slate-100 align-middle ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
+                                                            <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
+                                                                {getStatusLabel(entry.status_value)}
+                                                            </span>
+                                                        </td>
+                                                        {hasAnyNotes && (
+                                                            <td className="px-4 py-4 border-y border-r border-slate-100 text-[11px] text-slate-500 italic last:rounded-r-xl align-middle text-right font-inter">
+                                                                <div className="max-w-[180px] ml-auto truncate font-medium">
+                                                                    {entry.notes || '-'}
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {!hasAnyNotes && (
+                                                            <td className="border-y border-r border-slate-100 last:rounded-r-xl w-1"></td>
+                                                        )}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    );
+                                })()
+                            ) : (
+                                <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 font-medium font-inter">
+                                    No entries recorded.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )
         }
 
@@ -264,25 +336,304 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
             )
         }
 
-        // MMT
+        // MMT (Manual Muscle Test)
         if (catId === 'mmt') {
             const entries = data.entries || []
-            if (entries.length === 0) return <p className="text-slate-500 italic">No MMT entries.</p>
+            if (entries.length === 0) return <p className="text-slate-500 italic px-2">No MMT entries recorded.</p>
+
+            const getGradeWindow = (grade) => {
+                const g = parseInt(grade)
+                if (isNaN(g)) return [3, 4, 5]
+                if (g <= 1) return [0, 1, 2]
+                if (g >= 4) return [3, 4, 5]
+                return [g - 1, g, g + 1]
+            }
+
+            const getStatusColor = (status) => {
+                if (!status) return '#cbd5e1'
+                const s = status.toLowerCase()
+                if (s.includes('normal')) return '#22c55e'
+                if (s.includes('slight')) return '#f59e0b'
+                if (s.includes('weak')) return '#ef4444'
+                return '#cbd5e1'
+            }
+
             return (
-                <ClinicalTable headers={['Muscle', 'Grade (0-5)', 'Notes']}>
-                    {entries.map((e, i) => (
-                        <tr key={i} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 font-medium text-slate-900">{e.muscle}</td>
-                            <td className="px-4 py-3 font-bold text-slate-800 text-lg">{e.grade}</td>
-                            <td className="px-4 py-3 text-slate-500 italic text-sm">{e.notes}</td>
-                        </tr>
-                    ))}
-                </ClinicalTable>
+                <div className=" car-mmt px-2 mb-8">
+                    <h3 className="text-xl font-black text-slate-800 mb-6">Motor Examination - Myotomes:</h3>
+                    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/50 border-b border-slate-100">
+                                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Level</th>
+                                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Muscle action</th>
+                                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-widest">Grade ( 0-5 )</th>
+                                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {entries.map((entry, i) => {
+                                    const gradeWindow = getGradeWindow(entry.grade)
+                                    const statusColor = getStatusColor(entry.status)
+                                    
+                                    return (
+                                        <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center justify-center min-w-[40px] px-3 py-1 bg-blue-50 text-blue-600 font-bold rounded-full text-xs">
+                                                    {entry.level || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-bold text-slate-700">{entry.muscle_action || entry.muscle || '-'}</div>
+                                                {entry.notes && <div className="text-[10px] text-slate-400 italic mt-0.5">{entry.notes}</div>}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-center gap-1.5">
+                                                    {gradeWindow.map(g => {
+                                                        const isSelected = String(g) === String(entry.grade)
+                                                        return (
+                                                            <div 
+                                                                key={g}
+                                                                className={`w-7 h-7 flex items-center justify-center rounded-md text-xs font-bold transition-all ${
+                                                                    isSelected 
+                                                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200 scale-110' 
+                                                                        : 'bg-white border border-slate-200 text-slate-400'
+                                                                }`}
+                                                            >
+                                                                {g}
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div 
+                                                        className="w-2.5 h-2.5 rounded-full" 
+                                                        style={{ backgroundColor: statusColor }}
+                                                    />
+                                                    <span className="text-sm font-bold text-slate-600">{entry.status || 'N/A'}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             )
         }
 
-        // Special Tests & Flexibility
-        if (catId === 'special_tests' || catId === 'flexibility_test') {
+        // Sensory Examination
+        if (catId === 'sensory_exam') {
+            const entries = data.entries || []
+            if (entries.length === 0) return <p className="text-slate-500 italic px-2">No sensory entries recorded.</p>
+
+            return (
+                <div className="car-sensory px-2 mb-8">
+                    <h3 className="text-xl font-black text-slate-800 mb-6">Sensory Examination - Dermatomes:</h3>
+                    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/50 border-b border-slate-100">
+                                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-widest">Level</th>
+                                    <th className="px-6 py-4 text-right text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {entries.map((entry, i) => {
+                                    const isAbnormal = entry.status?.toLowerCase().includes('abnormal')
+                                    return (
+                                        <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="inline-flex items-center justify-center min-w-[44px] px-3 py-1 bg-blue-50 text-blue-600 font-bold rounded-full text-[13px]">
+                                                        {entry.level || '-'}
+                                                    </span>
+                                                    <span className="text-sm font-bold text-slate-600">
+                                                        {entry.sense ? `(${entry.sense})` : ''}
+                                                    </span>
+                                                </div>
+                                                {entry.notes && <div className="text-[10px] text-slate-400 italic mt-1 ml-[56px]">{entry.notes}</div>}
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-bold ${
+                                                    isAbnormal 
+                                                        ? 'bg-red-50 text-red-600 border border-red-100 shadow-sm' 
+                                                        : 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm'
+                                                }`}>
+                                                    {entry.status || 'N/A'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )
+        }
+
+        // Cervical Curve Assessment
+        if (catId === 'cervical_curve') {
+            const options = data.options || []
+            const selectedId = data.selected_option_id
+
+            const getDefaultImage = (title) => {
+                const t = title?.toLowerCase() || ''
+                if (t.includes('flattened')) return '/img/clinical/flattened.png'
+                if (t.includes('normal')) return '/img/clinical/normal_lordosis.png'
+                if (t.includes('reversed')) return '/img/clinical/reversed_curve.png'
+                return null
+            }
+
+            return (
+                <div className="car-cervical mt-4 px-2 mb-10 max-w-6xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+                        {options.map((opt, i) => {
+                            const isSelected = opt.id === selectedId
+                            const displayImage = opt.image_url || getDefaultImage(opt.title)
+
+                            return (
+                                <div 
+                                    key={i} 
+                                    className={`flex flex-col items-center transition-all duration-500 rounded-3xl p-5 border-2 ${
+                                        isSelected 
+                                            ? 'bg-blue-50/50 border-blue-500 scale-105 shadow-xl shadow-blue-100 z-10' 
+                                            : 'border-slate-100 opacity-50 scale-[0.85]'
+                                    }`}
+                                >
+                                    {/* Header */}
+                                    <h4 className={`text-lg font-black uppercase tracking-tight mb-8 text-center min-h-[56px] flex items-center justify-center ${
+                                        isSelected ? 'text-blue-600' : 'text-slate-400'
+                                    }`}>
+                                        {opt.title}
+                                    </h4>
+
+                                    {/* Image Container */}
+                                    <div className={`w-full aspect-square bg-white rounded-[2rem] overflow-hidden border mb-8 flex items-center justify-center p-6 transition-all duration-500 ${
+                                        isSelected ? 'border-blue-200 shadow-inner' : 'border-slate-100'
+                                    }`}>
+                                        {displayImage ? (
+                                            <img 
+                                                src={displayImage} 
+                                                alt={opt.title} 
+                                                className="max-w-full max-h-full object-contain"
+                                            />
+                                        ) : (
+                                            <div className="text-slate-200">
+                                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Status Footer */}
+                                    <div className="mt-auto pt-2 text-center">
+                                        <p className={`text-[13px] font-black uppercase tracking-widest leading-relaxed ${
+                                            isSelected ? 'text-red-500' : 'text-slate-400'
+                                        }`}>
+                                            {isSelected ? (opt.selected_footer_text || 'Detected in this patient') : (opt.footer_text || 'Not present')}
+                                        </p>
+                                        {isSelected && (
+                                            <div className="mt-3 h-1.5 w-12 bg-red-500 mx-auto rounded-full shadow-sm shadow-red-200"></div>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )
+        }
+
+        // Special Tests
+        if (catId === 'special_tests') {
+            const entries = data.entries || []
+            if (entries.length === 0) return <p className="text-slate-500 italic">No tests found.</p>
+
+            const getResultClass = (result) => {
+                if (!result) return 'bg-slate-100 text-slate-500'
+                const r = result.toLowerCase()
+                if (r.includes('positive') || r === 'pos' || r === '+') return 'bg-rose-50 text-rose-600 border border-rose-100'
+                if (r.includes('negative') || r === 'neg' || r === '-') return 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                return 'bg-blue-50 text-blue-600 border border-blue-100'
+            }
+
+            return (
+                <div className="car-special mb-8">
+                    <h3 className="text-xl font-black text-slate-800 mb-6 px-2">Special Tests:</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
+                        {entries.map((e, i) => (
+                            <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
+                                <div className="w-full text-left">
+                                    <h4 className="font-bold text-slate-700 text-lg leading-tight">
+                                        {i + 1}. {e.test_name}
+                                    </h4>
+                                </div>
+
+                                <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
+                                    {e.image_url ? (
+                                        <img
+                                            src={e.image_url}
+                                            alt={e.test_name}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="text-slate-300 flex flex-col items-center">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <polyline points="21 15 16 10 5 21" />
+                                            </svg>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest mt-2">No Image</span>
+                                        </div>
+                                    )}
+
+                                    {e.result && (
+                                        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${getResultClass(e.result)}`}>
+                                            {e.result}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {e.link && (
+                                    <a
+                                        href={e.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            border: "2px solid #F14722",
+                                            boxShadow: "0px 2px 0px #F14722",
+                                            borderRadius: "10px",
+                                        }}
+                                        className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-800 font-bold text-sm transition-all hover:bg-rose-50 hover:scale-105"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" />
+                                            <path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" />
+                                        </svg>
+                                        View
+                                    </a>
+                                )}
+
+                                {e.notes && (
+                                    <p className="w-full text-center text-xs text-slate-400 italic mt-auto pt-2 border-t border-slate-50">
+                                        {e.notes}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )
+        }
+
+        // Flexibility Test
+        if (catId === 'flexibility_test') {
             const entries = data.entries || []
             if (entries.length === 0) return <p className="text-slate-500 italic">No tests found.</p>
             return (

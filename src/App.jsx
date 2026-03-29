@@ -12,7 +12,6 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
-import PerformanceDashboard from './pages/PerformanceDashboard'
 import ComponentShowcase from './pages/ComponentShowcase'
 
 import { API_BASE_URL } from './config'
@@ -63,14 +62,6 @@ function Navbar({ auth, logout, menuOpen, toggleMenu, closeMenu, isAdmin, showDr
             >
               About Us
             </Link>
-            {auth && (
-              <Link 
-                to="/performance" 
-                className={`text-sm font-semibold transition-colors ${location.pathname === '/performance' ? 'text-primary' : 'text-slate-600 hover:text-primary'}`}
-              >
-                My Progress
-              </Link>
-            )}
             {auth && (
               <Link 
                 to="/leaderboard" 
@@ -158,7 +149,6 @@ function Navbar({ auth, logout, menuOpen, toggleMenu, closeMenu, isAdmin, showDr
             <Link to="/membership" className="text-lg font-bold text-slate-900 py-2" onClick={closeMenu}>Membership</Link>
             <Link to="/cases" className="text-lg font-bold text-slate-900 py-2" onClick={closeMenu}>Cases</Link>
             <Link to="/about" className="text-lg font-bold text-slate-900 py-2" onClick={closeMenu}>About Us</Link>
-            {auth && <Link to="/performance" className="text-lg font-bold text-slate-900 py-2" onClick={closeMenu}>My Progress</Link>}
             {auth && <Link to="/leaderboard" className="text-lg font-bold text-slate-900 py-2" onClick={closeMenu}>Leaderboard</Link>}
             {isAdmin && <Link to="/admin" className="text-lg font-bold text-slate-900 py-2" onClick={closeMenu}>Admin</Link>}
           </nav>
@@ -235,10 +225,6 @@ function App() {
               <Route
                 path="/leaderboard"
                 element={auth ? <LeaderboardPage auth={auth} /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/performance"
-                element={auth ? <PerformanceDashboard auth={auth} /> : <Navigate to="/login" />}
               />
               <Route path="/showcase" element={<ComponentShowcase />} />
             </Routes>

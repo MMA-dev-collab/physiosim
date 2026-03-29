@@ -106,11 +106,16 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
         }
 
         const entries = content.entries || []
+        const statusOptions = content.status_options || [
+            { label: 'Normal', value: 'normal', type: 'normal' },
+            { label: 'Tender', value: 'tender', type: 'mid' },
+            { label: 'Tender++', value: 'tender_plus', type: 'extreme' }
+        ]
 
         const addEntry = () => {
             onUpdate({
                 ...step,
-                content: { ...content, entries: [...entries, { location: '', finding: '', severity: '', image_url: '', notes: '' }] }
+                content: { ...content, entries: [...entries, { level: '', status_value: '', notes: '' }] }
             })
         }
 
@@ -127,12 +132,80 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
             })
         }
 
+        const addOption = () => {
+             onUpdate({
+                ...step,
+                content: { ...content, status_options: [...statusOptions, { label: 'New Option', value: 'new_' + Date.now(), type: 'normal' }] }
+            })
+        }
+
+        const updateOption = (idx, field, val) => {
+            const u = [...statusOptions]; u[idx] = { ...u[idx], [field]: val };
+            onUpdate({ ...step, content: { ...content, status_options: u } })
+        }
+
+        const removeOption = (idx) => {
+            onUpdate({
+                ...step,
+                content: { ...content, status_options: statusOptions.filter((_, i) => i !== idx) }
+            })
+        }
+
         return (
             <div className="phase-editor assessment-phase">
                 <div className="phase-header">
                     <h4>🤲 Palpation - {tissueLabels[tissueType] || tissueType}</h4>
                     <p>Palpation findings for {tissueLabels[tissueType] || tissueType}</p>
                 </div>
+
+                <div className="form-grid mb-6">
+                    <label style={{ gridColumn: '1 / -1' }}>
+                        Status Column Title
+                        <input 
+                            value={content.status_title || 'Status'} 
+                            onChange={e => onUpdate({ ...step, content: { ...content, status_title: e.target.value } })} 
+                            placeholder="e.g. Rotation status, Tender status" 
+                        />
+                    </label>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                        <ImageUpload 
+                            label="Section Image (Reference)" 
+                            folderType="palpation" 
+                            initialUrl={content.image_url} 
+                            onUpload={url => onUpdate({ ...step, content: { ...content, image_url: url } })} 
+                        />
+                    </div>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+                    <div className="section-header !mb-4">
+                        <h5 style={{ fontSize: '0.85rem', color: '#475569' }}>Status Options & Colors</h5>
+                        <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+                    </div>
+                    <div className="space-y-2">
+                        {statusOptions.map((opt, oIdx) => (
+                            <div key={oIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                                <input 
+                                    value={opt.label} 
+                                    onChange={e => updateOption(oIdx, 'label', e.target.value)} 
+                                    placeholder="Label (Normal)" 
+                                    style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                />
+                                <select 
+                                    value={opt.type} 
+                                    onChange={e => updateOption(oIdx, 'type', e.target.value)}
+                                    style={{ width: '100px', padding: '6px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                >
+                                    <option value="normal">Normal</option>
+                                    <option value="mid">Mid</option>
+                                    <option value="extreme">Extreme</option>
+                                </select>
+                                <button type="button" className="btn-delete-small" onClick={() => removeOption(oIdx)}>×</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="dynamic-list">
                     <div className="section-header">
                         <h5>Palpation Entries</h5>
@@ -146,40 +219,30 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                             </div>
                             <div className="form-grid">
                                 <label>
-                                    Location <span className="required">*</span>
+                                    Level (e.g. C3-C4)
                                     <input
-                                        value={entry.location || ''}
-                                        onChange={(e) => updateEntry(idx, 'location', e.target.value)}
-                                        placeholder="e.g., spinous process, transverse process..."
+                                        value={entry.level || ''}
+                                        onChange={(e) => updateEntry(idx, 'level', e.target.value)}
+                                        placeholder="C4"
                                     />
                                 </label>
                                 <label>
-                                    Finding <span className="required">*</span>
-                                    <input
-                                        value={entry.finding || ''}
-                                        onChange={(e) => updateEntry(idx, 'finding', e.target.value)}
-                                        placeholder="e.g., flattened curve, tenderness..."
-                                    />
-                                </label>
-                                <label>
-                                    Severity
+                                    {content.status_title || 'Status'}
                                     <select
-                                        value={entry.severity || ''}
-                                        onChange={(e) => updateEntry(idx, 'severity', e.target.value)}
+                                        value={entry.status_value || ''}
+                                        onChange={(e) => updateEntry(idx, 'status_value', e.target.value)}
                                     >
-                                        <option value="">Select severity</option>
-                                        <option value="mild">Mild</option>
-                                        <option value="moderate">Moderate</option>
-                                        <option value="severe">Severe</option>
+                                        <option value="">Select status</option>
+                                        {statusOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
                                     </select>
                                 </label>
                                 <label style={{ gridColumn: '1 / -1' }}>
                                     Notes
-                                    <textarea
+                                    <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
-                                        rows={2}
-                                        placeholder="Additional notes..."
                                     />
                                 </label>
                             </div>
@@ -332,7 +395,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
         const addEntry = () => {
             onUpdate({
                 ...step,
-                content: { ...content, entries: [...entries, { muscle: '', grade: '', notes: '', link: '' }] }
+                content: { ...content, entries: [...entries, { level: '', muscle_action: '', grade: '', status: '', notes: '', link: '' }] }
             })
         }
 
@@ -368,11 +431,19 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                             </div>
                             <div className="form-grid">
                                 <label>
-                                    Muscle <span className="required">*</span>
+                                    Level (e.g., C5, C6)
                                     <input
-                                        value={entry.muscle || ''}
-                                        onChange={(e) => updateEntry(idx, 'muscle', e.target.value)}
-                                        placeholder="e.g., Quadriceps, Biceps..."
+                                        value={entry.level || ''}
+                                        onChange={(e) => updateEntry(idx, 'level', e.target.value)}
+                                        placeholder="C5, L2, etc."
+                                    />
+                                </label>
+                                <label>
+                                    Muscle Action <span className="required">*</span>
+                                    <input
+                                        value={entry.muscle_action || entry.muscle || ''}
+                                        onChange={(e) => updateEntry(idx, 'muscle_action', e.target.value)}
+                                        placeholder="e.g., Shoulder abduction, Biceps..."
                                     />
                                 </label>
                                 <label>
@@ -389,6 +460,18 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                         <option value="4">4 - Movement against some resistance</option>
                                         <option value="5">5 - Normal strength</option>
                                         <option value="n/a">N/A</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Status
+                                    <select
+                                        value={entry.status || ''}
+                                        onChange={(e) => updateEntry(idx, 'status', e.target.value)}
+                                    >
+                                        <option value="">Select status</option>
+                                        <option value="Normal">Normal</option>
+                                        <option value="Slightly Weak">Slightly Weak</option>
+                                        <option value="Weak">Weak</option>
                                     </select>
                                 </label>
                                 <label>
@@ -413,6 +496,96 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                     {entries.length === 0 && (
                         <div className="empty-state-box">
                             No MMT findings. Click "+ Add Muscle" or mark as "N/A" if not applicable.
+                        </div>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    // ===== SENSORY EXAMINATION EDITOR =====
+    if (category === 'sensory_exam') {
+        const entries = content.entries || []
+
+        const addEntry = () => {
+            onUpdate({
+                ...step,
+                content: { ...content, entries: [...entries, { level: '', sense: '', status: '', notes: '' }] }
+            })
+        }
+
+        const updateEntry = (index, field, value) => {
+            const updated = [...entries]
+            updated[index] = { ...updated[index], [field]: value }
+            onUpdate({ ...step, content: { ...content, entries: updated } })
+        }
+
+        const removeEntry = (index) => {
+            onUpdate({
+                ...step,
+                content: { ...content, entries: entries.filter((_, i) => i !== index) }
+            })
+        }
+
+        return (
+            <div className="phase-editor assessment-phase">
+                <div className="phase-header">
+                    <h4>🫀 Sensory Examination</h4>
+                    <p>Dermatome sensory testing by level</p>
+                </div>
+                <div className="dynamic-list">
+                    <div className="section-header">
+                        <h5>Sensory Entries</h5>
+                        <button type="button" className="btn-small" onClick={addEntry}>+ Add Entry</button>
+                    </div>
+                    {entries.map((entry, idx) => (
+                        <div key={idx} className="list-item">
+                            <div className="item-header">
+                                <span>Entry {idx + 1}</span>
+                                <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
+                            </div>
+                            <div className="form-grid">
+                                <label>
+                                    Level (e.g., C5, Thumb, Index Finger)
+                                    <input
+                                        value={entry.level || ''}
+                                        onChange={(e) => updateEntry(idx, 'level', e.target.value)}
+                                        placeholder="C5, Web space, Thumb..."
+                                    />
+                                </label>
+                                <label>
+                                    Sense / Area <span className="required">*</span>
+                                    <input
+                                        value={entry.sense || ''}
+                                        onChange={(e) => updateEntry(idx, 'sense', e.target.value)}
+                                        placeholder="e.g., Light touch, Pin prick..."
+                                    />
+                                </label>
+                                <label>
+                                    Status
+                                    <select
+                                        value={entry.status || ''}
+                                        onChange={(e) => updateEntry(idx, 'status', e.target.value)}
+                                    >
+                                        <option value="">Select status</option>
+                                        <option value="Normal">Normal</option>
+                                        <option value="Abnormal">Abnormal</option>
+                                    </select>
+                                </label>
+                                <label style={{ gridColumn: '1 / -1' }}>
+                                    Notes
+                                    <input
+                                        value={entry.notes || ''}
+                                        onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
+                                        placeholder="Additional notes..."
+                                    />
+                                </label>
+                            </div>
+                        </div>
+                    ))}
+                    {entries.length === 0 && (
+                        <div className="empty-state-box">
+                            No sensory findings. Click "+ Add Entry" to begin.
                         </div>
                     )}
                 </div>
@@ -551,7 +724,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                 <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
                             </div>
                             <div className="form-grid">
-                                <label>
+                                 <label style={{ gridColumn: '1 / -1' }}>
                                     Test Name <span className="required">*</span>
                                     <input
                                         value={entry.test_name || ''}
@@ -559,6 +732,14 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                         placeholder="e.g., Compression/Distraction, Spurling A&B, VBI..."
                                     />
                                 </label>
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                    <ImageUpload
+                                        label="Test Image"
+                                        folderType="special_tests"
+                                        initialUrl={entry.image_url}
+                                        onUpload={(url) => updateEntry(idx, 'image_url', url)}
+                                    />
+                                </div>
                                 <label>
                                     Result
                                     <select
@@ -573,11 +754,11 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     </select>
                                 </label>
                                 <label>
-                                    Reference Link
+                                    Reference Link (YouTube)
                                     <input
                                         value={entry.link || ''}
                                         onChange={(e) => updateEntry(idx, 'link', e.target.value)}
-                                        placeholder="https://..."
+                                        placeholder="https://youtube.com/..."
                                     />
                                 </label>
                                 <label>
@@ -597,6 +778,109 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                         </div>
                     )}
                 </div>
+            </div>
+        )
+    }
+
+    // ===== CERVICAL CURVE EDITOR =====
+    if (category === 'cervical_curve') {
+        const options = content.options || []
+
+        const updateOption = (idx, field, val) => {
+            const u = [...options]; u[idx] = { ...u[idx], [field]: val };
+            onUpdate({ ...step, content: { ...content, options: u } })
+        }
+
+        const addOption = () => {
+            onUpdate({
+                ...step,
+                content: { ...content, options: [...options, { id: 'opt_' + Date.now(), title: 'New Option', image_url: '', footer_text: 'Not present', selected_footer_text: 'Detected in this patient' }] }
+            })
+        }
+
+        const removeOption = (idx) => {
+            onUpdate({
+                ...step,
+                content: { ...content, options: options.filter((_, i) => i !== idx) }
+            })
+        }
+
+        return (
+            <div className="phase-editor assessment-phase">
+                <div className="phase-header">
+                    <h4>🦴 Cervical Curve Assessment</h4>
+                    <p>Visual assessment of spinal curvature</p>
+                </div>
+
+                <div className="section-header">
+                    <h5>Assessment Options</h5>
+                    <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', marginTop: '16px' }}>
+                    {options.map((opt, idx) => (
+                        <div key={idx} style={{ 
+                            padding: '16px', 
+                            borderRadius: '12px', 
+                            border: content.selected_option_id === opt.id ? '2px solid #3b82f6' : '2px solid #e2e8f0',
+                            background: content.selected_option_id === opt.id ? '#eff6ff' : '#fff',
+                            transition: 'all 0.2s ease'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                    <input 
+                                        type="radio" 
+                                        name="selected_curve"
+                                        checked={content.selected_option_id === opt.id}
+                                        onChange={() => onUpdate({ ...step, content: { ...content, selected_option_id: opt.id } })}
+                                    />
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>Set as Finding</span>
+                                </label>
+                                <button type="button" className="btn-delete-small" onClick={() => removeOption(idx)}>×</button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <label>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Title</span>
+                                    <input 
+                                        value={opt.title} 
+                                        onChange={e => updateOption(idx, 'title', e.target.value)} 
+                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                    />
+                                </label>
+                                
+                                <ImageUpload 
+                                    label="Option Image" 
+                                    folderType="clinical" 
+                                    initialUrl={opt.image_url} 
+                                    onUpload={url => updateOption(idx, 'image_url', url)} 
+                                />
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <label>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Footer (Unselected)</span>
+                                        <input 
+                                            value={opt.footer_text} 
+                                            onChange={e => updateOption(idx, 'footer_text', e.target.value)} 
+                                            style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.75rem' }}
+                                        />
+                                    </label>
+                                    <label>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Footer (Selected)</span>
+                                        <input 
+                                            value={opt.selected_footer_text} 
+                                            onChange={e => updateOption(idx, 'selected_footer_text', e.target.value)} 
+                                            style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.75rem' }}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                {options.length === 0 && (
+                    <div className="empty-state-box">No options defined. Click "+ Add Option" to build the visual grid.</div>
+                )}
             </div>
         )
     }

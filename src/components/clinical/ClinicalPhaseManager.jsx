@@ -209,8 +209,7 @@ export default function ClinicalPhaseManager({
                                     historySteps.map(step => (
                                         <div key={step.id} className="reorder-item pinned">
                                             <span className="step-icon">{step.phase === 'case_overview' ? '🧑‍⚕️' : '📋'}</span>
-                                            <span className="step-label">{step.category || step.type}</span>
-                                            {step.content?.title && <span className="step-subtitle"> - {step.content.title}</span>}
+                                            <span className="step-label">{step.title || step.category || step.type}</span>
                                         </div>
                                     ))
                                 )}
@@ -293,8 +292,7 @@ export default function ClinicalPhaseManager({
                                                             >
                                                                 <span className="drag-handle">::</span>
                                                                 <div className="step-info">
-                                                                    <span className="step-label">{step.category || step.type}</span>
-                                                                    {step.content?.title && <span className="step-subtitle"> - {step.content.title}</span>}
+                                                                    <span className="step-label">{step.title || step.category || step.type}</span>
                                                                 </div>
                                                             </Reorder.Item>
                                                         ))}
@@ -499,7 +497,7 @@ export default function ClinicalPhaseManager({
                                                                 <strong style={{ fontSize: '0.85rem', color: '#1e293b' }}>
                                                                     {cStep.title || 'Composite Step'}
                                                                 </strong>
-                                                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '8px' }}>
+                                                                <span style={{ fontSize: '0.75rem', color: '#6366f1', marginLeft: '8px', background: '#eef2ff', padding: '2px 6px', borderRadius: '4px' }}>
                                                                     {(cStep.content?.sections || []).length} sections
                                                                 </span>
                                                             </div>

@@ -252,6 +252,79 @@ export default function StepEditor({ step, onSave, onCancel }) {
     )
 }
 
+/* ── Multiple Hints Editor ── */
+function HintsEditor({ hints, onUpdate }) {
+  const addHint = () => {
+    onUpdate([...(hints || []), { text: '', delaySeconds: 0 }]);
+  };
+  const updateHint = (idx, field, value) => {
+    const updated = [...(hints || [])];
+    updated[idx][field] = value;
+    onUpdate(updated);
+  };
+  const removeHint = (idx) => {
+    onUpdate((hints || []).filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="mt-4 bg-[#eef2ff] p-4 border border-[#c7d2fe] rounded-xl flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <h6 className="text-[0.9rem] font-bold text-[#3730a3] flex items-center gap-2">
+          <span className="text-xl">💡</span> Multiple Hints
+        </h6>
+        <button type="button" onClick={addHint} className="text-xs bg-white text-[#4f46e5] px-4 py-2 rounded-lg hover:bg-[#e0e7ff] border border-[#a5b4fc] font-bold transition-all shadow-sm">
+          + Add Hint
+        </button>
+      </div>
+      
+      {(!hints || hints.length === 0) && (
+        <p className="text-sm text-[#818cf8] italic">No hints added. Students will not see any hints.</p>
+      )}
+
+      <div className="flex flex-col gap-3">
+        {(hints || []).map((hint, idx) => (
+          <div key={idx} className="flex gap-4 items-start bg-white p-4 rounded-xl border border-[#c7d2fe] shadow-sm relative group">
+            <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-[#eef2ff] text-[#4f46e5] font-bold text-sm">
+              {idx + 1}
+            </div>
+            
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Hint Text</label>
+              <textarea
+                value={hint.text || ''}
+                onChange={e => updateHint(idx, 'text', e.target.value)}
+                rows={2}
+                className="w-full p-2.5 border border-slate-200 rounded-lg text-[0.95rem] outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-all"
+                placeholder="What should the student consider?"
+              />
+            </div>
+            
+            <div className="w-28 shrink-0">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Delay (sec)</label>
+              <input
+                type="number"
+                min="0"
+                value={hint.delaySeconds || 0}
+                onChange={e => updateHint(idx, 'delaySeconds', parseInt(e.target.value) || 0)}
+                className="w-full p-2.5 border border-slate-200 rounded-lg text-[0.95rem] outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-all"
+              />
+            </div>
+            
+            <button 
+              type="button" 
+              onClick={() => removeHint(idx)} 
+              className="absolute -top-2 -right-2 w-7 h-7 bg-white border border-slate-200 rounded-full text-slate-400 hover:text-red-500 hover:border-red-200 flex items-center justify-center text-lg leading-none shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" 
+              title="Remove Hint"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // Info Step Editor
 function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched }) {
     const handleBlur = (field) => {
@@ -590,118 +663,11 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                 )}
             </label>
 
-            <div className="adaptive-feedback-box" style={{ gridColumn: '1 / -1' }}>
-                <div className="adaptive-header">
-                    <h4 className="adaptive-title">
-                        <span>💡</span> Adaptive Feedback Settings
-                    </h4>
-                    <label className="hint-toggle">
-                        <span>Enable Hint</span>
-                        <input
-                            type="checkbox"
-                            checked={editedStep.hint_enabled !== false}
-                            onChange={(e) => {
-                                const isEnabled = e.target.checked;
-                                if (!isEnabled) {
-                                    // RESET STATE: Clear all hint related fields and errors
-                                    setEditedStep({
-                                        ...editedStep,
-                                        hint_enabled: false,
-                                        hint_text: "",
-                                        tag: "",
-                                        expected_time: ""
-                                    });
-                                    // Clear touched state for hint-related fields
-                                    setTouched(prev => {
-                                        const newTouched = { ...prev };
-                                        delete newTouched.hint_text;
-                                        delete newTouched.tag;
-                                        delete newTouched.expected_time;
-                                        return newTouched;
-                                    });
-                                } else {
-                                    setEditedStep({ ...editedStep, hint_enabled: true });
-                                }
-                            }}
-                        />
-                    </label>
-                </div>
-
-                {editedStep.hint_enabled !== false && (
-                    <div className="form-grid" style={{ transition: 'all 0.3s ease' }}>
-                        <label>
-                            <div className="flex items-center gap-1">
-                                Tag / Category <span className="text-red-500">*</span>
-                            </div>
-                            <select
-                                value={editedStep.tag || ''}
-                                onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
-                                onBlur={() => setTouched(prev => ({ ...prev, tag: true }))}
-                                style={{ borderColor: (touched.all || touched.tag) && errors.tag ? 'var(--step-editor-danger)' : undefined }}
-                            >
-                                <option value="">Select Tag</option>
-                                <option value="Anatomy">Anatomy</option>
-                                <option value="Diagnosis">Diagnosis</option>
-                                <option value="MSK">MSK</option>
-                                <option value="Imaging">Imaging</option>
-                                <option value="Treatment">Treatment</option>
-                                <option value="Physiology">Physiology</option>
-                            </select>
-                            {(touched.all || touched.tag) && errors.tag ? (
-                                <span className="validation-error"><span>⚠️</span>{errors.tag}</span>
-                            ) : (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Used for performance analysis</span>
-                            )}
-                        </label>
-                        <label>
-                            <div className="flex items-center gap-1">
-                                Expected Time (seconds)
-                            </div>
-                            <input
-                                type="number"
-                                value={editedStep.expected_time ?? ''}
-                                onChange={(e) => {
-                                    const val = e.target.value
-                                    if (val !== '' && !/^\d+$/.test(val)) return
-                                    setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
-                                }}
-                                onKeyDown={(e) => {
-                                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
-                                        e.preventDefault()
-                                    }
-                                }}
-                                onBlur={() => setTouched(prev => ({ ...prev, expected_time: true }))}
-                                min={1}
-                                max={600}
-                                placeholder="45"
-                                style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'var(--step-editor-danger)' : undefined }}
-                            />
-                            {(touched.all || touched.expected_time) && errors.expected_time ? (
-                                <span className="validation-error"><span>⚠️</span>{errors.expected_time}</span>
-                            ) : (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Threshold for idle hint (1-600s)</span>
-                            )}
-                        </label>
-                        <label style={{ gridColumn: '1 / -1' }}>
-                            <div className="flex items-center gap-1">
-                                Hint Text <span className="text-red-500">*</span>
-                            </div>
-                            <textarea
-                                value={editedStep.hint_text || ''}
-                                onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
-                                onBlur={() => setTouched(prev => ({ ...prev, hint_text: true }))}
-                                rows={2}
-                                placeholder="A contextual hint to show when the student is stuck..."
-                                style={{ borderColor: (touched.all || touched.hint_text) && errors.hint_text ? 'var(--step-editor-danger)' : undefined }}
-                            />
-                            {(touched.all || touched.hint_text) && errors.hint_text ? (
-                                <span className="validation-error"><span>⚠️</span>{errors.hint_text}</span>
-                            ) : (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
-                            )}
-                        </label>
-                    </div>
-                )}
+            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                <HintsEditor 
+                    hints={editedStep.hints || (editedStep.hint_text ? [{ text: editedStep.hint_text, delaySeconds: editedStep.expected_time || 0 }] : [])}
+                    onUpdate={(newHints) => setEditedStep({ ...editedStep, hints: newHints, hint_text: null, expected_time: null })}
+                />
             </div>
 
             <div style={{ gridColumn: '1 / -1', marginTop: '2rem' }}>
@@ -761,6 +727,46 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                     <span className="validation-error"><span>⚠️</span>{errors[`options[${idx}].feedback`]}</span>
                                 )}
                             </label>
+
+                            <div style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#475569' }}>Rich Content (Optional)</h5>
+                                <div className="form-grid">
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <ImageUpload
+                                            label="Option Image"
+                                            folderType="step-image"
+                                            initialUrl={opt.imageUrl}
+                                            onUpload={(url) => updateOption(idx, 'imageUrl', url)}
+                                        />
+                                        <div style={{ marginTop: '0.5rem' }}>
+                                            <label style={{ fontSize: '0.875rem', color: '#4b5563' }}>Or enter Image URL manually:</label>
+                                            <input
+                                                value={opt.imageUrl || ''}
+                                                onChange={(e) => updateOption(idx, 'imageUrl', e.target.value)}
+                                                placeholder="https://... or data:image/..."
+                                                style={{ marginTop: '0.25rem' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <label>
+                                        Subtext (under image)
+                                        <input
+                                            value={opt.subtext || ''}
+                                            onChange={(e) => updateOption(idx, 'subtext', e.target.value)}
+                                            placeholder="Detected in this patient"
+                                        />
+                                    </label>
+                                    <label>
+                                        Video URL/Link
+                                        <input
+                                            value={opt.videoUrl || ''}
+                                            onChange={(e) => updateOption(idx, 'videoUrl', e.target.value)}
+                                            placeholder="https://youtube.com/watch?v=..."
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 ))}
@@ -1210,118 +1216,11 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
                 )}
             </div>
 
-            <div className="adaptive-feedback-box" style={{ gridColumn: '1 / -1' }}>
-                <div className="adaptive-header">
-                    <h4 className="adaptive-title">
-                        <span>💡</span> Adaptive Feedback Settings
-                    </h4>
-                    <label className="hint-toggle">
-                        <span>Enable Hint</span>
-                        <input
-                            type="checkbox"
-                            checked={editedStep.hint_enabled !== false}
-                            onChange={(e) => {
-                                const isEnabled = e.target.checked;
-                                if (!isEnabled) {
-                                    // RESET STATE: Clear all hint related fields and errors
-                                    setEditedStep({
-                                        ...editedStep,
-                                        hint_enabled: false,
-                                        hint_text: "",
-                                        tag: "",
-                                        expected_time: ""
-                                    });
-                                    // Clear touched state for hint-related fields
-                                    setTouched(prev => {
-                                        const newTouched = { ...prev };
-                                        delete newTouched.hint_text;
-                                        delete newTouched.tag;
-                                        delete newTouched.expected_time;
-                                        return newTouched;
-                                    });
-                                } else {
-                                    setEditedStep({ ...editedStep, hint_enabled: true });
-                                }
-                            }}
-                        />
-                    </label>
-                </div>
-
-                {editedStep.hint_enabled !== false && (
-                    <div className="form-grid" style={{ transition: 'all 0.3s ease' }}>
-                        <label>
-                            <div className="flex items-center gap-1">
-                                Tag / Category <span className="text-red-500">*</span>
-                            </div>
-                            <select
-                                value={editedStep.tag || ''}
-                                onChange={(e) => setEditedStep({ ...editedStep, tag: e.target.value })}
-                                onBlur={() => setTouched(prev => ({ ...prev, tag: true }))}
-                                style={{ borderColor: (touched.all || touched.tag) && errors.tag ? 'var(--step-editor-danger)' : undefined }}
-                            >
-                                <option value="">Select Tag</option>
-                                <option value="Anatomy">Anatomy</option>
-                                <option value="Diagnosis">Diagnosis</option>
-                                <option value="MSK">MSK</option>
-                                <option value="Imaging">Imaging</option>
-                                <option value="Treatment">Treatment</option>
-                                <option value="Physiology">Physiology</option>
-                            </select>
-                            {(touched.all || touched.tag) && errors.tag ? (
-                                <span className="validation-error"><span>⚠️</span>{errors.tag}</span>
-                            ) : (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Used for performance analysis</span>
-                            )}
-                        </label>
-                        <label>
-                            <div className="flex items-center gap-1">
-                                Expected Time (seconds)
-                            </div>
-                            <input
-                                type="number"
-                                value={editedStep.expected_time ?? ''}
-                                onChange={(e) => {
-                                    const val = e.target.value
-                                    if (val !== '' && !/^\d+$/.test(val)) return
-                                    setEditedStep({ ...editedStep, expected_time: val === '' ? '' : parseInt(val) })
-                                }}
-                                onKeyDown={(e) => {
-                                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
-                                        e.preventDefault()
-                                    }
-                                }}
-                                onBlur={() => setTouched(prev => ({ ...prev, expected_time: true }))}
-                                min={1}
-                                max={600}
-                                placeholder="45"
-                                style={{ borderColor: (touched.all || touched.expected_time) && errors.expected_time ? 'var(--step-editor-danger)' : undefined }}
-                            />
-                            {(touched.all || touched.expected_time) && errors.expected_time ? (
-                                <span className="validation-error"><span>⚠️</span>{errors.expected_time}</span>
-                            ) : (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Threshold for idle hint (1-600s)</span>
-                            )}
-                        </label>
-                        <label style={{ gridColumn: '1 / -1' }}>
-                            <div className="flex items-center gap-1">
-                                Hint Text <span className="text-red-500">*</span>
-                            </div>
-                            <textarea
-                                value={editedStep.hint_text || ''}
-                                onChange={(e) => setEditedStep({ ...editedStep, hint_text: e.target.value })}
-                                onBlur={() => setTouched(prev => ({ ...prev, hint_text: true }))}
-                                rows={2}
-                                placeholder="A contextual hint to show when the student is stuck..."
-                                style={{ borderColor: (touched.all || touched.hint_text) && errors.hint_text ? 'var(--step-editor-danger)' : undefined }}
-                            />
-                            {(touched.all || touched.hint_text) && errors.hint_text ? (
-                                <span className="validation-error"><span>⚠️</span>{errors.hint_text}</span>
-                            ) : (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 400 }}>Shown automatically after {editedStep.expected_time || 45}s of inactivity</span>
-                            )}
-                        </label>
-                    </div>
-                )}
+            <div style={{ gridColumn: '1 / -1' }}>
+                <HintsEditor 
+                    hints={editedStep.hints || (editedStep.hint_text ? [{ text: editedStep.hint_text, delaySeconds: editedStep.expected_time || 0 }] : [])}
+                    onUpdate={(newHints) => setEditedStep({ ...editedStep, hints: newHints, hint_text: null, expected_time: null })}
+                />
             </div>
         </div>
     );

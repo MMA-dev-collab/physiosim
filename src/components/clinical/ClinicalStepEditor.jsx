@@ -184,6 +184,18 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
             </div>
 
             <div className="step-editor-body">
+                <div className="form-group mb-6" style={{ padding: '0 1.5rem' }}>
+                    <label className="text-slate-500 font-bold uppercase tracking-wider text-xs mb-2 block">Step Name (Optional)</label>
+                    <input 
+                        type="text"
+                        value={editedStep.title || ''}
+                        onChange={(e) => handleStepUpdate({ ...editedStep, title: e.target.value })}
+                        placeholder="e.g. Observation, Palpation, Examination..."
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-semibold"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1.5 ml-1 italic">This title will identify the step in the builder and runner sidebar.</p>
+                </div>
+
                 {renderPhaseEditor()}
 
                 {touched.all && hasErrors && (
