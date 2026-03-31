@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './AboutPage.css'
-import { Footer } from '../components/ui/footer'
+import Footer from '../components/Footer'
 import { Activity, Instagram, Facebook, Linkedin } from 'lucide-react'
 
 function AboutPage() {
@@ -192,47 +192,7 @@ function AboutPage() {
       </section>
 
       {/* Footer */}
-      <Footer
-        logo={
-          <img 
-            src="https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png" 
-            alt="PhysioSim" 
-            className="h-10 w-auto"
-          />
-        }
-        brandName="PhysioSim"
-        description="Design amazing digital experiences that create more happy in the world."
-        socialLinks={[
-          {
-            icon: <Linkedin className="h-5 w-5" />,
-            href: "#",
-            label: "LinkedIn",
-          },
-          {
-            icon: <Facebook className="h-5 w-5" />,
-            href: "#",
-            label: "Facebook",
-          },
-          {
-            icon: <Instagram className="h-5 w-5" />,
-            href: "#",
-            label: "Instagram",
-          },
-        ]}
-        mainLinks={[
-          { href: "/membership", label: "Membership" },
-          { href: "/cases", label: "Cases" },
-          { href: "/membership", label: "Pricing" },
-          { href: "/about", label: "About Us" },
-        ]}
-        legalLinks={[
-          { href: "#", label: "Privacy" },
-          { href: "#", label: "Terms of Service" },
-        ]}
-        copyright={{
-          text: `© 2077 PhysioSim All rights reserved.`,
-        }}
-      />
+      <Footer />
     </div>
   )
 }

@@ -174,7 +174,7 @@ function CasesPage({ auth }) {
               <div className="case-card-content">
                 <div className="case-card-title-row">
                   <h3 className="case-card-title">{c.title}</h3>
-                  <div className="case-card-link-icon" onClick={() => navigate(`/cases/${c.id}`)}>↗</div>
+                  <div className="case-card-link-icon" onClick={() => window.open(`/cases/${c.id}`, '_blank')}>↗</div>
                 </div>
                 
                 <p className="case-card-description">
