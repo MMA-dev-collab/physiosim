@@ -912,7 +912,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
         return (
             <div className="phase-editor assessment-phase">
                 <div className="phase-header">
-                    <h4>🩻 Investigations (Imaging)</h4>
+                    <h4>📸 Investigations (Imaging)</h4>
                     <p>X-ray, MRI, CT, and other imaging</p>
                 </div>
                 <div className="dynamic-list">

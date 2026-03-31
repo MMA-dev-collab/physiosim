@@ -31,12 +31,20 @@ export const CLINICAL_PHASES = [
         order: 3
     },
     {
+        id: 'imaging',
+        label: 'Imaging',
+        shortLabel: 'Imaging',
+        icon: '📸',
+        description: 'MRI, X-Rays, and other imaging studies',
+        order: 4
+    },
+    {
         id: 'diagnosis',
         label: 'Diagnosis',
         shortLabel: 'Diagnosis',
         icon: '🎯',
         description: 'Clinical interpretation and working diagnosis',
-        order: 4
+        order: 5
     },
     {
         id: 'problem_list',
@@ -44,7 +52,7 @@ export const CLINICAL_PHASES = [
         shortLabel: 'Problems',
         icon: '📝',
         description: 'Actionable problems mapped from findings',
-        order: 5
+        order: 6
     },
     {
         id: 'treatment',
@@ -52,7 +60,7 @@ export const CLINICAL_PHASES = [
         shortLabel: 'Treatment',
         icon: '💊',
         description: 'Interventions linked to problem IDs',
-        order: 6
+        order: 7
     }
 ]
 
@@ -87,6 +95,9 @@ export const PHASE_CATEGORIES = {
     ],
     diagnosis: [
         { id: 'diagnosis_entry', label: 'Diagnosis', inputMode: 'user_input', dataTypes: ['text', 'numbers', 'image'] }
+    ],
+    imaging: [
+        { id: 'composite_imaging', label: 'Imaging Assessment', inputMode: 'composite', dataTypes: ['composite'] }
     ],
     problem_list: [
         { id: 'problem_entry', label: 'Problem List', inputMode: 'user_input', dataTypes: ['text', 'numbers'] }
@@ -224,6 +235,10 @@ export const CATEGORY_TEMPLATES = {
     },
     diagnosis_entry: {
         diagnoses: [] // [{ code, label, confidence, supporting_findings, notes, image_url }]
+    },
+    composite_imaging: {
+        sections: [],
+        clinicalTip: ''
     },
     problem_entry: {
         problems: [] // [{ id, label, severity, functional_impact, supporting_findings, priority }]

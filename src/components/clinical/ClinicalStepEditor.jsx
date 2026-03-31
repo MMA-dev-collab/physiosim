@@ -151,11 +151,12 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
                 }
                 return <HistoryPhaseEditor {...editorProps} />
             case 'assessment':
-                // Composite assessment: step has content.sections[]
                 if (editedStep.content?.sections || editedStep.category === 'composite') {
                     return <CompositeAssessmentEditor step={editedStep} onUpdate={handleStepUpdate} />
                 }
                 return <AssessmentPhaseEditor {...editorProps} />
+            case 'imaging':
+                return <CompositeAssessmentEditor step={editedStep} onUpdate={handleStepUpdate} />
             case 'diagnosis':
                 return <DiagnosisPhaseEditor {...editorProps} />
             case 'problem_list':
@@ -223,6 +224,7 @@ function getPhaseColor(phase) {
         case_overview: 'linear-gradient(135deg, #a855f7, #9333ea)', // Purple gradient
         history_presentation: 'linear-gradient(135deg, #10b981, #059669)',
         assessment: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+        imaging: 'linear-gradient(135deg, #0ea5e9, #0ea5e9)', // Cyan gradient
         diagnosis: 'linear-gradient(135deg, #f59e0b, #d97706)',
         problem_list: 'linear-gradient(135deg, #ef4444, #dc2626)',
         treatment: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'

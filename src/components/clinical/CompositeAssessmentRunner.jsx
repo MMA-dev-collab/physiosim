@@ -86,6 +86,12 @@ function renderSection(section, mcqProps, essayProps) {
       return <PalpationSection section={section} />
     case 'cervical_curve':
       return <CervicalCurveSection section={section} />
+    case 'mri_findings':
+      return <MriFindingsSection section={section} />
+    case 'mri_warnings':
+      return <MriWarningsSection section={section} />
+    case 'umnl_screening':
+      return <UmnlScreeningSection section={section} />
     case 'mcq':
       return <McqStep step={section} {...mcqProps} />
     case 'essay':
@@ -815,3 +821,260 @@ function GenericSection({ section }) {
     </div>
   )
 }
+
+/* ==========================
+   MRI FINDINGS SECTION
+========================== */
+function MriFindingsSection({ section }) {
+  const entries = section.entries || []
+  const hasImage = !!section.image_url
+  const statusOptions = section.status_options || []
+
+  const getStatusLabel = (val) => {
+    const opt = statusOptions.find(o => o.value === val)
+    return opt ? opt.label : val
+  }
+
+  const getStatusBadgeClass = (val) => {
+    const opt = statusOptions.find(o => o.value === val)
+    if (!opt) return 'bg-slate-100 text-slate-600'
+    
+    switch (opt.type) {
+        case 'normal': return 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+        case 'mid': return 'bg-amber-50 text-amber-600 border border-amber-100'
+        case 'extreme': return 'bg-rose-50 text-rose-600 border border-rose-100'
+        default: return 'bg-slate-100 text-slate-600 border border-slate-200'
+    }
+  }
+
+  return (
+    <div className="car-mri-findings">
+      <h3 className="car-section-title">{section.title || 'MRI Findings'}</h3>
+      
+      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-stretch`}>
+        {hasImage && (
+          <div className="w-full lg:w-1/2 shrink-0 relative min-h-[350px] lg:min-h-0">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden border border-slate-200 bg-[#0f172a] shadow-sm p-3 flex items-center justify-center">
+                <img src={section.image_url} alt="MRI Reference" className="w-full h-full object-fill rounded-xl" />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 w-full overflow-x-auto mt-2">
+          {entries.length > 0 ? (
+            <table className="w-full text-left border-separate border-spacing-y-2">
+              <thead>
+                <tr>
+                  <th className="px-5 py-2 text-[11px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
+                  <th className="px-5 py-2 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">
+                    {section.status_title || 'Status'}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((e, idx) => (
+                  <tr key={idx} className="bg-white">
+                    <td className="px-5 py-4 border border-slate-100 border-r-0 rounded-l-xl shadow-sm bg-slate-50/50">
+                      <span className="inline-flex items-center justify-center min-w-[60px] whitespace-nowrap px-3 py-1 bg-white border border-slate-200 text-slate-700 font-bold rounded-full text-[13px] shadow-sm">
+                        {e.level || '-'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 border border-slate-100 border-l-0 rounded-r-xl shadow-sm bg-slate-50/50 text-right">
+                      {e.status_value ? (
+                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-bold shadow-sm ${getStatusBadgeClass(e.status_value)}`}>
+                          {getStatusLabel(e.status_value)}
+                        </span>
+                      ) : <span className="text-slate-400 italic text-sm">-</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="car-no-data">No findings recorded</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ==========================
+   MRI WARNINGS SECTION
+========================== */
+function MriWarningsSection({ section }) {
+  const entries = section.entries || []
+  const hasImage = !!section.image_url
+  const statusOptions = section.status_options || []
+
+  const getStatusLabel = (val) => {
+    const opt = statusOptions.find(o => o.value === val)
+    return opt ? opt.label : val
+  }
+
+  const getStatusBadgeClass = (val) => {
+    const opt = statusOptions.find(o => o.value === val)
+    if (!opt) return 'bg-slate-100 text-slate-600'
+    
+    switch (opt.type) {
+        case 'normal': return 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+        case 'mid': return 'bg-amber-50 text-amber-600 border border-amber-100'
+        case 'extreme': return 'bg-rose-50 text-rose-600 border border-rose-100'
+        default: return 'bg-slate-100 text-slate-600 border border-slate-200'
+    }
+  }
+
+  const warningEntries = entries.filter(e => e.is_warning && e.warning_text)
+
+  return (
+    <div className="car-mri-warnings relative">
+      <h3 className="car-section-title">{section.title || 'MRI Warnings'}</h3>
+      
+      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-stretch`}>
+        {hasImage && (
+          <div className="w-full lg:w-1/2 shrink-0 relative min-h-[350px] lg:min-h-0">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden border border-slate-200 bg-[#0f172a] shadow-sm p-3 flex items-center justify-center">
+                <img src={section.image_url} alt="MRI Reference" className="w-full h-full object-fill rounded-xl" />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 w-full overflow-x-auto mt-2">
+          {entries.length > 0 ? (
+            <table className="w-full text-left border-separate border-spacing-y-2">
+              <thead>
+                <tr>
+                  <th className="px-5 py-2 text-[11px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
+                  <th className="px-5 py-2 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">
+                    {section.status_title || 'Status'}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((e, idx) => {
+                  const trBg = e.is_warning ? 'bg-rose-50/50' : 'bg-slate-50/50'
+                  const tdBor = e.is_warning ? 'border-rose-100' : 'border-slate-100'
+                  const levBor = e.is_warning ? 'border-rose-200 text-rose-700 bg-white' : 'border-slate-200 text-slate-700 bg-white'
+                  
+                  return (
+                    <tr key={idx} className="bg-white">
+                      <td className={`px-5 py-4 border ${tdBor} border-r-0 rounded-l-xl shadow-sm ${trBg}`}>
+                        <span className={`inline-flex items-center justify-center min-w-[60px] whitespace-nowrap px-3 py-1 border font-bold rounded-full text-[13px] shadow-sm ${levBor}`}>
+                          {e.is_warning && '⚠️ '}{e.level || '-'}
+                        </span>
+                      </td>
+                      <td className={`px-5 py-4 border ${tdBor} border-l-0 rounded-r-xl shadow-sm ${trBg} text-right`}>
+                        {e.status_value ? (
+                          <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-bold shadow-sm ${getStatusBadgeClass(e.status_value)} ${e.is_warning ? 'ring-2 ring-rose-200 ring-offset-1' : ''}`}>
+                            {getStatusLabel(e.status_value)}
+                          </span>
+                        ) : <span className="text-slate-400 italic text-sm">-</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <p className="car-no-data">No findings recorded</p>
+          )}
+        </div>
+      </div>
+
+      {warningEntries.length > 0 && (
+        <div className="mt-8 flex flex-col gap-4 relative z-10 w-full">
+          {warningEntries.map((warn, i) => (
+            <div key={i} className="bg-[#fff7ed] border border-[#ffedd5] rounded-2xl p-5 flex items-start gap-4 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-[#f97316]"></div>
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 text-xl border border-[#ffedd5]">
+                ⚠️
+              </div>
+              <div className="pt-0.5">
+                <h4 className="font-bold text-[#c2410c] text-sm mb-1 uppercase tracking-widest leading-none mt-1">
+                  Level {warn.level}
+                </h4>
+                <p className="text-[#9a3412] font-semibold text-[13.5px] leading-relaxed mt-2">{warn.warning_text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ==========================
+   UMNL SCREENING SECTION
+========================== */
+function UmnlScreeningSection({ section }) {
+  const entries = section.entries || []
+  
+  const getBadgeClass = (opt, isSelected) => {
+    if (!isSelected) return 'bg-white text-slate-400 border border-slate-200 opacity-50 font-medium'
+    
+    switch (opt.colorType) {
+        case 'normal': return 'bg-emerald-500 text-white border-transparent shadow-md'
+        case 'mid': return 'bg-amber-500 text-white border-transparent shadow-md'
+        case 'extreme': return 'bg-rose-500 text-white border-transparent shadow-md'
+        default: return 'bg-slate-500 text-white border-transparent shadow-md'
+    }
+  }
+
+  const getOutcomeStyle = (type) => {
+    switch(type) {
+      case 'success': return { bg: 'bg-[#ecfdf5]', border: 'border-[#d1fae5]', iconBg: 'bg-white', iconColor: 'text-[#10b981]', icon: '✓', titleText: 'text-[#047857]', subText: 'text-[#065f46]' }
+      case 'warning': return { bg: 'bg-[#fff1f2]', border: 'border-[#ffe4e6]', iconBg: 'bg-white', iconColor: 'text-[#e11d48]', icon: '!', titleText: 'text-[#be123c]', subText: 'text-[#9f1239]' }
+      case 'neutral': return { bg: 'bg-[#eff6ff]', border: 'border-[#dbeafe]', iconBg: 'bg-white', iconColor: 'text-[#3b82f6]', icon: 'i', titleText: 'text-[#1d4ed8]', subText: 'text-[#1e40af]' }
+      default: return { bg: 'bg-slate-50', border: 'border-slate-200', iconBg: 'bg-white', iconColor: 'text-slate-500', icon: '•', titleText: 'text-slate-800', subText: 'text-slate-600' }
+    }
+  }
+
+  const outcomeStyle = getOutcomeStyle(section.outcome_type || 'success')
+
+  return (
+    <div className="car-umnl-screening">
+      <h3 className="car-section-title">{section.title || 'Neurological Screening'}</h3>
+      {section.subtitle && <p className="text-slate-500 font-medium mb-8 text-[15px]">{section.subtitle}</p>}
+
+      <div className="space-y-4 mb-10">
+        {entries.length > 0 ? entries.map((e, idx) => (
+          <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl shadow-sm gap-4 transition-all hover:border-slate-300 hover:shadow-md">
+            <div>
+              <h4 className="font-bold text-slate-800 text-[15px] leading-snug">{e.title}</h4>
+              {e.subtitle && <p className="text-sm font-medium text-slate-500 mt-1">{e.subtitle}</p>}
+            </div>
+            
+            <div className="flex flex-wrap gap-2 shrink-0 md:justify-end">
+              {(e.options || []).map((opt, oIdx) => {
+                const isSelected = e.selected_value === opt.value
+                return (
+                  <span 
+                    key={oIdx} 
+                    className={`inline-flex items-center justify-center px-4 py-2 rounded-full text-[13px] border transition-all ${getBadgeClass(opt, isSelected)}`}
+                  >
+                    {opt.label}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        )) : (
+          <p className="car-no-data">No screening tests configured.</p>
+        )}
+      </div>
+
+      {section.outcome_title && (
+        <div className={`mt-8 ${outcomeStyle.bg} border-2 ${outcomeStyle.border} rounded-2xl p-6 flex items-start md:items-center gap-5 shadow-sm`}>
+          <div className={`w-12 h-12 rounded-full ${outcomeStyle.iconBg} flex items-center justify-center shadow-sm shrink-0 border ${outcomeStyle.border}`}>
+            <span className={`${outcomeStyle.iconColor} font-black text-2xl leading-none`}>{outcomeStyle.icon}</span>
+          </div>
+          <div className="flex-1 pt-1 md:pt-0">
+            <h4 className={`font-black uppercase tracking-widest text-[13px] ${outcomeStyle.titleText} mb-1`}>{section.outcome_title}</h4>
+            {section.outcome_subtitle && <p className={`${outcomeStyle.subText} font-bold text-[15px]`}>{section.outcome_subtitle}</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+

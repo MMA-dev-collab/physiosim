@@ -310,25 +310,8 @@ export default function ClinicalPhaseManager({
         )
     }
 
-    // 1. Sort Phases based on steps
-    const sortedPhases = [...CLINICAL_PHASES].sort((a, b) => {
-        // Pins Overview & History to top
-        if (a.id === 'case_overview') return -1
-        if (b.id === 'case_overview') return 1
-        if (a.id === 'history_presentation') return -1
-        if (b.id === 'history_presentation') return 1
-
-        const stepsA = steps.filter(s => s.phase === a.id)
-        const stepsB = steps.filter(s => s.phase === b.id)
-
-        const minIndexA = stepsA.length > 0 ? Math.min(...stepsA.map(s => s.stepIndex)) : Infinity
-        const minIndexB = stepsB.length > 0 ? Math.min(...stepsB.map(s => s.stepIndex)) : Infinity
-
-        if (minIndexA === Infinity && minIndexB === Infinity) {
-            return 0 // Keep default order
-        }
-        return minIndexA - minIndexB
-    })
+    // 1. Sort Phases based on predefined order
+    const sortedPhases = [...CLINICAL_PHASES].sort((a, b) => a.order - b.order)
 
     return (
         <div className="clinical-phase-manager">

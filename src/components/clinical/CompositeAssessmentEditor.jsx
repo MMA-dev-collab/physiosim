@@ -24,7 +24,10 @@ const SECTION_TYPES = [
   { value: 'special_tests', label: '🧪 Special Tests', desc: 'Positive/negative clinical tests' },
   { value: 'palpation', label: '🤲 Palpation', desc: 'Palpation findings by tissue type' },
   { value: 'cervical_curve', label: '🦴 Cervical Curve', desc: 'Visual assessment of spinal curvature' },
-  { value: 'investigations', label: '🩻 Investigations', desc: 'X-ray, MRI, imaging studies' },
+  { value: 'investigations', label: '📸 Investigations', desc: 'X-ray, MRI, imaging studies' },
+  { value: 'mri_findings', label: '📸 MRI Findings', desc: 'Imaging findings with customizable status pills' },
+  { value: 'mri_warnings', label: '⚠️ MRI Warnings', desc: 'Imaging findings with warning alerts' },
+  { value: 'umnl_screening', label: '🧠 UMNL Screening', desc: 'Neurological test outcomes & screening' },
   { value: 'mcq', label: '❓ MCQ', desc: 'Multiple choice clinical decision question' },
   { value: 'essay', label: '📝 Essay', desc: 'Short answer / reflective question' },
 ]
@@ -183,7 +186,10 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
             background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.12)', marginTop: '4px', overflow: 'hidden'
           }}>
-            {SECTION_TYPES.map(st => (
+            {(step?.category === 'composite_imaging'
+              ? SECTION_TYPES.filter(st => ['mri_findings', 'mri_warnings', 'umnl_screening'].includes(st.value))
+              : SECTION_TYPES.filter(st => !['mri_findings', 'mri_warnings', 'umnl_screening'].includes(st.value))
+            ).map(st => (
               <button
                 key={st.value}
                 type="button"
@@ -266,6 +272,37 @@ function createDefaultSection(type) {
       }
     case 'investigations':
       return { ...base, entries: [] }
+    case 'mri_findings':
+      return {
+        ...base,
+        image_url: '',
+        status_title: 'Status',
+        status_options: [
+          { label: 'Normal', value: 'normal', type: 'normal' },
+          { label: 'Abnormal', value: 'abnormal', type: 'extreme' }
+        ],
+        entries: [] 
+      }
+    case 'mri_warnings':
+      return {
+        ...base,
+        image_url: '',
+        status_title: 'Status',
+        status_options: [
+          { label: 'Normal', value: 'normal', type: 'normal' },
+          { label: 'Abnormal', value: 'abnormal', type: 'extreme' }
+        ],
+        entries: [] 
+      }
+    case 'umnl_screening':
+      return {
+        ...base,
+        subtitle: '',
+        entries: [],
+        outcome_title: 'Outcome',
+        outcome_subtitle: '',
+        outcome_type: 'success'
+      }
     case 'mcq':
       return { ...base, question: '', options: [{ id: 'a', text: '', isCorrect: true }], explanationOnFail: '', explanationOnSuccess: '', hint: '' }
     case 'essay':
@@ -287,6 +324,9 @@ function SectionEditor({ section, onUpdate }) {
     case 'palpation': return <PalpationSectionEditor section={section} onUpdate={onUpdate} />
     case 'cervical_curve': return <CervicalCurveEditor section={section} onUpdate={onUpdate} />
     case 'investigations': return <InvestigationsSectionEditor section={section} onUpdate={onUpdate} />
+    case 'mri_findings': return <MriFindingsSectionEditor section={section} onUpdate={onUpdate} />
+    case 'mri_warnings': return <MriWarningsSectionEditor section={section} onUpdate={onUpdate} />
+    case 'umnl_screening': return <UmnlScreeningSectionEditor section={section} onUpdate={onUpdate} />
     case 'mcq': return <McqSectionEditor section={section} onUpdate={onUpdate} />
     case 'essay': return <EssaySectionEditor section={section} onUpdate={onUpdate} />
     default: return <div style={{ color: '#94a3b8' }}>Unknown section type: {section.type}</div>
@@ -1084,3 +1124,413 @@ function HintsEditor({ hints, onUpdate }) {
     </div>
   )
 }
+
+/* ── MRI Findings Editor ── */
+function MriFindingsSectionEditor({ section, onUpdate }) {
+  const entries = section.entries || []
+  const statusOptions = section.status_options || []
+  
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', status_value: '' }] })
+  const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
+  const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
+
+  const addOption = () => onUpdate({ 
+    ...section, 
+    status_options: [...statusOptions, { label: 'New Option', value: 'new_' + Date.now(), type: 'normal' }] 
+  })
+  const updateOption = (idx, field, val) => { 
+    const u = [...statusOptions]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, status_options: u }) 
+  }
+  const removeOption = (idx) => onUpdate({ 
+    ...section, 
+    status_options: statusOptions.filter((_, i) => i !== idx) 
+  })
+
+  return (
+    <div className="space-y-6">
+      <div className="form-grid">
+        <label style={{ gridColumn: '1 / -1' }}>
+          Status Column Title
+          <input 
+            value={section.status_title || 'Status'} 
+            onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
+            placeholder="e.g. Tenderness, Bulge Status" 
+          />
+        </label>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <ImageUpload 
+            label="MRI/Imaging Visual" 
+            folderType="imaging" 
+            initialUrl={section.image_url} 
+            onUpload={url => onUpdate({ ...section, image_url: url })} 
+          />
+        </div>
+      </div>
+
+      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div className="section-header !mb-4">
+          <h5 style={{ fontSize: '0.85rem', color: '#475569' }}>Status Options & Colors</h5>
+          <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+        </div>
+        <div className="space-y-2">
+          {statusOptions.map((opt, oIdx) => (
+            <div key={oIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input 
+                value={opt.label} 
+                onChange={e => updateOption(oIdx, 'label', e.target.value)} 
+                placeholder="Label (Normal)" 
+                style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              />
+              <select 
+                value={opt.type} 
+                onChange={e => updateOption(oIdx, 'type', e.target.value)}
+                style={{ width: '100px', padding: '6px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              >
+                <option value="normal">Normal (Green)</option>
+                <option value="mid">Mid (Orange)</option>
+                <option value="extreme">Extreme (Red)</option>
+              </select>
+              <button type="button" className="btn-delete-small" onClick={() => removeOption(oIdx)}>×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-header">
+        <h5>Findings (Levels)</h5>
+        <button type="button" className="btn-small" onClick={addEntry}>+ Add Level</button>
+      </div>
+      <div className="space-y-3">
+        {entries.map((e, idx) => (
+          <div key={idx} className="list-item">
+            <div className="item-header">
+              <span>{idx + 1}</span>
+              <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
+            </div>
+            <div className="form-grid">
+              <label>
+                Level (e.g. C3-C4)
+                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C4" />
+              </label>
+              <label>
+                {section.status_title || 'Status'}
+                <select 
+                  value={e.status_value || ''} 
+                  onChange={ev => updateEntry(idx, 'status_value', ev.target.value)}
+                >
+                  <option value="">Select status</option>
+                  {statusOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+      {entries.length === 0 && <div className="empty-state-box">No findings recorded. Click "+ Add Level".</div>}
+    </div>
+  )
+}
+
+/* ── MRI Warnings Editor ── */
+function MriWarningsSectionEditor({ section, onUpdate }) {
+  const entries = section.entries || []
+  const statusOptions = section.status_options || []
+  
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', status_value: '', is_warning: false, warning_text: '' }] })
+  const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
+  const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
+
+  const addOption = () => onUpdate({ 
+    ...section, 
+    status_options: [...statusOptions, { label: 'New Option', value: 'new_' + Date.now(), type: 'normal' }] 
+  })
+  const updateOption = (idx, field, val) => { 
+    const u = [...statusOptions]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, status_options: u }) 
+  }
+  const removeOption = (idx) => onUpdate({ 
+    ...section, 
+    status_options: statusOptions.filter((_, i) => i !== idx) 
+  })
+
+  return (
+    <div className="space-y-6">
+      <div className="form-grid">
+        <label style={{ gridColumn: '1 / -1' }}>
+          Status Column Title
+          <input 
+            value={section.status_title || 'Status'} 
+            onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
+            placeholder="e.g. Disc Level Findings" 
+          />
+        </label>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <ImageUpload 
+            label="MRI/Imaging Visual" 
+            folderType="imaging" 
+            initialUrl={section.image_url} 
+            onUpload={url => onUpdate({ ...section, image_url: url })} 
+          />
+        </div>
+      </div>
+
+      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div className="section-header !mb-4">
+          <h5 style={{ fontSize: '0.85rem', color: '#475569' }}>Status Options & Colors</h5>
+          <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
+        </div>
+        <div className="space-y-2">
+          {statusOptions.map((opt, oIdx) => (
+            <div key={oIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input 
+                value={opt.label} 
+                onChange={e => updateOption(oIdx, 'label', e.target.value)} 
+                placeholder="Label (Normal)" 
+                style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              />
+              <select 
+                value={opt.type} 
+                onChange={e => updateOption(oIdx, 'type', e.target.value)}
+                style={{ width: '100px', padding: '6px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              >
+                <option value="normal">Normal (Green)</option>
+                <option value="mid">Mid (Orange)</option>
+                <option value="extreme">Extreme (Red)</option>
+              </select>
+              <button type="button" className="btn-delete-small" onClick={() => removeOption(oIdx)}>×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-header">
+        <h5>Findings & Warnings</h5>
+        <button type="button" className="btn-small" onClick={addEntry}>+ Add Level</button>
+      </div>
+      <div className="space-y-3">
+        {entries.map((e, idx) => (
+          <div key={idx} className="list-item" style={{ border: e.is_warning ? '2px solid #fecaca' : '1px solid #e2e8f0' }}>
+            <div className="item-header" style={{ background: e.is_warning ? '#fef2f2' : '' }}>
+              <span style={{ color: e.is_warning ? '#dc2626' : 'inherit', fontWeight: e.is_warning ? 'bold' : 'normal' }}>
+                {e.is_warning ? '⚠️ ' : ''}Level {idx + 1}
+              </span>
+              <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
+            </div>
+            <div className="form-grid">
+              <label>
+                Level (e.g. C5-C6)
+                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C5-C6" />
+              </label>
+              <label>
+                {section.status_title || 'Status'}
+                <select 
+                  value={e.status_value || ''} 
+                  onChange={ev => updateEntry(idx, 'status_value', ev.target.value)}
+                >
+                  <option value="">Select status</option>
+                  {statusOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </label>
+              <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: e.is_warning ? '8px' : '0' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={e.is_warning || false} 
+                    onChange={ev => updateEntry(idx, 'is_warning', ev.target.checked)} 
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#b91c1c' }}>Mark as Warning</span>
+                </label>
+                {e.is_warning && (
+                  <label>
+                    Warning Description
+                    <input 
+                      value={e.warning_text || ''} 
+                      onChange={ev => updateEntry(idx, 'warning_text', ev.target.value)} 
+                      placeholder="e.g. Disc touching spinal cord -> refer immediately." 
+                      style={{ 
+                        border: '1px solid #fca5a5', 
+                        background: '#fef2f2',
+                        color: '#991b1b'
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {entries.length === 0 && <div className="empty-state-box">No findings recorded. Click "+ Add Level".</div>}
+    </div>
+  )
+}
+
+/* ── UMNL Screening Editor ── */
+function UmnlScreeningSectionEditor({ section, onUpdate }) {
+  const entries = section.entries || []
+  
+  const addEntry = () => onUpdate({ 
+    ...section, 
+    entries: [...entries, { 
+      title: 'New Test', 
+      subtitle: '', 
+      options: [
+        { label: 'Negative', value: 'negative', colorType: 'normal' },
+        { label: 'Positive', value: 'positive', colorType: 'extreme' }
+      ], 
+      selected_value: 'negative' 
+    }] 
+  })
+  
+  const updateEntry = (idx, field, val) => { 
+    const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) 
+  }
+  
+  const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
+
+  // Nested updates for options inside a test entry
+  const addOption = (eIdx) => {
+    const u = [...entries]
+    u[eIdx].options = [...(u[eIdx].options || []), { label: 'New', value: 'new_' + Date.now(), colorType: 'normal' }]
+    onUpdate({ ...section, entries: u })
+  }
+  const updateOption = (eIdx, oIdx, field, val) => {
+    const u = [...entries]
+    u[eIdx].options[oIdx] = { ...u[eIdx].options[oIdx], [field]: val }
+    onUpdate({ ...section, entries: u })
+  }
+  const removeOption = (eIdx, oIdx) => {
+    const u = [...entries]
+    u[eIdx].options = u[eIdx].options.filter((_, i) => i !== oIdx)
+    onUpdate({ ...section, entries: u })
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="form-grid">
+        <label style={{ gridColumn: '1 / -1' }}>
+          Section Subtitle
+          <input 
+            value={section.subtitle || ''} 
+            onChange={e => onUpdate({ ...section, subtitle: e.target.value })} 
+            placeholder="e.g. Perform the following tests..." 
+          />
+        </label>
+      </div>
+
+      <div className="section-header">
+        <h5>Neurological Tests</h5>
+        <button type="button" className="btn-small" onClick={addEntry}>+ Add Test</button>
+      </div>
+      <div className="space-y-4">
+        {entries.map((e, idx) => (
+          <div key={idx} className="list-item !p-0 overflow-hidden" style={{ border: '1px solid #cbd5e1' }}>
+            <div className="item-header" style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1', padding: '10px 14px' }}>
+              <span className="font-bold text-slate-700">Test {idx + 1}</span>
+              <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="form-grid">
+                <label>
+                  Test Title
+                  <input value={e.title || ''} onChange={ev => updateEntry(idx, 'title', ev.target.value)} placeholder="e.g. Babinski Sign" />
+                </label>
+                <label>
+                  Test Subtitle
+                  <input value={e.subtitle || ''} onChange={ev => updateEntry(idx, 'subtitle', ev.target.value)} placeholder="e.g. Dorsiflexion of big toe = positive" />
+                </label>
+                <label style={{ gridColumn: '1 / -1' }}>
+                  <strong>Selected Result (Presented to Student)</strong>
+                  <select 
+                    value={e.selected_value || ''} 
+                    onChange={ev => updateEntry(idx, 'selected_value', ev.target.value)}
+                    style={{ background: '#eef2ff', borderColor: '#c7d2fe', color: '#4338ca', fontWeight: 'bold' }}
+                  >
+                    <option value="">Select a result</option>
+                    {(e.options || []).map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              
+              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Available Options</span>
+                  <button type="button" className="btn-small" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => addOption(idx)}>+ Option</button>
+                </div>
+                <div className="space-y-2">
+                  {(e.options || []).map((opt, oIdx) => (
+                    <div key={oIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input 
+                        value={opt.label} 
+                        onChange={ev => updateOption(idx, oIdx, 'label', ev.target.value)} 
+                        placeholder="Label" 
+                        style={{ flex: 1, padding: '4px 8px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                      />
+                      <input 
+                        value={opt.value} 
+                        onChange={ev => updateOption(idx, oIdx, 'value', ev.target.value)} 
+                        placeholder="Value (id)" 
+                        style={{ flex: 1, padding: '4px 8px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                      />
+                      <select 
+                        value={opt.colorType} 
+                        onChange={ev => updateOption(idx, oIdx, 'colorType', ev.target.value)}
+                        style={{ padding: '4px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                      >
+                        <option value="normal">Green (Normal)</option>
+                        <option value="mid">Orange (Mid)</option>
+                        <option value="extreme">Red (Extreme)</option>
+                      </select>
+                      <button type="button" className="btn-delete-small" style={{ width: '24px', height: '24px' }} onClick={() => removeOption(idx, oIdx)}>×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {entries.length === 0 && <div className="empty-state-box">No tests recorded. Click "+ Add Test".</div>}
+
+      <div style={{ background: '#fdf4ff', padding: '16px', borderRadius: '12px', border: '1px solid #fbcfe8', marginTop: '24px' }}>
+        <h5 style={{ fontSize: '0.9rem', color: '#9d174d', marginBottom: '16px', marginTop: 0 }}>Outcome Summary</h5>
+        <div className="form-grid">
+          <label>
+            Outcome Title
+            <input 
+              value={section.outcome_title || ''} 
+              onChange={e => onUpdate({ ...section, outcome_title: e.target.value })} 
+              placeholder="e.g. Outcome: UMNL Excluded" 
+            />
+          </label>
+          <label>
+            Outcome Type (Color)
+            <select 
+              value={section.outcome_type || 'success'} 
+              onChange={e => onUpdate({ ...section, outcome_type: e.target.value })}
+            >
+              <option value="success">Success / Safe (Green)</option>
+              <option value="warning">Warning / Refer (Red/Orange)</option>
+              <option value="neutral">Neutral / Informative (Blue)</option>
+            </select>
+          </label>
+          <label style={{ gridColumn: '1 / -1' }}>
+            Outcome Subtitle / Explanation
+            <input 
+              value={section.outcome_subtitle || ''} 
+              onChange={e => onUpdate({ ...section, outcome_subtitle: e.target.value })} 
+              placeholder="e.g. Safe to Proceed" 
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+  )
+}
+

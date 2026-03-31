@@ -808,7 +808,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
     }
 
     const addXray = () => {
-        const newXrays = [...xrays, { label: '', icon: '🩻', imageUrl: '' }]
+        const newXrays = [...xrays, { label: '', icon: '📸', imageUrl: '' }]
         setEditedStep({ ...editedStep, xrays: newXrays })
     }
 
@@ -962,7 +962,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                 <EmojiInput
                                     value={xray.icon || ''}
                                     onChange={(val) => updateXray(idx, 'icon', val)}
-                                    placeholder="🩻"
+                                    placeholder="📸"
                                 />
                             </label>
                             <label style={{ gridColumn: '1 / -1' }}>
