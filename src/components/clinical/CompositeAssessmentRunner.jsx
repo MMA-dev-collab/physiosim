@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import McqStep from './McqStep'
 import EssayStep from './EssayStep'
 
@@ -88,8 +88,8 @@ function renderSection(section, mcqProps, essayProps) {
       return <CervicalCurveSection section={section} />
     case 'mri_findings':
       return <MriFindingsSection section={section} />
-    case 'mri_warnings':
-      return <MriWarningsSection section={section} />
+    case 'mri_imaging':
+      return <MriImagingSection section={section} />
     case 'umnl_screening':
       return <UmnlScreeningSection section={section} />
     case 'mcq':
@@ -848,88 +848,11 @@ function MriFindingsSection({ section }) {
     }
   }
 
-  return (
-    <div className="car-mri-findings">
-      <h3 className="car-section-title">{section.title || 'MRI Findings'}</h3>
-      
-      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-stretch`}>
-        {hasImage && (
-          <div className="w-full lg:w-1/2 shrink-0 relative min-h-[350px] lg:min-h-0">
-            <div className="absolute inset-0 rounded-2xl overflow-hidden border border-slate-200 bg-[#0f172a] shadow-sm p-3 flex items-center justify-center">
-                <img src={section.image_url} alt="MRI Reference" className="w-full h-full object-fill rounded-xl" />
-            </div>
-          </div>
-        )}
-
-        <div className="flex-1 w-full overflow-x-auto mt-2">
-          {entries.length > 0 ? (
-            <table className="w-full text-left border-separate border-spacing-y-2">
-              <thead>
-                <tr>
-                  <th className="px-5 py-2 text-[11px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
-                  <th className="px-5 py-2 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">
-                    {section.status_title || 'Status'}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((e, idx) => (
-                  <tr key={idx} className="bg-white">
-                    <td className="px-5 py-4 border border-slate-100 border-r-0 rounded-l-xl shadow-sm bg-slate-50/50">
-                      <span className="inline-flex items-center justify-center min-w-[60px] whitespace-nowrap px-3 py-1 bg-white border border-slate-200 text-slate-700 font-bold rounded-full text-[13px] shadow-sm">
-                        {e.level || '-'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 border border-slate-100 border-l-0 rounded-r-xl shadow-sm bg-slate-50/50 text-right">
-                      {e.status_value ? (
-                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[13px] font-bold shadow-sm ${getStatusBadgeClass(e.status_value)}`}>
-                          {getStatusLabel(e.status_value)}
-                        </span>
-                      ) : <span className="text-slate-400 italic text-sm">-</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="car-no-data">No findings recorded</p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ==========================
-   MRI WARNINGS SECTION
-========================== */
-function MriWarningsSection({ section }) {
-  const entries = section.entries || []
-  const hasImage = !!section.image_url
-  const statusOptions = section.status_options || []
-
-  const getStatusLabel = (val) => {
-    const opt = statusOptions.find(o => o.value === val)
-    return opt ? opt.label : val
-  }
-
-  const getStatusBadgeClass = (val) => {
-    const opt = statusOptions.find(o => o.value === val)
-    if (!opt) return 'bg-slate-100 text-slate-600'
-    
-    switch (opt.type) {
-        case 'normal': return 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-        case 'mid': return 'bg-amber-50 text-amber-600 border border-amber-100'
-        case 'extreme': return 'bg-rose-50 text-rose-600 border border-rose-100'
-        default: return 'bg-slate-100 text-slate-600 border border-slate-200'
-    }
-  }
-
   const warningEntries = entries.filter(e => e.is_warning && e.warning_text)
 
   return (
-    <div className="car-mri-warnings relative">
-      <h3 className="car-section-title">{section.title || 'MRI Warnings'}</h3>
+    <div className="car-mri-findings relative">
+      <h3 className="car-section-title">{section.title || 'MRI Findings'}</h3>
       
       <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-stretch`}>
         {hasImage && (
@@ -986,18 +909,120 @@ function MriWarningsSection({ section }) {
         <div className="mt-8 flex flex-col gap-4 relative z-10 w-full">
           {warningEntries.map((warn, i) => (
             <div key={i} className="bg-[#fff7ed] border border-[#ffedd5] rounded-2xl p-5 flex items-start gap-4 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-[#f97316]"></div>
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 text-xl border border-[#ffedd5]">
+              
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0 text-xl border border-[#ffedd5]">
                 ⚠️
               </div>
               <div className="pt-0.5">
-                <h4 className="font-bold text-[#c2410c] text-sm mb-1 uppercase tracking-widest leading-none mt-1">
-                  Level {warn.level}
-                </h4>
+                {warn.warning_title && (
+                  <h4 className="font-bold text-[#c2410c] text-sm mb-1 uppercase tracking-widest leading-none mt-1">
+                    {warn.warning_title}
+                  </h4>
+                )}
                 <p className="text-[#9a3412] font-semibold text-[13.5px] leading-relaxed mt-2">{warn.warning_text}</p>
               </div>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ==========================
+   MRI IMAGING SECTION
+   Side-by-side images with hover zoom, fullscreen lightbox, optional warning
+========================== */
+function MriImagingSection({ section }) {
+  const images = section.images || []
+  const [lightboxIdx, setLightboxIdx] = useState(null)
+
+  return (
+    <div className="car-mri-imaging">
+      <h3 className="car-section-title">{section.title || 'MRI Findings'}</h3>
+      
+      {images.length > 0 ? (
+        <div className={`grid gap-8 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+          {images.map((img, idx) => (
+            <div key={idx} className="flex flex-col gap-3">
+              <p className="text-sm font-bold text-slate-500">{img.title || `View ${idx + 1}`}</p>
+              {img.image_url ? (
+                <div 
+                  className="group relative rounded-2xl overflow-hidden border border-slate-200 bg-[#0f172a] cursor-pointer shadow-sm"
+                  style={{ aspectRatio: '4/5' }}
+                  onClick={() => setLightboxIdx(idx)}
+                >
+                  <img 
+                    src={img.image_url} 
+                    alt={img.title || 'MRI'} 
+                    className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:grayscale"
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-2 shadow-lg">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                        <path d="M11 8v6M8 11h6" />
+                      </svg>
+                      <span className="font-bold text-slate-800 text-sm">View</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center" style={{ aspectRatio: '4/5' }}>
+                  <p className="text-slate-400 text-sm">No image</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="car-no-data">No images configured.</p>
+      )}
+
+      {/* Warning banner */}
+      {section.enable_warning && section.warning_text && (
+        <div className="mt-8 flex flex-col gap-4 relative z-10 w-full">
+          <div className="bg-[#fff7ed] border border-[#ffedd5] rounded-2xl p-5 flex items-start gap-4 shadow-sm relative overflow-hidden">
+           
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0 text-xl border border-[#ffedd5]">
+              ⚠️
+            </div>
+            <div className="pt-0.5">
+              {section.warning_level && (
+                <h4 className="font-bold text-[#c2410c] text-sm mb-1 uppercase tracking-widest leading-none mt-1">
+                  {section.warning_level}
+                </h4>
+              )}
+              <p className="text-[#9a3412] font-semibold text-[13.5px] leading-relaxed mt-2">{section.warning_text}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Lightbox */}
+      {lightboxIdx !== null && images[lightboxIdx]?.image_url && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-pointer"
+          onClick={() => setLightboxIdx(null)}
+        >
+          <div className="relative w-[50vw] h-[90vh] mx-auto" onClick={e => e.stopPropagation()}>
+            <img 
+              src={images[lightboxIdx].image_url} 
+              alt={images[lightboxIdx].title || 'MRI'} 
+              className="w-full h-full object-contain rounded-2xl shadow-2xl"
+            />
+            {images[lightboxIdx].title && (
+              <p className="text-center text-white/90 font-bold text-lg mt-4">{images[lightboxIdx].title}</p>
+            )}
+            <button 
+              className="absolute -top-4 -right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-slate-800 font-bold text-xl hover:bg-slate-100 transition-colors"
+              onClick={() => setLightboxIdx(null)}
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
     </div>

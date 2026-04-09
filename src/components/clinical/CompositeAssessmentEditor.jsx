@@ -25,8 +25,8 @@ const SECTION_TYPES = [
   { value: 'palpation', label: '🤲 Palpation', desc: 'Palpation findings by tissue type' },
   { value: 'cervical_curve', label: '🦴 Cervical Curve', desc: 'Visual examination of spinal curvature' },
   { value: 'investigations', label: '📸 Imagery', desc: 'X-ray, MRI, imagery studies' },
-  { value: 'mri_findings', label: '📸 MRI Findings', desc: 'Imagery findings with customizable status pills' },
-  { value: 'mri_warnings', label: '⚠️ MRI Warnings', desc: 'Imagery findings with warning alerts' },
+  { value: 'mri_findings', label: '📸 MRI Findings', desc: 'Imagery findings with customizable status pills & optional warnings' },
+  { value: 'mri_imaging', label: '🖼️ MRI Imaging', desc: 'Side-by-side MRI images with zoom & fullscreen' },
   { value: 'umnl_screening', label: '🧠 UMNL Screening', desc: 'Neurological test outcomes & screening' },
   { value: 'mcq', label: '❓ MCQ', desc: 'Multiple choice clinical decision question' },
   { value: 'essay', label: '📝 Essay', desc: 'Short answer / reflective question' },
@@ -187,8 +187,8 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
             boxShadow: '0 8px 24px rgba(0,0,0,0.12)', marginTop: '4px', overflow: 'hidden'
           }}>
             {(step?.category === 'composite_imaging'
-              ? SECTION_TYPES.filter(st => ['mri_findings', 'mri_warnings', 'umnl_screening'].includes(st.value))
-              : SECTION_TYPES.filter(st => !['mri_findings', 'mri_warnings', 'umnl_screening'].includes(st.value))
+              ? SECTION_TYPES.filter(st => ['mri_findings', 'mri_imaging', 'umnl_screening'].includes(st.value))
+              : SECTION_TYPES.filter(st => !['mri_findings', 'mri_imaging', 'umnl_screening'].includes(st.value))
             ).map(st => (
               <button
                 key={st.value}
@@ -283,16 +283,16 @@ function createDefaultSection(type) {
         ],
         entries: [] 
       }
-    case 'mri_warnings':
+    case 'mri_imaging':
       return {
         ...base,
-        image_url: '',
-        status_title: 'Status',
-        status_options: [
-          { label: 'Normal', value: 'normal', type: 'normal' },
-          { label: 'Abnormal', value: 'abnormal', type: 'extreme' }
+        images: [
+          { title: 'Sagittal View', image_url: '' },
+          { title: 'Axial View', image_url: '' }
         ],
-        entries: [] 
+        enable_warning: false,
+        warning_text: '',
+        warning_level: ''
       }
     case 'umnl_screening':
       return {
@@ -325,7 +325,7 @@ function SectionEditor({ section, onUpdate }) {
     case 'cervical_curve': return <CervicalCurveEditor section={section} onUpdate={onUpdate} />
     case 'investigations': return <InvestigationsSectionEditor section={section} onUpdate={onUpdate} />
     case 'mri_findings': return <MriFindingsSectionEditor section={section} onUpdate={onUpdate} />
-    case 'mri_warnings': return <MriWarningsSectionEditor section={section} onUpdate={onUpdate} />
+    case 'mri_imaging': return <MriImagingSectionEditor section={section} onUpdate={onUpdate} />
     case 'umnl_screening': return <UmnlScreeningSectionEditor section={section} onUpdate={onUpdate} />
     case 'mcq': return <McqSectionEditor section={section} onUpdate={onUpdate} />
     case 'essay': return <EssaySectionEditor section={section} onUpdate={onUpdate} />
@@ -1141,7 +1141,7 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
   const entries = section.entries || []
   const statusOptions = section.status_options || []
   
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', status_value: '' }] })
+  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', status_value: '', is_warning: false, warning_title: '', warning_text: '' }] })
   const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
   const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
 
@@ -1166,114 +1166,6 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
             value={section.status_title || 'Status'} 
             onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
             placeholder="e.g. Tenderness, Bulge Status" 
-          />
-        </label>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <ImageUpload 
-            label="MRI/Imaging Visual" 
-            folderType="imaging" 
-            initialUrl={section.image_url} 
-            onUpload={url => onUpdate({ ...section, image_url: url })} 
-          />
-        </div>
-      </div>
-
-      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-        <div className="section-header !mb-4">
-          <h5 style={{ fontSize: '0.85rem', color: '#475569' }}>Status Options & Colors</h5>
-          <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
-        </div>
-        <div className="space-y-2">
-          {statusOptions.map((opt, oIdx) => (
-            <div key={oIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input 
-                value={opt.label} 
-                onChange={e => updateOption(oIdx, 'label', e.target.value)} 
-                placeholder="Label (Normal)" 
-                style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-              />
-              <select 
-                value={opt.type} 
-                onChange={e => updateOption(oIdx, 'type', e.target.value)}
-                style={{ width: '100px', padding: '6px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-              >
-                <option value="normal">Normal (Green)</option>
-                <option value="mid">Mid (Orange)</option>
-                <option value="extreme">Extreme (Red)</option>
-              </select>
-              <button type="button" className="btn-delete-small" onClick={() => removeOption(oIdx)}>×</button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="section-header">
-        <h5>Findings (Levels)</h5>
-        <button type="button" className="btn-small" onClick={addEntry}>+ Add Level</button>
-      </div>
-      <div className="space-y-3">
-        {entries.map((e, idx) => (
-          <div key={idx} className="list-item">
-            <div className="item-header">
-              <span>{idx + 1}</span>
-              <button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button>
-            </div>
-            <div className="form-grid">
-              <label>
-                Level (e.g. C3-C4)
-                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C4" />
-              </label>
-              <label>
-                {section.status_title || 'Status'}
-                <select 
-                  value={e.status_value || ''} 
-                  onChange={ev => updateEntry(idx, 'status_value', ev.target.value)}
-                >
-                  <option value="">Select status</option>
-                  {statusOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
-      {entries.length === 0 && <div className="empty-state-box">No findings recorded. Click "+ Add Level".</div>}
-    </div>
-  )
-}
-
-/* ── MRI Warnings Editor ── */
-function MriWarningsSectionEditor({ section, onUpdate }) {
-  const entries = section.entries || []
-  const statusOptions = section.status_options || []
-  
-  const addEntry = () => onUpdate({ ...section, entries: [...entries, { level: '', status_value: '', is_warning: false, warning_text: '' }] })
-  const updateEntry = (idx, field, val) => { const u = [...entries]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, entries: u }) }
-  const removeEntry = (idx) => onUpdate({ ...section, entries: entries.filter((_, i) => i !== idx) })
-
-  const addOption = () => onUpdate({ 
-    ...section, 
-    status_options: [...statusOptions, { label: 'New Option', value: 'new_' + Date.now(), type: 'normal' }] 
-  })
-  const updateOption = (idx, field, val) => { 
-    const u = [...statusOptions]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, status_options: u }) 
-  }
-  const removeOption = (idx) => onUpdate({ 
-    ...section, 
-    status_options: statusOptions.filter((_, i) => i !== idx) 
-  })
-
-  return (
-    <div className="space-y-6">
-      <div className="form-grid">
-        <label style={{ gridColumn: '1 / -1' }}>
-          Status Column Title
-          <input 
-            value={section.status_title || 'Status'} 
-            onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
-            placeholder="e.g. Disc Level Findings" 
           />
         </label>
         <div style={{ gridColumn: '1 / -1' }}>
@@ -1356,19 +1248,34 @@ function MriWarningsSectionEditor({ section, onUpdate }) {
                   <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#b91c1c' }}>Mark as Warning</span>
                 </label>
                 {e.is_warning && (
-                  <label>
-                    Warning Description
-                    <input 
-                      value={e.warning_text || ''} 
-                      onChange={ev => updateEntry(idx, 'warning_text', ev.target.value)} 
-                      placeholder="e.g. Disc touching spinal cord -> refer immediately." 
-                      style={{ 
-                        border: '1px solid #fca5a5', 
-                        background: '#fef2f2',
-                        color: '#991b1b'
-                      }}
-                    />
-                  </label>
+                  <div className="space-y-2">
+                    <label>
+                      Warning Title
+                      <input 
+                        value={e.warning_title || ''} 
+                        onChange={ev => updateEntry(idx, 'warning_title', ev.target.value)} 
+                        placeholder="e.g. C5-C6 disc is touching the spinal cord" 
+                        style={{ 
+                          border: '1px solid #fca5a5', 
+                          background: '#fef2f2',
+                          color: '#991b1b'
+                        }}
+                      />
+                    </label>
+                    <label>
+                      Warning Description
+                      <input 
+                        value={e.warning_text || ''} 
+                        onChange={ev => updateEntry(idx, 'warning_text', ev.target.value)} 
+                        placeholder="e.g. Possible cervical myelopathy (UMNL). Must rule out before treatment." 
+                        style={{ 
+                          border: '1px solid #fca5a5', 
+                          background: '#fef2f2',
+                          color: '#991b1b'
+                        }}
+                      />
+                    </label>
+                  </div>
                 )}
               </div>
             </div>
@@ -1376,6 +1283,85 @@ function MriWarningsSectionEditor({ section, onUpdate }) {
         ))}
       </div>
       {entries.length === 0 && <div className="empty-state-box">No findings recorded. Click "+ Add Level".</div>}
+    </div>
+  )
+}
+
+/* ── MRI Imaging Editor ── */
+function MriImagingSectionEditor({ section, onUpdate }) {
+  const images = section.images || []
+
+  const updateImage = (idx, field, val) => {
+    const u = [...images]; u[idx] = { ...u[idx], [field]: val }; onUpdate({ ...section, images: u })
+  }
+  const addImage = () => onUpdate({ ...section, images: [...images, { title: 'New View', image_url: '' }] })
+  const removeImage = (idx) => onUpdate({ ...section, images: images.filter((_, i) => i !== idx) })
+
+  return (
+    <div className="space-y-6">
+      <div className="section-header">
+        <h5>MRI Images</h5>
+        <button type="button" className="btn-small" onClick={addImage}>+ Add Image</button>
+      </div>
+      <div className="space-y-4">
+        {images.map((img, idx) => (
+          <div key={idx} className="list-item">
+            <div className="item-header">
+              <span>Image {idx + 1}</span>
+              <button type="button" className="btn-delete-small" onClick={() => removeImage(idx)}>🗑</button>
+            </div>
+            <div className="form-grid">
+              <label style={{ gridColumn: '1 / -1' }}>
+                Image Title
+                <input value={img.title || ''} onChange={e => updateImage(idx, 'title', e.target.value)} placeholder="e.g. Sagittal View" />
+              </label>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <ImageUpload 
+                  label={`Image ${idx + 1}`}
+                  folderType="imaging" 
+                  initialUrl={img.image_url} 
+                  onUpload={url => updateImage(idx, 'image_url', url)} 
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {images.length === 0 && <div className="empty-state-box">No images added. Click "+ Add Image".</div>}
+
+      {/* Warning toggle */}
+      <div style={{ background: '#fef2f2', padding: '16px', borderRadius: '12px', border: '1px solid #fecaca' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: section.enable_warning ? '12px' : '0' }}>
+          <input 
+            type="checkbox" 
+            checked={section.enable_warning || false} 
+            onChange={e => onUpdate({ ...section, enable_warning: e.target.checked })} 
+            style={{ width: '16px', height: '16px' }}
+          />
+          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#b91c1c' }}>⚠️ Enable Warning Banner</span>
+        </label>
+        {section.enable_warning && (
+          <div className="form-grid" style={{ marginTop: '8px' }}>
+            <label>
+              Warning Level
+              <input 
+                value={section.warning_level || ''} 
+                onChange={e => onUpdate({ ...section, warning_level: e.target.value })} 
+                placeholder="e.g. C5-C6" 
+              />
+            </label>
+            <label style={{ gridColumn: '1 / -1' }}>
+              Warning Text
+              <input 
+                value={section.warning_text || ''} 
+                onChange={e => onUpdate({ ...section, warning_text: e.target.value })} 
+                placeholder="e.g. C5-C6 disc is touching the spinal cord" 
+                style={{ border: '1px solid #fca5a5', background: '#fff', color: '#991b1b' }}
+              />
+            </label>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
