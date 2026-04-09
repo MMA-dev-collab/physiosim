@@ -178,7 +178,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
     }
 
     const renderAssessment = (catId, data) => {
-        if (!data || Object.keys(data).length === 0) return <p className="text-slate-500 italic">No assessment data.</p>
+        if (!data || Object.keys(data).length === 0) return <p className="text-slate-500 italic">No examination data.</p>
 
         // Observations
         if (catId?.startsWith('observation_')) {
@@ -666,7 +666,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                         <ClinicalCard key={i} className="overflow-hidden p-0">
                             <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex justify-between items-center">
                                 <span className="font-bold text-slate-700 capitalize flex items-center gap-2">
-                                    <span>📷</span> {e.modality || 'Imaging'}
+                                    <span>📷</span> {e.modality || 'Imagery'}
                                 </span>
                             </div>
                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">

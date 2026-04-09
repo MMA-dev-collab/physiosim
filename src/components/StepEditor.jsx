@@ -827,16 +827,16 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
         <div className="form-grid">
             <div style={{ gridColumn: '1 / -1', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Investigations/Tests</h4>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Examination/Tests</h4>
                     <button type="button" className="btn-secondary btn-small" onClick={addInvestigation}>
-                        + Add Investigation
+                        + Add Examination
                     </button>
                 </div>
 
                 {investigations.map((inv, idx) => (
                     <div key={idx} className="array-item">
                         <div className="array-item-header">
-                            <span>Investigation {idx + 1}</span>
+                            <span>Examination {idx + 1}</span>
                             <button type="button" className="btn-delete-small" onClick={() => removeInvestigation(idx)}>
                                 🗑
                             </button>
@@ -927,16 +927,16 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
 
             <div style={{ gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>X-rays/Imaging</h4>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Imagery</h4>
                     <button type="button" className="btn-secondary btn-small" onClick={addXray}>
-                        + Add X-ray
+                        + Add Imagery
                     </button>
                 </div>
 
                 {xrays.map((xray, idx) => (
                     <div key={idx} className="array-item">
                         <div className="array-item-header">
-                            <span>X-ray {idx + 1}</span>
+                            <span>Imagery {idx + 1}</span>
                             <button type="button" className="btn-delete-small" onClick={() => removeXray(idx)}>
                                 🗑
                             </button>
@@ -1030,6 +1030,7 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
     const addEssayQuestion = () => {
         const newQuestions = [...essayQuestions, {
             question_text: '',
+            placeholder: '',
             keywords: [],
             synonyms: [],
             max_score: editedStep.maxScore || 10,
@@ -1128,6 +1129,20 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
                                 {touched[`essayQuestions[${idx}].question_text`] && errors[`essayQuestions[${idx}].question_text`] && (
                                     <span className="validation-error"><span>⚠️</span>{errors[`essayQuestions[${idx}].question_text`]}</span>
                                 )}
+                            </label>
+
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Placeholder Text (Optional)
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
+                                        (Text displayed in the student's writing area)
+                                    </span>
+                                </div>
+                                <input
+                                    value={eq.placeholder || ''}
+                                    onChange={(e) => updateEssayQuestion(idx, 'placeholder', e.target.value)}
+                                    placeholder="Enter your clinical findings here..."
+                                />
                             </label>
 
                             <label style={{ gridColumn: '1 / -1' }}>

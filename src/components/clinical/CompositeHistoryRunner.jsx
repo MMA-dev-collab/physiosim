@@ -57,7 +57,7 @@ export default function CompositeHistoryRunner({ step }) {
       </div>
 
       {/* 2. DYNAMIC GRID: All other sections flow here as independent col-6 items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 min-[1090px]:grid-cols-2 gap-8 items-start">
         
         {/* Card: Lifestyle Factors */}
         {hasLifestyle && (

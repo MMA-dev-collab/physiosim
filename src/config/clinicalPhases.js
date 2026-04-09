@@ -16,24 +16,24 @@ export const CLINICAL_PHASES = [
     },
     {
         id: 'history_presentation',
-        label: 'History Presentation',
-        shortLabel: 'History',
+        label: 'Subjective Data',
+        shortLabel: 'Subjective',
         icon: '📋',
         description: 'Capture subjective patient story and structured pain metadata',
         order: 2
     },
     {
         id: 'assessment',
-        label: 'Assessment',
-        shortLabel: 'Assessment',
+        label: 'Examination',
+        shortLabel: 'Examination',
         icon: '🔍',
         description: 'Objective exam — observations, palpation, ROM, tests, imaging',
         order: 3
     },
     {
         id: 'imaging',
-        label: 'Imaging',
-        shortLabel: 'Imaging',
+        label: 'Imagery',
+        shortLabel: 'Imagery',
         icon: '📸',
         description: 'MRI, X-Rays, and other imaging studies',
         order: 4
@@ -56,7 +56,7 @@ export const CLINICAL_PHASES = [
     },
     {
         id: 'treatment',
-        label: 'Treatment',
+        label: 'Treatment Plan',
         shortLabel: 'Treatment',
         icon: '💊',
         description: 'Interventions linked to problem IDs',
@@ -97,13 +97,13 @@ export const PHASE_CATEGORIES = {
         { id: 'diagnosis_entry', label: 'Diagnosis', inputMode: 'user_input', dataTypes: ['text', 'numbers', 'image'] }
     ],
     imaging: [
-        { id: 'composite_imaging', label: 'Imaging Assessment', inputMode: 'composite', dataTypes: ['composite'] }
+        { id: 'composite_imaging', label: 'Imagery', inputMode: 'composite', dataTypes: ['composite'] }
     ],
     problem_list: [
-        { id: 'problem_entry', label: 'Problem List', inputMode: 'user_input', dataTypes: ['text', 'numbers'] }
+        { id: 'problem_entry', label: 'Problem', inputMode: 'user_input', dataTypes: ['text', 'numbers'] }
     ],
     treatment: [
-        { id: 'treatment_table', label: 'Treatment Table', inputMode: 'author_only', dataTypes: ['text', 'links'] }
+        { id: 'treatment_table', label: 'Treatment Plan', inputMode: 'author_only', dataTypes: ['text', 'links'] }
     ]
 }
 

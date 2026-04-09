@@ -112,13 +112,11 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
                 </div>
               </div>
             ) : (
-              <>
                 <textarea
                   value={essayAnswer}
                   onChange={(e) => setEssayAnswer(e.target.value)}
                   rows={10}
-                  placeholder="Type your answer here... (Maximum 1000 characters)"
-                  maxLength={1000}
+                  placeholder={eq.placeholder || step.placeholder || "Type your answer here..."}
                   disabled={essayScore !== null}
                   style={{
                     width: '100%',
@@ -134,15 +132,6 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
                     cursor: essayScore !== null ? 'not-allowed' : 'text'
                   }}
                 />
-                <div style={{
-                  textAlign: 'right',
-                  fontSize: '0.875rem',
-                  color: '#64748b',
-                  marginTop: '0.5rem'
-                }}>
-                  {essayAnswer?.length || 0} / 1000 characters
-                </div>
-              </>
             )}
           </div>
         ))}

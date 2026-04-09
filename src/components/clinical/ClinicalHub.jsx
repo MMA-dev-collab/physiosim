@@ -34,8 +34,16 @@ export default function ClinicalHub({ step, viewedSubSteps = new Set(), onStepVi
 
     // Determine Hub Title & Icon based on phase
     const isHistory = step.phase === 'history_presentation'
-    const hubTitle = step.title || (isHistory ? 'Patient History' : 'Objective Examination')
-    const hubIcon = isHistory ? '📋' : '🔍'
+    const isImaging = step.phase === 'imaging'
+    const isTreatment = step.phase === 'treatment'
+    
+    let defaultTitle = 'Examination'
+    if (isHistory) defaultTitle = 'Subjective Data'
+    else if (isImaging) defaultTitle = 'Imagery'
+    else if (isTreatment) defaultTitle = 'Treatment Plan'
+    
+    const hubTitle = step.title || defaultTitle
+    const hubIcon = isHistory ? '📋' : isImaging ? '📸' : isTreatment ? '💊' : '🔍'
 
     // If there is ONLY ONE step inside the hub, skip the hub sidebar layout completely and render the content directly
     if (step.subSteps.length === 1) {

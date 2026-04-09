@@ -48,7 +48,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
             <div className="phase-editor assessment-phase">
                 <div className="phase-header">
                     <h4>👁️ Observation - {viewLabels[viewType] || viewType}</h4>
-                    <p>Visual assessment from {viewType} view</p>
+                    <p>Visual examination from {viewType} view</p>
                 </div>
                 <div className="form-grid">
                     <div style={{ gridColumn: '1 / -1' }}>
@@ -295,7 +295,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
         return (
             <div className="phase-editor assessment-phase">
                 <div className="phase-header">
-                    <h4>📐 ROM Assessment - {romType}</h4>
+                    <h4>📐 ROM Examination - {romType}</h4>
                     <p>Range of Motion - {romType === 'AROM' ? 'Active' : 'Passive'}</p>
                 </div>
 

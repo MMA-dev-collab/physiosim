@@ -98,7 +98,9 @@ function CaseRunnerPage({ auth }) {
           group.push(rawSteps[i])
           i++
         }
-        const hubTitle = group.length === 1 && group[0].title ? group[0].title : 'Physical Assessment'
+        const hubTitle = group.length === 1 
+          ? (group[0].title || (group[0].category === 'composite_imaging' ? 'Imagery' : 'Examination'))
+          : 'Examination'
         processed.push({
           id: `assessment-hub-${group[0].id}`,
           type: 'clinical_hub',
@@ -117,7 +119,7 @@ function CaseRunnerPage({ auth }) {
           group.push(rawSteps[i])
           i++
         }
-        const hubTitle = group.length === 1 && group[0].title ? group[0].title : 'Patient History'
+        const hubTitle = group.length === 1 && group[0].title ? group[0].title : 'Subjective Data'
         processed.push({
           id: `history-hub-${group[0].id}`,
           type: 'clinical_hub',
@@ -349,7 +351,7 @@ function CaseRunnerPage({ auth }) {
         if (step.category === 'composite_history') {
              return (
                <div className="animate-in fade-in duration-500">
-                  {!hideHeader && <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective History</h2>}
+                  {!hideHeader && <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective Data</h2>}
                   <ClinicalStepRunner step={step} hideHeader={true} />
                </div>
              )
@@ -656,7 +658,7 @@ function CaseRunnerPage({ auth }) {
             <div className="animate-in fade-in duration-300">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-3xl font-bold text-slate-800">
-                      {currentStep.title === 'Physical Assessment' ? 'Objective Examination' : currentStep.title === 'Patient History' ? 'Subjective History' : currentStep.title}
+                      {currentStep.title === 'Examination' ? 'Examination' : currentStep.title === 'Subjective Data' ? 'Subjective Data' : currentStep.title}
                     </h2>
                 </div>
                 {renderStepContent(activeSubStep, true)}

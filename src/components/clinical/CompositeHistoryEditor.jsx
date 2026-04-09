@@ -85,8 +85,8 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
   return (
     <div className="phase-editor history-phase">
       <div className="phase-header">
-        <h4>📋 Subjective History (Unified)</h4>
-        <p>Enter all patient history findings to be displayed on a single composite screen.</p>
+        <h4>📋 Subjective Data (Unified)</h4>
+        <p>Enter all subjective findings to be displayed on a single composite screen.</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

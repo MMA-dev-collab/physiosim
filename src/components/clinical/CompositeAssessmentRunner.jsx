@@ -22,7 +22,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
-        <p>No assessment data configured for this step.</p>
+        <p>No examination data configured for this step.</p>
       </div>
     )
   }
@@ -49,7 +49,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
              💡
            </div>
            <div className="flex-1">
-             <h4 className="text-amber-900 font-black uppercase tracking-widest text-sm mb-3">Clinical Tip / Assessment Guide</h4>
+             <h4 className="text-amber-900 font-black uppercase tracking-widest text-sm mb-3">Clinical Tip / Examination Guide</h4>
              <div className="space-y-3 text-slate-700 font-bold leading-relaxed">
                {clinicalTip.split('\n').map((line, i) => (
                  <p key={i} className="flex items-start gap-2">
@@ -116,7 +116,7 @@ function ObservationSection({ section }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {views.map((view, i) => (
             <div key={i} className="text-center space-y-4">
-              <p className="text-sm font-bold text-slate-500">{view.label}</p>
+              <p className="text-sm font-bold text-slate-500 whitespace-nowrap overflow-visible">{view.label}</p>
               {view.image_url && (
                 <div className="h-48 flex items-center justify-center">
                   <img
@@ -192,22 +192,22 @@ function RomSection({ section }) {
       </h3>
       {entries.length > 0 ? (
         <div className="overflow-visible">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm border-separate border-spacing-y-3">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-100">
-                <th className="w-[5%] md:w-[15%] lg:w-[20%]"></th>
-                <th className="text-center py-4 font-bold uppercase tracking-wider">Movement</th>
-                <th className="text-center py-4 font-bold uppercase tracking-wider">{romType === 'prom' ? 'Passive ROM' : 'Active ROM'}</th>
-                <th className="text-center py-4 font-bold uppercase tracking-wider">Pain status</th>
-                {showPerMovementEndFeel && <th className="text-center py-4 font-bold uppercase tracking-wider">End Feel</th>}
-                <th className="w-[5%] md:w-[15%] lg:w-[20%]"></th>
+              <tr className="text-slate-400">
+                <th className="w-[5%] md:w-[15%] lg:w-[20%] border-b border-slate-100 pb-2"></th>
+                <th className="text-center pb-2 font-bold uppercase tracking-wider border-b border-slate-100">Movement</th>
+                <th className="text-center pb-2 font-bold uppercase tracking-wider border-b border-slate-100">{romType === 'prom' ? 'Passive ROM' : 'Active ROM'}</th>
+                <th className="text-center pb-2 font-bold uppercase tracking-wider border-b border-slate-100">Pain status</th>
+                {showPerMovementEndFeel && <th className="text-center pb-2 font-bold uppercase tracking-wider border-b border-slate-100">End Feel</th>}
+                <th className="w-[5%] md:w-[15%] lg:w-[20%] border-b border-slate-100 pb-2"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {entries.map((entry, i) => (
-                <tr key={i} className="group hover:bg-slate-50 transition-colors">
-                  <td></td>
-                  <td className="py-4 font-medium text-slate-700 text-center relative whitespace-nowrap">
+                <tr key={i} className="group bg-white hover:bg-slate-50 transition-colors shadow-sm">
+                  <td className="first:rounded-l-xl border-y border-l border-slate-100 w-[5%] md:w-[15%] lg:w-[20%]"></td>
+                  <td className="py-4 border-y border-slate-100 font-medium text-slate-700 text-center relative whitespace-nowrap">
                     {/* Hover Image */}
                     {entry.image_url && (
                       <div className="absolute top-1/2 -translate-y-1/2 -left-6 w-32 h-32 bg-white border-2 border-slate-100 rounded-xl shadow-2xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 pointer-events-none flex items-center justify-center overflow-hidden" style={{ transform: 'translate(-100%, -50%)' }}>
@@ -221,21 +221,21 @@ function RomSection({ section }) {
                     )}
                     {entry.movement}
                   </td>
-                  <td className="py-4 text-center">
+                  <td className="py-4 border-y border-slate-100 text-center">
                     <span className={`px-3 py-1 rounded-md text-xs font-bold ${getRomBadgeColors(entry.rom || entry.value)}`}>
                       {entry.rom || entry.value || '—'}
                     </span>
                   </td>
-                  <td className="py-4">
+                  <td className="py-4 border-y border-slate-100">
                     <div className="flex items-center justify-center gap-2">
                       <div className={`w-3 h-3 rounded-full ${getPainDotColor(entry.pain)}`}></div>
                       <span className="text-slate-600 font-medium">{entry.pain || '—'}</span>
                     </div>
                   </td>
                   {showPerMovementEndFeel && (
-                    <td className="py-4 text-slate-600 text-center font-medium">{entry.end_feel || entry.endFeel || '—'}</td>
+                    <td className="py-4 border-y border-slate-100 text-slate-600 text-center font-medium">{entry.end_feel || entry.endFeel || '—'}</td>
                   )}
-                  <td></td>
+                  <td className="last:rounded-r-xl border-y border-r border-slate-100 w-[5%] md:w-[15%] lg:w-[20%]"></td>
                 </tr>
               ))}
             </tbody>
@@ -284,14 +284,14 @@ function FlexibilitySection({ section }) {
         <hr className="border-slate-50 mb-8" />
       )}
 
-      {/* Entry cards - Strict 3-column grid */}
+      {/* Entry cards - Strict grid */}
       {entries.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {entries.map((entry, i) => (
             <div key={i} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
               {/* Header bar */}
               <div className="bg-slate-50 px-4 py-3 border-b border-slate-100">
-                <div className="text-[13px] font-black text-slate-800 uppercase tracking-tight">
+                <div className="text-[13px] font-bold text-slate-600 uppercase tracking-tight">
                   {entry.test_name || entry.label}
                 </div>
               </div>
@@ -344,18 +344,19 @@ function SpecialTestsSection({ section }) {
 
   return (
     <div className="car-special mb-8">
-      <h3 className="text-xl font-black text-slate-800 mb-6 px-2">Special Tests:</h3>
+      <h3 className="text-xl font-black text-slate-800 mb-6 px-0 md:px-2">Special Tests:</h3>
       {entries.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 px-0 md:px-2">
           {entries.map((entry, i) => (
-            <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
-              <div className="w-full text-left">
+            <div key={i} className="bg-white h-full rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
+              
+              <div className="w-full text-left flex-1 flex flex-col">
                 <h4 className="font-bold text-slate-700 text-lg leading-tight">
                   {i + 1}. {entry.test_name}
                 </h4>
               </div>
 
-              <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
+              <div className="w-full shrink-0 aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative mt-auto">
                 {entry.image_url ? (
                   <img 
                     src={entry.image_url} 
@@ -424,14 +425,14 @@ function InvestigationsSection({ section }) {
 
   return (
     <div className="car-investigations">
-      <h3 className="car-section-title">{section.title || 'Investigations'}</h3>
+      <h3 className="car-section-title">{section.title || 'Imagery Findings'}</h3>
       {entries.length > 0 ? (
         <div className="car-inv-list space-y-8">
           {entries.map((entry, i) => (
             <div key={i} className="car-section-box p-0 overflow-hidden" style={{ background: '#fff', border: '1px solid var(--cf-border)', borderRadius: 'var(--cf-radius)' }}>
               <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex justify-between items-center">
                 <span className="font-bold text-slate-700 capitalize flex items-center gap-2">
-                    <span className="text-xl">📷</span> {entry.modality || 'Imaging'}
+                    <span className="text-xl">📷</span> {entry.modality || 'Imagery'}
                 </span>
               </div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -657,11 +658,11 @@ function PalpationSection({ section }) {
     <div className="car-palpation">
       <h3 className="car-section-title">{section.title || 'Palpation'}</h3>
       
-      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-start`}>
+      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-stretch`}>
         {hasImage && (
-          <div className="w-full lg:w-1/2 shrink-0">
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
-                <img src={section.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" />
+          <div className="w-full lg:w-1/2 shrink-0 flex">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm flex-1 flex">
+                <img src={section.image_url} alt="Palpation Reference" className="w-full h-full object-fill" />
             </div>
           </div>
         )}
@@ -743,7 +744,7 @@ function CervicalCurveSection({ section }) {
 
   return (
     <div className="car-cervical max-w-6xl mx-auto">
-      <h3 className="car-section-title mb-10 text-center">{section.title || 'Cervical Curve Assessment'}</h3>
+      <h3 className="car-section-title mb-10 text-center">{section.title || 'Cervical Curve Examination'}</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
         {options.map((opt, i) => {

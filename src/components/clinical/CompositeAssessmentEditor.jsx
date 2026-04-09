@@ -23,10 +23,10 @@ const SECTION_TYPES = [
   { value: 'flexibility_test', label: '🧘 Flexibility Tests', desc: 'Flexibility test entries' },
   { value: 'special_tests', label: '🧪 Special Tests', desc: 'Positive/negative clinical tests' },
   { value: 'palpation', label: '🤲 Palpation', desc: 'Palpation findings by tissue type' },
-  { value: 'cervical_curve', label: '🦴 Cervical Curve', desc: 'Visual assessment of spinal curvature' },
-  { value: 'investigations', label: '📸 Investigations', desc: 'X-ray, MRI, imaging studies' },
-  { value: 'mri_findings', label: '📸 MRI Findings', desc: 'Imaging findings with customizable status pills' },
-  { value: 'mri_warnings', label: '⚠️ MRI Warnings', desc: 'Imaging findings with warning alerts' },
+  { value: 'cervical_curve', label: '🦴 Cervical Curve', desc: 'Visual examination of spinal curvature' },
+  { value: 'investigations', label: '📸 Imagery', desc: 'X-ray, MRI, imagery studies' },
+  { value: 'mri_findings', label: '📸 MRI Findings', desc: 'Imagery findings with customizable status pills' },
+  { value: 'mri_warnings', label: '⚠️ MRI Warnings', desc: 'Imagery findings with warning alerts' },
   { value: 'umnl_screening', label: '🧠 UMNL Screening', desc: 'Neurological test outcomes & screening' },
   { value: 'mcq', label: '❓ MCQ', desc: 'Multiple choice clinical decision question' },
   { value: 'essay', label: '📝 Essay', desc: 'Short answer / reflective question' },
@@ -86,8 +86,8 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
   return (
     <div className="phase-editor assessment-phase">
       <div className="phase-header">
-        <h4>🔬 Composite Assessment Step</h4>
-        <p>Add multiple assessment sections that will be displayed together on one scrollable page.</p>
+        <h4>🔬 Composite Examination Step</h4>
+        <p>Add multiple examination sections that will be displayed together on one scrollable page.</p>
       </div>
 
       {/* Sections List */}
@@ -164,7 +164,7 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
 
         {sections.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', background: '#f8f9fc', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
-            No sections added yet. Click "＋ Add Section" to start building this assessment step.
+            No sections added yet. Click "＋ Add Section" to start building this examination step.
           </div>
         )}
       </div>
@@ -223,7 +223,7 @@ export default function CompositeAssessmentEditor({ step, onUpdate }) {
             value={clinicalTip}
             onChange={e => updateClinicalTip(e.target.value)}
             rows={3}
-            placeholder="Add a clinical tip for this assessment step..."
+            placeholder="Add a clinical tip for this examination step..."
             style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #fde68a', fontSize: '0.85rem', marginTop: '6px', background: '#fff' }}
           />
         </label>
@@ -306,7 +306,7 @@ function createDefaultSection(type) {
     case 'mcq':
       return { ...base, question: '', options: [{ id: 'a', text: '', isCorrect: true }], explanationOnFail: '', explanationOnSuccess: '', hint: '' }
     case 'essay':
-      return { ...base, question: '', expectedKeywords: [], hint: '' }
+      return { ...base, question: '', expectedKeywords: [], hint: '', placeholder: '' }
     default:
       return { ...base, data: {} }
   }
@@ -746,7 +746,7 @@ function CervicalCurveEditor({ section, onUpdate }) {
   return (
     <div className="space-y-4">
       <div className="section-header">
-        <h5>Assessment Options</h5>
+        <h5>Examination Options</h5>
         <button type="button" className="btn-small" onClick={addOption}>+ Add Option</button>
       </div>
 
@@ -999,6 +999,17 @@ function EssaySectionEditor({ section, onUpdate }) {
           rows={3}
           className="w-full mt-1 p-3 border border-slate-300 rounded-md font-medium"
           placeholder="Ask a reflective or analytical question..."
+        />
+      </label>
+
+      <label className="block text-sm font-bold text-slate-700">
+        Placeholder Text (Optional)
+        <textarea
+          value={section.placeholder || ''}
+          onChange={e => onUpdate({ ...section, placeholder: e.target.value })}
+          rows={2}
+          className="w-full mt-1 p-2 border border-slate-300 rounded-md text-sm"
+          placeholder="e.g. Type your reasoning here..."
         />
       </label>
 

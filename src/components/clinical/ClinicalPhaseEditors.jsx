@@ -203,7 +203,7 @@ export function ProblemPhaseEditor({ step, onUpdate, errors, touched, setTouched
             <div className="phase-header user-input-header">
                 <h4>📝 Problem List</h4>
                 <span className="user-input-badge">User Input</span>
-                <p>Actionable problems derived from assessment findings</p>
+                <p>Actionable problems derived from examination findings</p>
             </div>
             <div className="dynamic-list">
                 <div className="section-header">
@@ -347,7 +347,7 @@ export function TreatmentPhaseEditor({ step, onUpdate, errors, touched, setTouch
     return (
         <div className="phase-editor treatment-phase">
             <div className="phase-header">
-                <h4>💊 Treatment</h4>
+                <h4>💊 Treatment Plan</h4>
                 <p>Interventions mapped to problems</p>
             </div>
 

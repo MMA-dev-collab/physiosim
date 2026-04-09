@@ -988,3 +988,71 @@
   line-clamp: 1;
   overflow: hidden;
 }
+
+/* ──────────── RESPONSIVE BREAKPOINTS ──────────── */
+@media (max-width: 1500px) {
+  :root {
+    --cf-sidebar-w: 240px;
+    --cf-stepper-w: 230px;
+  }
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --cf-sidebar-w: 190px;
+    --cf-stepper-w: 180px;
+  }
+  .cf-main-scroll {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --cf-sidebar-w: 190px; /* keep left sidebar smaller width */
+    --cf-stepper-w: 0px; 
+  }
+  .cf-stepper-col {
+    display: none;
+  }
+  .cf-main {
+    margin-right: 0;
+  }
+  .cf-main-scroll {
+    padding: 24px;
+  }
+  .car-section {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 950px) {
+  :root {
+    --cf-sidebar-w: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --cf-sidebar-w: 0px;
+  }
+  .cf-sidebar {
+    display: none;
+  }
+  .cf-main {
+    margin-left: 0;
+  }
+  .cf-main-scroll {
+    padding: 16px;
+  }
+  .cf-footer {
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+  }
+  
+  .cf-layout {
+    /* If sidebars hidden, allow the top margin or padding so content is visible under global headers if any */
+    padding-top: 80px; 
+  }
+}
