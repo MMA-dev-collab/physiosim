@@ -37,25 +37,6 @@ export default function CaseRunnerLayout({
   const [expandedHubs, setExpandedHubs] = React.useState({})
   const [showClinicalTip, setShowClinicalTip] = React.useState(false)
 
-  React.useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // Adjust 80 based on your exact navbar height if needed
-          const newTop = Math.max(0, 80 - window.scrollY);
-          document.documentElement.style.setProperty('--cf-sidebar-top', `${newTop}px`);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    // init
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Automatically expand current step if it has sub-steps
   React.useEffect(() => {
     const currentStep = steps[currentStepIndex]
@@ -142,7 +123,7 @@ export default function CaseRunnerLayout({
 
             {/* ─── CLINICAL TIP ─── */}
             {clinicalTip && (
-              <div className="mt-auto p-2 mb-2">
+              <div className="mt-auto p-4 mb-2">
                 <button
                   onClick={() => setShowClinicalTip(!showClinicalTip)}
                   className="w-full relative flex items-center justify-between p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 shadow-sm hover:bg-amber-100 transition-colors group"
