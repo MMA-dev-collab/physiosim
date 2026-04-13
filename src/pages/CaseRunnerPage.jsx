@@ -9,6 +9,8 @@ import ClinicalHub from '@/components/clinical/ClinicalHub'
 import CompositeAssessmentRunner from '@/components/clinical/CompositeAssessmentRunner'
 import McqStep from '@/components/clinical/McqStep'
 import EssayStep from '@/components/clinical/EssayStep'
+import DiagnosisStep from '@/components/clinical/DiagnosisStep'
+import ProblemListStep from '@/components/clinical/ProblemListStep'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 
@@ -26,6 +28,11 @@ function CaseRunnerPage({ auth }) {
   const [essayAnswer, setEssayAnswer] = useState('')
   const [essayFeedback, setEssayFeedback] = useState(null)
   const [essayScore, setEssayScore] = useState(null)
+  const [stepInitialData, setStepInitialData] = useState(null)
+
+  // Structured step data (Diagnosis / Problem List)
+  const [diagnosisData, setDiagnosisData] = useState(null)
+  const [problemListData, setProblemListData] = useState(null)
 
   // Progress state for Clinical Hubs 
   const [hubProgress, setHubProgress] = useState({})
@@ -68,10 +75,22 @@ function CaseRunnerPage({ auth }) {
         }
         const data = await res.json()
         setCaseData(data)
-        // Resume from saved step index
-        if (data.currentStepIndex && data.currentStepIndex > 0 && !data.isCompleted) {
-          setCurrentStepIndex(data.currentStepIndex)
-          setMaxReachedIndex(data.currentStepIndex)
+        // Resume from saved state
+        if (data.isCompleted) {
+          // If completed, ensure they can freely navigate (they've reached max index)
+          setCurrentStepIndex(0) // Start at the beginning for review mode
+          setMaxReachedIndex(data.steps ? data.steps.length - 1 : 0)
+        } else {
+          if (data.currentStepIndex !== undefined) setCurrentStepIndex(data.currentStepIndex)
+          if (data.maxReachedIndex !== undefined) setMaxReachedIndex(data.maxReachedIndex)
+        }
+        
+        // Restore substep and hub progress
+        if (data.completedSubSteps) setCompletedSubSteps(data.completedSubSteps)
+        if (data.hubProgress) setHubProgress(data.hubProgress)
+        // Set active sub step ID after a short delay since steps are built via useMemo
+        if (data.activeSubStepId) {
+          setTimeout(() => setActiveSubStepId(data.activeSubStepId), 0)
         }
       } catch (e) {
         setError(e.message)
@@ -177,6 +196,12 @@ function CaseRunnerPage({ auth }) {
     }
   }, [activeSubStepId, currentStep, handleSubStepView])
 
+  const activeSubStep = useMemo(() => {
+    if (currentStep?.type !== 'clinical_hub') return null
+    const sub = currentStep.subSteps?.find(s => s.id === activeSubStepId) || currentStep.subSteps?.[0]
+    return sub
+  }, [currentStep, activeSubStepId])
+
   useEffect(() => {
     // Reset state first
     setShowHint(false)
@@ -185,24 +210,48 @@ function CaseRunnerPage({ auth }) {
     setAttemptNumber(1)
     stepStartTimeRef.current = Date.now()
 
-    // Load saved progress if available (Review Mode)
-    if (caseData?.userProgress && currentStep?.id) {
-      const progress = caseData.userProgress[currentStep.id]
-      if (progress) {
-        if (currentStep.type === 'mcq') {
-          setSelectedOption(progress.selectedOptionId)
-          setIsCorrect(progress.isCorrect)
+    const stepIdToLoad = activeSubStepId || currentStep?.id;
+    const stepData = activeSubStep || currentStep;
 
-          // Find feedback for the selected option
-          const selectedOpt = currentStep.options?.find(o => o.id === progress.selectedOptionId)
-          if (selectedOpt) {
-            setFeedback(selectedOpt.feedback)
+    // Load saved progress if available (Review Mode or Mid-run resume)
+    if (caseData?.userProgress && stepIdToLoad && stepData) {
+      const progress = caseData.userProgress[stepIdToLoad]
+      if (progress) {
+        const ad = progress.answer_data || {}
+
+        // Hydrate MCQ state — check both top-level and merged answer_data
+        const savedOptionId = progress.selectedOptionId || ad.selectedOptionId || null
+        setSelectedOption(savedOptionId)
+        // For composite steps: ad.mcqIsCorrect holds the MCQ result (the row isCorrect is the essay's)
+        const savedIsCorrect = ad.mcqIsCorrect !== undefined
+          ? !!ad.mcqIsCorrect
+          : (progress.isCorrect !== undefined ? !!progress.isCorrect : null)
+        setIsCorrect(savedIsCorrect)
+
+        // Find feedback for the selected option if it's an MCQ step or embedded MCQ section
+        let foundFeedback = ad.mcqFeedback || ad.feedback || null
+        if (!foundFeedback && savedOptionId) {
+          let opts = stepData.options
+          if (!opts && stepData.content?.sections) {
+            const mcqSection = stepData.content.sections.find(s => s.type === 'mcq')
+            if (mcqSection) opts = mcqSection.options
           }
-        } else if (currentStep.type === 'essay') {
-          setEssayAnswer(progress.essay_answer || progress.answer || '')
-          setEssayScore(progress.score)
-          setEssayFeedback(progress.feedback)
-          setIsCorrect(progress.isCorrect)
+          // Option IDs might be stored as strings or ints
+          const selectedOpt = (opts || []).find(o => String(o.id) === String(savedOptionId))
+          if (selectedOpt) foundFeedback = selectedOpt.feedback
+        }
+        setFeedback(foundFeedback)
+
+        // Hydrate Essay / Clinical Step answers
+        setEssayAnswer(progress.essay_answer || ad.essayAnswer || '')
+        setEssayScore(progress.score !== undefined && progress.score !== null ? progress.score : (ad.essayScore !== undefined ? ad.essayScore : null))
+        setEssayFeedback(ad.feedback || progress.feedback || null)
+
+        // Hydrate Structured Answer Data
+        if (progress.answer_data) {
+          setStepInitialData(progress.answer_data)
+        } else {
+          setStepInitialData(null)
         }
       } else {
         setSelectedOption(null)
@@ -211,6 +260,7 @@ function CaseRunnerPage({ auth }) {
         setEssayAnswer('')
         setEssayFeedback(null)
         setEssayScore(null)
+        setStepInitialData(null)
       }
     } else {
       setSelectedOption(null)
@@ -219,8 +269,9 @@ function CaseRunnerPage({ auth }) {
       setEssayAnswer('')
       setEssayFeedback(null)
       setEssayScore(null)
+      setStepInitialData(null)
     }
-  }, [currentStepIndex, caseData])
+  }, [currentStepIndex, activeSubStepId, caseData, currentStep, activeSubStep])
 
   // Default expected times by step type (in ms)
   const STEP_TYPE_IDLE_TIMES = {
@@ -283,23 +334,9 @@ function CaseRunnerPage({ auth }) {
     return Math.round(((currentStepIndex + 1) / steps.length) * 100)
   }, [steps.length, currentStepIndex])
 
-  const activeSubStep = useMemo(() => {
-    if (currentStep?.type !== 'clinical_hub') return null
-    const sub = currentStep.subSteps?.find(s => s.id === activeSubStepId) || currentStep.subSteps?.[0]
-    return sub
-  }, [currentStep, activeSubStepId])
 
-  // Reset MCQ/Essay state on sub-step change
-  useEffect(() => {
-    if (activeSubStepId) {
-      setSelectedOption(null)
-      setFeedback(null)
-      setIsCorrect(null)
-      setEssayAnswer('')
-      setEssayFeedback(null)
-      setEssayScore(null)
-    }
-  }, [activeSubStepId])
+
+  // The combined load effect now handles MCQ/Essay state reset on sub-step change
 
   const renderStepContent = (step, hideHeader = false) => {
     if (!step) return null
@@ -329,6 +366,28 @@ function CaseRunnerPage({ auth }) {
             essayScore={essayScore}
             isReviewMode={caseData?.isCompleted}
             onSubmit={handleEssaySubmit}
+          />
+        )
+      case 'diagnosis':
+        return (
+          <DiagnosisStep
+            step={step}
+            essayFeedback={essayFeedback}
+            essayScore={essayScore}
+            isReviewMode={caseData?.isCompleted}
+            initialValue={stepInitialData}
+            onSubmit={handleDiagnosisSubmit}
+          />
+        )
+      case 'problem_list':
+        return (
+          <ProblemListStep
+            step={step}
+            essayFeedback={essayFeedback}
+            essayScore={essayScore}
+            isReviewMode={caseData?.isCompleted}
+            initialValue={stepInitialData}
+            onSubmit={handleProblemListSubmit}
           />
         )
       case 'investigation':
@@ -363,6 +422,33 @@ function CaseRunnerPage({ auth }) {
                 mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
                 essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
                 hideHeader={hideHeader}
+                initialValue={stepInitialData}
+            />
+          )
+        }
+        // Interactive Diagnosis (phase-based clinical step)
+        if (step.phase === 'diagnosis') {
+          return (
+            <DiagnosisStep
+              step={step}
+              essayFeedback={essayFeedback}
+              essayScore={essayScore}
+              isReviewMode={caseData?.isCompleted}
+              initialValue={stepInitialData}
+              onSubmit={handleDiagnosisSubmit}
+            />
+          )
+        }
+        // Interactive Problem List (phase-based clinical step)
+        if (step.phase === 'problem_list') {
+          return (
+            <ProblemListStep
+              step={step}
+              essayFeedback={essayFeedback}
+              essayScore={essayScore}
+              isReviewMode={caseData?.isCompleted}
+              initialValue={stepInitialData}
+              onSubmit={handleProblemListSubmit}
             />
           )
         }
@@ -419,6 +505,93 @@ function CaseRunnerPage({ auth }) {
       }
     } catch (e) {
       setEssayFeedback(e.message)
+    }
+  }
+
+  // ─── Diagnosis Submit Handler ────────────────────────
+  const handleDiagnosisSubmit = async ({ essayAnswer: genSentence, structuredAnswer }) => {
+    if (caseData.isCompleted) return
+    const currentStepToSubmit = activeSubStep || currentStep
+    const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+
+    setIsCorrect(null)
+    setEssayFeedback(null)
+    setEssayScore(null)
+    setDiagnosisData(structuredAnswer)
+
+    try {
+      const isFinal = currentStepIndex === steps.length - 1
+      const res = await fetch(
+        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStepToSubmit.id}/answer-essay`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify({
+            essayAnswer: genSentence,
+            structuredAnswer,
+            isFinalStep: isFinal,
+            timeSpent,
+            hintShown,
+            attemptNumber
+          }),
+        }
+      )
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Failed to submit diagnosis')
+
+      setEssayScore(data.score)
+      setEssayFeedback(data.feedback)
+      setIsCorrect(data.correct)
+      if (data.final) setFinalSummary(data)
+    } catch (e) {
+      setEssayFeedback(e.message)
+    }
+  }
+
+  // ─── Problem List Submit Handler ─────────────────────
+  const handleProblemListSubmit = async ({ essayAnswer: joinedAnswer, problemListItems, evalResult }) => {
+    if (caseData.isCompleted) return
+    const currentStepToSubmit = activeSubStep || currentStep
+    const timeSpent = Math.floor((Date.now() - stepStartTimeRef.current) / 1000)
+
+    setProblemListData({ items: problemListItems, evalResult })
+
+    // Use the frontend‑evaluated score directly
+    setEssayScore(evalResult.score)
+    setIsCorrect(evalResult.score >= (currentStepToSubmit.maxScore || 10) * 0.6)
+    setEssayFeedback(
+      evalResult.score >= (currentStepToSubmit.maxScore || 10) * 0.6
+        ? `Great job! You matched ${evalResult.matched.length} out of ${evalResult.matched.length + evalResult.missing.length} expected problems.`
+        : `You matched ${evalResult.matched.length} out of ${evalResult.matched.length + evalResult.missing.length} expected problems. Review the missing items and try to improve.`
+    )
+
+    // Log to backend for record‑keeping (fire‑and‑forget)
+    try {
+      await fetch(
+        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStepToSubmit.id}/answer-essay`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify({
+            essayAnswer: joinedAnswer,
+            problemListItems,
+            isFinalStep: currentStepIndex === steps.length - 1,
+            timeSpent,
+            hintShown,
+            attemptNumber
+          }),
+        }
+      )
+    } catch (e) {
+      console.error('Failed to log problem list to backend:', e)
     }
   }
 
@@ -492,6 +665,11 @@ function CaseRunnerPage({ auth }) {
     if (stepType === 'essay') {
       return essayScore !== null
     }
+    
+    // Clinical phases handling
+    if (step.phase === 'diagnosis' || step.phase === 'problem_list') {
+      return essayScore !== null
+    }
 
     // Check Composite Assessment sections
     if (step.content?.sections) {
@@ -525,18 +703,22 @@ function CaseRunnerPage({ auth }) {
     if (currentStep?.type === 'clinical_hub' && currentStep.subSteps?.length > 0) {
       const subIndex = currentStep.subSteps.findIndex(s => s.id === activeSubStepId)
       if (subIndex !== -1 && subIndex < currentStep.subSteps.length - 1) {
+        const nextSubId = currentStep.subSteps[subIndex + 1].id;
+        
         // Mark current sub-step as reached/completed (for non-MCQ/Essay sub-steps)
         const subStep = currentStep.subSteps[subIndex]
+        const newCompleted = { ...completedSubSteps }
         if (subStep && (subStep.type !== 'mcq' && subStep.category !== 'mcq' && subStep.type !== 'essay')) {
-          setCompletedSubSteps(prev => {
-            const hubId = currentStep.id
-            const existing = prev[hubId] ? [...prev[hubId]] : []
-            if (!existing.includes(subStep.id)) existing.push(subStep.id)
-            return { ...prev, [hubId]: existing }
-          })
+          const hubId = currentStep.id
+          const existing = newCompleted[hubId] ? [...newCompleted[hubId]] : []
+          if (!existing.includes(subStep.id)) existing.push(subStep.id)
+          newCompleted[hubId] = existing
+          setCompletedSubSteps(newCompleted)
         }
+        
         // Go to next sub-step
-        setActiveSubStepId(currentStep.subSteps[subIndex + 1].id)
+        setActiveSubStepId(nextSubId)
+        saveProgress({ activeSubStepId: nextSubId, completedSubSteps: newCompleted })
         return
       }
     }
@@ -544,10 +726,12 @@ function CaseRunnerPage({ auth }) {
     if (currentStepIndex < steps.length - 1) {
       const nextIdx = currentStepIndex + 1
       setCurrentStepIndex(nextIdx)
-      // Advance the high-water mark
-      setMaxReachedIndex(prev => Math.max(prev, nextIdx))
+      const nextMax = Math.max(maxReachedIndex, nextIdx)
+      setMaxReachedIndex(nextMax)
       // Persist progress for mid-case resume
-      saveProgress(nextIdx)
+      saveProgress({ currentStepIndex: nextIdx, maxReachedIndex: nextMax, activeSubStepId: null })
+    } else {
+      handleFinish()
     }
   }
 
@@ -557,7 +741,9 @@ function CaseRunnerPage({ auth }) {
       const subIndex = currentStep.subSteps.findIndex(s => s.id === activeSubStepId)
       if (subIndex > 0) {
         // Go to previous sub-step
-        setActiveSubStepId(currentStep.subSteps[subIndex - 1].id)
+        const prevSubId = currentStep.subSteps[subIndex - 1].id
+        setActiveSubStepId(prevSubId)
+        saveProgress({ activeSubStepId: prevSubId })
         return
       }
     }
@@ -566,17 +752,37 @@ function CaseRunnerPage({ auth }) {
       const prevIdx = currentStepIndex - 1
       setCurrentStepIndex(prevIdx)
       
+      let prevActiveId = null;
       // If returning to a hub, auto-select its LAST sub-step
       const prevStep = steps[prevIdx]
       if (prevStep?.type === 'clinical_hub' && prevStep.subSteps?.length > 0) {
-        setActiveSubStepId(prevStep.subSteps[prevStep.subSteps.length - 1].id)
+        prevActiveId = prevStep.subSteps[prevStep.subSteps.length - 1].id
+        setActiveSubStepId(prevActiveId)
+      } else {
+        setActiveSubStepId(null)
       }
+      saveProgress({ currentStepIndex: prevIdx, activeSubStepId: prevActiveId })
     }
   }
 
-  // Save currentStepIndex to backend (non-blocking)
-  const saveProgress = useCallback(async (stepIdx) => {
+  // Save state to backend (non-blocking)
+  const saveProgress = useCallback(async (updates = {}) => {
+    if (caseData?.isCompleted) return; // Don't save progress if case is completed
     try {
+      const payload = {
+        currentStepIndex,
+        maxReachedIndex,
+        activeSubStepId,
+        completedSubSteps,
+        hubProgress,
+        ...updates
+      };
+      
+      // Keep maxReachedIndex bounded correctly
+      if (payload.currentStepIndex > payload.maxReachedIndex) {
+         payload.maxReachedIndex = payload.currentStepIndex;
+      }
+      
       await fetch(`${API_BASE_URL}/api/cases/${id}/progress`, {
         method: 'PUT',
         headers: {
@@ -584,12 +790,32 @@ function CaseRunnerPage({ auth }) {
           Authorization: `Bearer ${auth.token}`,
           'ngrok-skip-browser-warning': 'true'
         },
-        body: JSON.stringify({ currentStepIndex: stepIdx })
+        body: JSON.stringify(payload)
       })
     } catch (err) {
       console.error('Failed to save progress:', err)
     }
-  }, [id, auth.token])
+  }, [id, auth.token, currentStepIndex, maxReachedIndex, activeSubStepId, completedSubSteps, hubProgress, caseData])
+
+  const handleFinish = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/cases/${id}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
+      })
+      if (!res.ok) throw new Error('Failed to complete case')
+      const data = await res.json()
+      setCaseData(prev => ({ ...prev, isCompleted: true }))
+      setFinalSummary(data)
+      saveProgress()
+    } catch(err) {
+       console.error("Failed to complete:", err)
+    }
+  }, [id, auth.token, saveProgress])
 
   const handleTryAgain = () => {
     setSelectedOption(null)
@@ -614,6 +840,50 @@ function CaseRunnerPage({ auth }) {
     )
   if (!caseData) return null
 
+  if (finalSummary && caseData?.isCompleted) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-10 max-w-2xl w-full text-center">
+          <div className="mb-6 mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+             <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+             </svg>
+          </div>
+          <h1 className="text-4xl font-extrabold text-slate-900 mb-4">Case Completed!</h1>
+          <p className="text-lg text-slate-600 mb-8">
+            You have successfully completed <strong>{caseData.title}</strong>.
+          </p>
+          <div className="bg-slate-50 rounded-xl p-6 mb-8 flex justify-center space-x-12">
+            <div className="text-center">
+              <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Final Score</p>
+              <p className="text-4xl font-bold text-slate-900">{finalSummary.score}</p>
+              <p className="text-xs text-slate-400 mt-1">out of {finalSummary.maxPossibleScore}</p>
+            </div>
+          </div>
+          <div className="flex space-x-4 justify-center">
+            <button 
+              onClick={() => setFinalSummary(null)} 
+              className="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Review Answers
+            </button>
+            <button 
+              onClick={() => {
+                if (window.location.hostname.includes('ngrok')) {
+                  window.location.href = '/cases';
+                } else {
+                  navigate('/cases');
+                }
+              }} 
+              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              Back to Library
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="page" style={{ padding: 0 }}> {/* Reset padding for full-screen layout */}
@@ -910,5 +1180,8 @@ function InvestigationsStep({ step }) {
 
 
 export default CaseRunnerPage
+
+
+ 
 
 

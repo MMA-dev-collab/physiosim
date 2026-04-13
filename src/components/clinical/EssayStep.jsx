@@ -79,7 +79,7 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
                 Question {idx + 1}
               </div>
               <div style={{ color: '#475569', lineHeight: '1.6' }}>
-                {eq.question_text || eq.question || eq}
+                {eq.question_text || eq.question || (typeof eq === 'string' ? eq : '')}
               </div>
             </div>
 
@@ -226,7 +226,7 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
       {hints.length > 0 && (
         <div 
           className="absolute -right-8 top-0 w-80 flex flex-col gap-4 z-[10] pointer-events-none"
-          style={{ transform: 'translateX(10%)',transform:"translateY(-20%)" }}
+          style={{ transform: 'translateX(10%) translateY(-20%)' }}
         >
           {hints.map((hint, idx) => {
             if (!visibleHints[idx]) return null;

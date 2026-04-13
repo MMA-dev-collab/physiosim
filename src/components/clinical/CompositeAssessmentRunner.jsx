@@ -11,7 +11,7 @@ import EssayStep from './EssayStep'
  *   step.content.clinicalTip - optional clinical tip text
  *   step.title - admin-given name of this Main Step
  */
-export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, hideHeader = false }) {
+export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, hideHeader = false, initialValue }) {
   const content = step?.content || {}
   const sections = content.sections || []
   const clinicalTip = content.clinicalTip || null

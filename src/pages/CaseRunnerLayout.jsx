@@ -177,6 +177,12 @@ export default function CaseRunnerLayout({
 
         {/* ─── RIGHT SIDEBAR: Progress Stepper ─── */}
         <aside className="cf-stepper-col bg-white">
+          {isReviewMode && (
+             <div className="bg-sky-50 text-sky-700 px-4 py-3 border-b border-sky-100 flex gap-2 items-center text-sm font-semibold sticky top-0 z-10">
+               <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+               Review Mode
+             </div>
+          )}
           <div className="px-4 py-4 border-b border-slate-100 mb-2">
             <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Progress</h3>
             <div className="flex items-center gap-4">
@@ -341,16 +347,18 @@ export default function CaseRunnerLayout({
               </svg>
               Back
             </button>
-            <button
-              className="cf-btn cf-btn-primary bg-[#2563eb] text-white hover:bg-blue-700"
-              onClick={onNext}
-              disabled={isNextDisabled}
-            >
-              {currentStepIndex === 0 && (steps[0]?.type === 'info' || steps[0]?.phase === 'case_overview') ? 'Start Assessment' : currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next Step'}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
+            {(!isReviewMode || currentStepIndex < totalSteps - 1) && (
+              <button
+                className="cf-btn cf-btn-primary bg-[#2563eb] text-white hover:bg-blue-700"
+                onClick={onNext}
+                disabled={isNextDisabled}
+              >
+                {currentStepIndex === 0 && (steps[0]?.type === 'info' || steps[0]?.phase === 'case_overview') ? 'Start Assessment' : currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next Step'}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>

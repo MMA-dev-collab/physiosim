@@ -66,7 +66,7 @@ export default function StepEditor({ step, onSave, onCancel }) {
             }
 
             // Hint Validation - Only run if hint is enabled
-            if (editedStep.hint_enabled !== false) {
+            if (editedStep.hint_enabled === true) {
                 if (!editedStep.tag) {
                     errors.tag = 'Tag / Category is required'
                 }
@@ -163,6 +163,28 @@ export default function StepEditor({ step, onSave, onCancel }) {
             });
         }
 
+        if (editedStep.type === 'diagnosis') {
+            const eq = (editedStep.essayQuestions && editedStep.essayQuestions[0]);
+            if (!eq || !eq.keywords || eq.keywords.length === 0) {
+                errors.diagnosisKeywords = 'At least 1 expected keyword is required for diagnosis';
+            }
+            if (!eq || !eq.perfect_answer) {
+                errors.diagnosisPerfectAnswer = 'Correct diagnosis (perfect answer) is required';
+            }
+        }
+
+        if (editedStep.type === 'problem_list') {
+            const problems = editedStep.essayQuestions || [];
+            if (problems.length === 0) {
+                errors.problemList = 'At least 1 expected problem is required';
+            }
+            problems.forEach((p, idx) => {
+                if (!p.question_text) {
+                    errors[`problem_${idx}_name`] = `Problem ${idx + 1} name is required`;
+                }
+            });
+        }
+
         return errors
     }
 
@@ -229,7 +251,9 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 {step.type === 'mcq' && <McqStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'investigation' && <InvestigationStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
                 {step.type === 'essay' && <EssayStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
-                {(step.type === 'diagnosis' || step.type === 'treatment') && (
+                {step.type === 'diagnosis' && <DiagnosisStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
+                {step.type === 'problem_list' && <ProblemListStepEditor editedStep={editedStep} setEditedStep={setEditedStep} errors={errors} touched={touched} setTouched={setTouched} />}
+                {step.type === 'treatment' && (
                     <GenericStepEditor editedStep={editedStep} setEditedStep={setEditedStep} />
                 )}
 
@@ -996,6 +1020,296 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
 }
 
 // Generic Step Editor (for diagnosis, treatment, etc.)
+// Diagnosis Step Editor — Structured admin fields for Diagnosis step
+function DiagnosisStepEditor({ editedStep, setEditedStep, errors, touched, setTouched }) {
+    // We store: essayQuestions[0] = { question_text, keywords, synonyms, perfect_answer, max_score }
+    // keywords = expected keywords (condition, levels, findings keywords)
+    const eq = (editedStep.essayQuestions && editedStep.essayQuestions[0]) || {
+        question_text: 'Build the diagnosis for this patient',
+        keywords: [],
+        synonyms: [],
+        max_score: editedStep.maxScore || 10,
+        perfect_answer: ''
+    };
+
+    const updateEq = (field, value) => {
+        const newEq = { ...eq, [field]: value };
+        setEditedStep({
+            ...editedStep,
+            essayQuestions: [newEq]
+        });
+    };
+
+    const addKeyword = (kw) => {
+        if (!kw.trim()) return;
+        const existing = eq.keywords || [];
+        if (!existing.includes(kw.trim())) {
+            updateEq('keywords', [...existing, kw.trim()]);
+        }
+    };
+
+    const removeKeyword = (idx) => {
+        updateEq('keywords', (eq.keywords || []).filter((_, i) => i !== idx));
+    };
+
+    const addSynonym = (syn) => {
+        if (!syn.trim()) return;
+        const existing = eq.synonyms || [];
+        if (!existing.includes(syn.trim())) {
+            updateEq('synonyms', [...existing, syn.trim()]);
+        }
+    };
+
+    const removeSynonym = (idx) => {
+        updateEq('synonyms', (eq.synonyms || []).filter((_, i) => i !== idx));
+    };
+
+    return (
+        <div className="form-grid">
+            {/* Max Score */}
+            <label>
+                <div className="flex items-center gap-1">
+                    Max Score <span className="text-red-500">*</span>
+                </div>
+                <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={editedStep.maxScore || 10}
+                    onChange={e => setEditedStep({ ...editedStep, maxScore: parseInt(e.target.value) || 10 })}
+                    placeholder="10"
+                />
+            </label>
+
+            {/* Perfect Answer (correct diagnosis sentence) */}
+            <label style={{ gridColumn: '1 / -1' }}>
+                <div className="flex items-center gap-1">
+                    Correct Diagnosis (Perfect Answer) <span className="text-red-500">*</span>
+                </div>
+                <textarea
+                    value={eq.perfect_answer || ''}
+                    onChange={e => updateEq('perfect_answer', e.target.value)}
+                    rows={3}
+                    placeholder="e.g. Multiple cervical disc bulges at C3-C4, C4-C5, C5-C6 with reversed cervical curve and stenosis"
+                />
+                <span style={{ color: '#64748b', fontSize: '0.75rem' }}>This is shown to the student after submission as the model answer.</span>
+            </label>
+
+            {/* Keywords */}
+            <div style={{ gridColumn: '1 / -1' }}>
+                <label>
+                    <div className="flex items-center gap-1 mb-2">
+                        Expected Keywords <span className="text-red-500">*</span>
+                    </div>
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                    {(eq.keywords || []).map((kw, idx) => (
+                        <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '12px', background: '#dbeafe', color: '#1e40af', fontSize: '0.85rem', fontWeight: 600 }}>
+                            {kw}
+                            <button type="button" onClick={() => removeKeyword(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e40af', fontSize: '1rem', padding: 0, lineHeight: 1 }}>×</button>
+                        </span>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
+                        placeholder="Type keyword and press Enter"
+                        onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                addKeyword(e.target.value);
+                                e.target.value = '';
+                            }
+                        }}
+                        style={{ flex: 1 }}
+                    />
+                    <button type="button" className="btn-secondary btn-small" onClick={e => {
+                        const input = e.target.previousSibling;
+                        addKeyword(input.value);
+                        input.value = '';
+                    }}>Add</button>
+                </div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Keywords the student's answer will be checked against (e.g. disc bulge, C3-C4, stenosis, reversed lordosis).</span>
+            </div>
+
+            {/* Synonyms */}
+            <div style={{ gridColumn: '1 / -1' }}>
+                <label>
+                    <div className="flex items-center gap-1 mb-2">Synonyms (Optional)</div>
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                    {(eq.synonyms || []).map((syn, idx) => (
+                        <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '12px', background: '#fef3c7', color: '#92400e', fontSize: '0.85rem', fontWeight: 600 }}>
+                            {syn}
+                            <button type="button" onClick={() => removeSynonym(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400e', fontSize: '1rem', padding: 0, lineHeight: 1 }}>×</button>
+                        </span>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
+                        placeholder="Type synonym and press Enter"
+                        onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                addSynonym(e.target.value);
+                                e.target.value = '';
+                            }
+                        }}
+                        style={{ flex: 1 }}
+                    />
+                    <button type="button" className="btn-secondary btn-small" onClick={e => {
+                        const input = e.target.previousSibling;
+                        addSynonym(input.value);
+                        input.value = '';
+                    }}>Add</button>
+                </div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Alternate terms that mean the same thing (e.g. "reversed curve" = "loss of lordosis").</span>
+            </div>
+        </div>
+    );
+}
+
+// Problem List Step Editor — Each expected problem = one essayQuestion entry
+function ProblemListStepEditor({ editedStep, setEditedStep, errors, touched, setTouched }) {
+    const essayQuestions = editedStep.essayQuestions || [];
+
+    const addProblem = () => {
+        setEditedStep({
+            ...editedStep,
+            essayQuestions: [...essayQuestions, {
+                question_text: '',
+                keywords: [],
+                synonyms: [],
+                max_score: editedStep.maxScore || 10,
+                perfect_answer: ''
+            }]
+        });
+    };
+
+    const removeProblem = (idx) => {
+        setEditedStep({
+            ...editedStep,
+            essayQuestions: essayQuestions.filter((_, i) => i !== idx)
+        });
+    };
+
+    const updateProblem = (idx, field, value) => {
+        const updated = [...essayQuestions];
+        updated[idx] = { ...updated[idx], [field]: value };
+        setEditedStep({ ...editedStep, essayQuestions: updated });
+    };
+
+    const addProblemKeyword = (problemIdx, kw) => {
+        if (!kw.trim()) return;
+        const updated = [...essayQuestions];
+        const existing = updated[problemIdx].keywords || [];
+        if (!existing.includes(kw.trim())) {
+            updated[problemIdx] = { ...updated[problemIdx], keywords: [...existing, kw.trim()] };
+            setEditedStep({ ...editedStep, essayQuestions: updated });
+        }
+    };
+
+    const removeProblemKeyword = (problemIdx, kwIdx) => {
+        const updated = [...essayQuestions];
+        updated[problemIdx] = {
+            ...updated[problemIdx],
+            keywords: (updated[problemIdx].keywords || []).filter((_, i) => i !== kwIdx)
+        };
+        setEditedStep({ ...editedStep, essayQuestions: updated });
+    };
+
+    return (
+        <div className="form-grid">
+            {/* Max Score */}
+            <label>
+                <div className="flex items-center gap-1">
+                    Max Score <span className="text-red-500">*</span>
+                </div>
+                <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={editedStep.maxScore || 10}
+                    onChange={e => setEditedStep({ ...editedStep, maxScore: parseInt(e.target.value) || 10 })}
+                    placeholder="10"
+                />
+            </label>
+
+            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Expected Problems</h4>
+                    <button type="button" className="btn-secondary btn-small" onClick={addProblem}>
+                        + Add Problem
+                    </button>
+                </div>
+
+                {essayQuestions.length === 0 && (
+                    <p style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>No expected problems added yet. Click "+ Add Problem" to start.</p>
+                )}
+
+                {essayQuestions.map((prob, idx) => (
+                    <div key={idx} className="array-item" style={{ marginBottom: '1rem' }}>
+                        <div className="array-item-header">
+                            <span>Problem {idx + 1}</span>
+                            <button type="button" className="btn-delete-small" onClick={() => removeProblem(idx)}>🗑</button>
+                        </div>
+                        <div className="form-grid">
+                            {/* Problem Label */}
+                            <label style={{ gridColumn: '1 / -1' }}>
+                                <div className="flex items-center gap-1">
+                                    Problem Name <span className="text-red-500">*</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={prob.question_text || ''}
+                                    onChange={e => updateProblem(idx, 'question_text', e.target.value)}
+                                    placeholder="e.g. Reduced cervical ROM"
+                                />
+                            </label>
+
+                            {/* Keywords */}
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <label>
+                                    <div className="flex items-center gap-1 mb-2">Matching Keywords</div>
+                                </label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                                    {(prob.keywords || []).map((kw, kwIdx) => (
+                                        <span key={kwIdx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '12px', background: '#dbeafe', color: '#1e40af', fontSize: '0.85rem', fontWeight: 600 }}>
+                                            {kw}
+                                            <button type="button" onClick={() => removeProblemKeyword(idx, kwIdx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e40af', fontSize: '1rem', padding: 0, lineHeight: 1 }}>×</button>
+                                        </span>
+                                    ))}
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Type keyword and press Enter"
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter' || e.key === ',') {
+                                                e.preventDefault();
+                                                addProblemKeyword(idx, e.target.value);
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button type="button" className="btn-secondary btn-small" onClick={e => {
+                                        const input = e.target.previousSibling;
+                                        addProblemKeyword(idx, input.value);
+                                        input.value = '';
+                                    }}>Add</button>
+                                </div>
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Keywords that match this problem (e.g. "cervical", "ROM", "range of motion").</span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function GenericStepEditor({ editedStep, setEditedStep }) {
     return (
         <div className="form-grid">

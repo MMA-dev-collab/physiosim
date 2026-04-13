@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
-export default function McqStep({ step, selectedOption, feedback, isCorrect, onAnswer }) {
+export default function McqStep({ step, selectedOption, feedback, isCorrect, onAnswer, isReviewMode }) {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [localSelection, setLocalSelection] = useState(null)
   const [hintVisible, setHintVisible] = useState(false)
@@ -12,6 +12,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
   }
 
   const handleOptionClick = (optionId) => {
+    if (isReviewMode) return
     if (!isSubmitted) {
       setLocalSelection(optionId)
     }
@@ -24,10 +25,14 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
     }
   }
 
-  // Reset submission state when step changes or when retry/load happens
+  // Reset or restore submission state when step changes or when retry/load happens
   useEffect(() => {
     setHintVisible(false)
-    if (!selectedOption) {
+    if (selectedOption) {
+      // Restoring from saved progress — mark as already submitted
+      setLocalSelection(selectedOption)
+      setIsSubmitted(true)
+    } else {
       setIsSubmitted(false)
       setLocalSelection(null)
     }
@@ -72,7 +77,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
   }, [isCorrect, hints.length])
 
   // Determine which selection to show: submitted answer or local selection
-  const displaySelection = isSubmitted ? (selectedOption || localSelection) : localSelection
+  const displaySelection = isReviewMode ? selectedOption : (isSubmitted ? (selectedOption || localSelection) : localSelection)
 
   return (
     <div className="relative w-full">
@@ -85,7 +90,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             const isSelected = displaySelection === opt.id
             let statusClass = ''
 
-            if (isSelected && isSubmitted) {
+            if (isSelected && (isSubmitted || isReviewMode)) {
               if (isCorrect === false) {
                 statusClass = ' wrong'
               } else if (isCorrect === true) {
@@ -99,7 +104,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
                 type="button"
                 className={`mcq-option-card${opt.imageUrl ? ' mcq-rich-card' : ''}${statusClass}${isSelected ? ' selected' : ''}`}
                 onClick={() => handleOptionClick(opt.id)}
-                disabled={isSubmitted}
+                disabled={isSubmitted || isReviewMode}
               >
                 {opt.imageUrl ? (
                    <div className="mcq-rich-content">
@@ -134,7 +139,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             )
           })}
         </div>
-        {!isSubmitted && (
+        {!isSubmitted && !isReviewMode && (
           <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
             <button
               className="cf-btn cf-btn-primary"
@@ -145,7 +150,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             </button>
           </div>
         )}
-        {isSubmitted && isCorrect !== undefined && isCorrect !== null && (
+        {(isSubmitted || isReviewMode) && isCorrect !== undefined && isCorrect !== null && (
           <div className={`mt-6 p-3.5 rounded-lg flex items-center gap-3 ${
             isCorrect ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
           }`}>

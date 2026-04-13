@@ -46,25 +46,23 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
         }
 
         if (phase === 'diagnosis') {
-            const diagnoses = content?.diagnoses || []
-            if (diagnoses.length === 0) {
-                errors.diagnoses = 'At least one diagnosis is required'
+            const eq = editedStep.essayQuestions && editedStep.essayQuestions[0]
+            if (!eq || !eq.keywords || eq.keywords.length === 0) {
+                errors.diagnosisKeywords = 'At least 1 expected keyword is required for diagnosis'
             }
-            diagnoses.forEach((d, idx) => {
-                if (!d.label?.trim()) {
-                    errors[`diagnosis_${idx}_label`] = `Diagnosis ${idx + 1} label is required`
-                }
-            })
+            if (!eq || !eq.perfect_answer?.trim()) {
+                errors.diagnosisPerfectAnswer = 'Correct diagnosis (perfect answer) is required'
+            }
         }
 
         if (phase === 'problem_list') {
-            const problems = content?.problems || []
+            const problems = editedStep.essayQuestions || []
             if (problems.length === 0) {
-                errors.problems = 'At least one problem is required'
+                errors.problems = 'At least one expected problem is required'
             }
             problems.forEach((p, idx) => {
-                if (!p.label?.trim()) {
-                    errors[`problem_${idx}_label`] = `Problem ${idx + 1} label is required`
+                if (!p.question_text?.trim()) {
+                    errors[`problem_${idx}_label`] = `Problem ${idx + 1} name is required`
                 }
             })
         }
