@@ -458,6 +458,26 @@ function CaseRunnerPage({ auth }) {
     }
   }
 
+  const updateLocalProgress = (stepIdToUpdate, dataToMerge) => {
+    setCaseData(prev => {
+      if (!prev) return prev;
+      const userProgress = prev.userProgress || {};
+      const existing = userProgress[stepIdToUpdate] || {};
+      const newAnswerData = { ...(existing.answer_data || {}), ...(dataToMerge.answer_data || {}) };
+      return {
+        ...prev,
+        userProgress: {
+          ...userProgress,
+          [stepIdToUpdate]: {
+            ...existing,
+            ...dataToMerge,
+            answer_data: Object.keys(newAnswerData).length > 0 ? newAnswerData : existing.answer_data
+          }
+        }
+      };
+    });
+  };
+
   const handleEssaySubmit = async () => {
     if (caseData.isCompleted) return
     const currentStepToSubmit = activeSubStep || currentStep
@@ -503,6 +523,14 @@ function CaseRunnerPage({ auth }) {
           return { ...prev, [hubId]: existing }
         })
       }
+
+      updateLocalProgress(currentStepToSubmit.id, {
+        score: data.score,
+        isCorrect: data.correct,
+        feedback: data.feedback,
+        essay_answer: essayAnswer,
+        answer_data: { essayAnswer, essayScore: data.score, feedback: data.feedback }
+      })
     } catch (e) {
       setEssayFeedback(e.message)
     }
@@ -547,6 +575,14 @@ function CaseRunnerPage({ auth }) {
       setEssayFeedback(data.feedback)
       setIsCorrect(data.correct)
       if (data.final) setFinalSummary(data)
+
+      updateLocalProgress(currentStepToSubmit.id, {
+        score: data.score,
+        isCorrect: data.correct,
+        feedback: data.feedback,
+        essay_answer: genSentence,
+        answer_data: { essayAnswer: genSentence, structuredAnswer, essayScore: data.score, feedback: data.feedback }
+      })
     } catch (e) {
       setEssayFeedback(e.message)
     }
@@ -572,7 +608,7 @@ function CaseRunnerPage({ auth }) {
     // Log to backend for record‑keeping (fire‑and‑forget)
     try {
       await fetch(
-        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStepToSubmit.id}/answer-essay`,
+        `${API_BASE_URL}/api/cases/${caseData.id}/steps/${currentStepToSubmit.id}/answer-structural`,
         {
           method: 'POST',
           headers: {
@@ -583,6 +619,9 @@ function CaseRunnerPage({ auth }) {
           body: JSON.stringify({
             essayAnswer: joinedAnswer,
             problemListItems,
+            evalScore: evalResult?.score,
+            evalFeedback: evalResult?.feedback,
+            evalResult,
             isFinalStep: currentStepIndex === steps.length - 1,
             timeSpent,
             hintShown,
@@ -590,6 +629,13 @@ function CaseRunnerPage({ auth }) {
           }),
         }
       )
+      
+      updateLocalProgress(currentStepToSubmit.id, {
+        score: evalResult.score,
+        isCorrect: evalResult.score >= (currentStepToSubmit.maxScore || 10) * 0.6,
+        essay_answer: joinedAnswer,
+        answer_data: { essayAnswer: joinedAnswer, problemListItems, essayScore: evalResult.score, evalResult }
+      })
     } catch (e) {
       console.error('Failed to log problem list to backend:', e)
     }
@@ -648,6 +694,14 @@ function CaseRunnerPage({ auth }) {
           return { ...prev, [hubId]: existing }
         })
       }
+
+      updateLocalProgress(currentStepToSubmit.id, {
+        selectedOptionId: optionId,
+        isCorrect: data.correct,
+        feedback: data.feedback,
+        score: data.score,
+        answer_data: { selectedOptionId: optionId, mcqIsCorrect: data.correct, mcqFeedback: data.feedback || currentStep.explanationOnFail }
+      })
     } catch (e) {
       setFeedback(e.message)
       setIsCorrect(false)
