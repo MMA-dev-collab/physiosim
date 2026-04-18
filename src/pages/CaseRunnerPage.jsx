@@ -11,6 +11,7 @@ import McqStep from '@/components/clinical/McqStep'
 import EssayStep from '@/components/clinical/EssayStep'
 import DiagnosisStep from '@/components/clinical/DiagnosisStep'
 import ProblemListStep from '@/components/clinical/ProblemListStep'
+import TreatmentPlanStep from '@/components/clinical/TreatmentPlanStep'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 
@@ -390,6 +391,8 @@ function CaseRunnerPage({ auth }) {
             onSubmit={handleProblemListSubmit}
           />
         )
+      case 'treatment':
+        return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
       case 'investigation':
         return <InvestigationsStep step={step} />
       case 'clinical':
@@ -451,6 +454,9 @@ function CaseRunnerPage({ auth }) {
               onSubmit={handleProblemListSubmit}
             />
           )
+        }
+        if (step.phase === 'treatment') {
+          return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
         }
         return <ClinicalStepRunner step={step} hideHeader={hideHeader} />
       default:

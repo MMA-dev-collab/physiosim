@@ -396,6 +396,7 @@ export default function ClinicalPhaseManager({
                                                                 <div className="category-editor-wrapper">
                                                                     <ClinicalStepEditor
                                                                         step={existingStep}
+                                                                        allSteps={steps}
                                                                         onSave={handleStepSave}
                                                                         onCancel={() => setEditingStepId(null)}
                                                                     />

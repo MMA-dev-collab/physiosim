@@ -446,11 +446,15 @@ export function ProblemPhaseEditor({ step, onUpdate, errors, touched, setTouched
 
 /**
  * Treatment Phase Editor
- * Handles: Treatment table (Problem → Treatment → Benefit)
+ * Handles: Treatment table (Problem → Treatment → Dosages & Video)
  */
-export function TreatmentPhaseEditor({ step, onUpdate, errors, touched, setTouched }) {
+export function TreatmentPhaseEditor({ step, allSteps, onUpdate, errors, touched, setTouched }) {
     const content = step.content || {}
     const treatments = content.treatments || []
+
+    // Extract problems from previous `problem_list` step if available
+    const problemListStep = allSteps?.find(s => s.phase === 'problem_list')
+    const availableProblems = problemListStep?.essayQuestions || []
 
     const addTreatment = () => {
         onUpdate({
@@ -461,9 +465,10 @@ export function TreatmentPhaseEditor({ step, onUpdate, errors, touched, setTouch
                     id: `treat_${Date.now()}`,
                     problem_id: '',
                     problem_label: '',
+                    goal: '',
                     intervention: '',
-                    benefit: '',
-                    links: []
+                    dosages: [],
+                    videoUrl: ''
                 }]
             }
         })
@@ -482,25 +487,18 @@ export function TreatmentPhaseEditor({ step, onUpdate, errors, touched, setTouch
         })
     }
 
-    const addLink = (treatIndex) => {
+    const addDosage = (treatIndex, dosageText) => {
+        if (!dosageText.trim()) return
         const updated = [...treatments]
-        const links = updated[treatIndex].links || []
-        updated[treatIndex] = { ...updated[treatIndex], links: [...links, ''] }
+        const dosages = updated[treatIndex].dosages || []
+        updated[treatIndex] = { ...updated[treatIndex], dosages: [...dosages, dosageText.trim()] }
         onUpdate({ ...step, content: { ...content, treatments: updated } })
     }
 
-    const updateLink = (treatIndex, linkIndex, value) => {
+    const removeDosage = (treatIndex, dosageIndex) => {
         const updated = [...treatments]
-        const links = [...(updated[treatIndex].links || [])]
-        links[linkIndex] = value
-        updated[treatIndex] = { ...updated[treatIndex], links }
-        onUpdate({ ...step, content: { ...content, treatments: updated } })
-    }
-
-    const removeLink = (treatIndex, linkIndex) => {
-        const updated = [...treatments]
-        const links = (updated[treatIndex].links || []).filter((_, i) => i !== linkIndex)
-        updated[treatIndex] = { ...updated[treatIndex], links }
+        const dosages = (updated[treatIndex].dosages || []).filter((_, i) => i !== dosageIndex)
+        updated[treatIndex] = { ...updated[treatIndex], dosages }
         onUpdate({ ...step, content: { ...content, treatments: updated } })
     }
 
@@ -512,65 +510,123 @@ export function TreatmentPhaseEditor({ step, onUpdate, errors, touched, setTouch
             </div>
 
             {/* Treatment Table */}
-            <div className="treatment-table">
-                <div className="table-header">
-                    <div className="col-problem">Problem</div>
-                    <div className="col-treatment">Treatment</div>
-                    <div className="col-benefit">Benefit</div>
-                    <div className="col-actions"></div>
-                </div>
+            <div className="treatment-table" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {treatments.map((treat, idx) => (
-                    <div key={idx} className="table-row">
-                        <div className="col-problem">
-                            <textarea
-                                value={treat.problem_label || ''}
-                                onChange={(e) => updateTreatment(idx, 'problem_label', e.target.value)}
-                                placeholder="e.g., Tight Muscles"
-                                rows={2}
-                            />
+                    <div key={idx} className="table-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: '12px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', position: 'relative' }}>
+                        
+                        {/* Remove Button */}
+                        <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+                            <button type="button" className="btn-delete-small" style={{ background: '#fee2e2', color: '#ef4444', padding: '4px 8px', borderRadius: '6px' }} onClick={() => removeTreatment(idx)}>🗑</button>
                         </div>
-                        <div className="col-treatment">
-                            <textarea
-                                value={treat.intervention || ''}
-                                onChange={(e) => updateTreatment(idx, 'intervention', e.target.value)}
-                                placeholder="e.g., Muscle energy technique, SNAG left rotation..."
-                                rows={2}
-                            />
-                            <div className="link-list">
-                                {(treat.links || []).map((link, lIdx) => (
-                                    <div key={lIdx} className="link-item">
-                                        <input
-                                            value={link}
-                                            onChange={(e) => updateLink(idx, lIdx, e.target.value)}
-                                            placeholder="https://..."
-                                        />
-                                        <button type="button" className="btn-delete-small" onClick={() => removeLink(idx, lIdx)}>×</button>
-                                    </div>
-                                ))}
-                                <button type="button" className="btn-link-add" onClick={() => addLink(idx)}>+ Link</button>
+
+                        {/* Col 1: Problem & Goal */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Problem</label>
+                                {availableProblems.length > 0 && (
+                                    <select
+                                        value={availableProblems.find(p => p.question_text === treat.problem_label) ? treat.problem_label : ''}
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                updateTreatment(idx, 'problem_label', e.target.value)
+                                            }
+                                        }}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '8px', fontSize: '0.85rem' }}
+                                    >
+                                        <option value="">-- Select from Problem List --</option>
+                                        {availableProblems.map((prob, pIdx) => (
+                                            <option key={pIdx} value={prob.question_text}>{prob.question_text}</option>
+                                        ))}
+                                    </select>
+                                )}
+                                <input
+                                    type="text"
+                                    value={treat.problem_label || ''}
+                                    onChange={(e) => updateTreatment(idx, 'problem_label', e.target.value)}
+                                    placeholder="Or type custom problem..."
+                                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Goal</label>
+                                <textarea
+                                    value={treat.goal || ''}
+                                    onChange={(e) => updateTreatment(idx, 'goal', e.target.value)}
+                                    placeholder="e.g., Reduce muscle tightness..."
+                                    rows={3}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                />
                             </div>
                         </div>
-                        <div className="col-benefit">
-                            <textarea
-                                value={treat.benefit || ''}
-                                onChange={(e) => updateTreatment(idx, 'benefit', e.target.value)}
-                                placeholder="e.g., Pain relief and increase ROM"
-                                rows={2}
-                            />
+
+                        {/* Col 2: Treatment & Video */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '1px solid #e2e8f0', paddingLeft: '12px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Treatment / Technique</label>
+                                <textarea
+                                    value={treat.intervention || ''}
+                                    onChange={(e) => updateTreatment(idx, 'intervention', e.target.value)}
+                                    placeholder="e.g., Muscle energy technique (MET)"
+                                    rows={2}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>YouTube Video URL</label>
+                                <input
+                                    type="text"
+                                    value={treat.videoUrl || ''}
+                                    onChange={(e) => updateTreatment(idx, 'videoUrl', e.target.value)}
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                />
+                            </div>
                         </div>
-                        <div className="col-actions">
-                            <button type="button" className="btn-delete-small" onClick={() => removeTreatment(idx)}>🗑</button>
+
+                        {/* Col 3: Dosages */}
+                        <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0', paddingLeft: '12px' }}>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Dosages / Tips</label>
+                            
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                                {(treat.dosages || []).map((dos, dIdx) => (
+                                    <span key={dIdx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '12px', background: '#e0e7ff', color: '#4338ca', fontSize: '0.75rem', fontWeight: 600 }}>
+                                        {dos}
+                                        <button type="button" onClick={() => removeDosage(idx, dIdx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4338ca', fontSize: '1rem', padding: 0, lineHeight: 1 }}>×</button>
+                                    </span>
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Add dosage and press Enter"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            addDosage(idx, e.target.value)
+                                            e.target.value = ''
+                                        }
+                                    }}
+                                    style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
+                                />
+                                <button type="button" onClick={(e) => {
+                                    const input = e.target.closest('div').querySelector('input')
+                                    addDosage(idx, input.value)
+                                    input.value = ''
+                                }} style={{ padding: '6px 12px', borderRadius: '6px', background: '#6366f1', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.75rem' }}>Add</button>
+                            </div>
                         </div>
+                        
                     </div>
                 ))}
                 {treatments.length === 0 && (
-                    <div className="empty-table-state">
+                    <div className="empty-table-state" style={{ padding: '2rem', textAlign: 'center', border: '2px dashed #cbd5e1', borderRadius: '12px', color: '#64748b' }}>
                         No treatments added. Click "+ Add Treatment" below.
                     </div>
                 )}
             </div>
-            <div className="table-footer">
-                <button type="button" className="btn-small" onClick={addTreatment}>+ Add Treatment</button>
+            <div className="table-footer" style={{ marginTop: '16px' }}>
+                <button type="button" className="btn-small" style={{ background: '#4338ca', color: '#fff', padding: '8px 16px', borderRadius: '8px', fontWeight: 600 }} onClick={addTreatment}>+ Add Treatment</button>
             </div>
         </div>
     )

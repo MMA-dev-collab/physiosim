@@ -13,7 +13,7 @@ import './PhaseEditors.css'
  * ClinicalStepEditor - Unified wrapper for all clinical phase editors
  * Routes to the correct phase editor based on step.phase and step.category
  */
-export default function ClinicalStepEditor({ step, onSave, onCancel }) {
+export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel }) {
     const [editedStep, setEditedStep] = useState({ ...step })
     const [saving, setSaving] = useState(false)
     const [touched, setTouched] = useState({})
@@ -106,6 +106,7 @@ export default function ClinicalStepEditor({ step, onSave, onCancel }) {
     const renderPhaseEditor = () => {
         const editorProps = {
             step: editedStep,
+            allSteps,
             onUpdate: handleStepUpdate,
             errors,
             touched,
