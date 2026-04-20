@@ -12,6 +12,7 @@ import EssayStep from '@/components/clinical/EssayStep'
 import DiagnosisStep from '@/components/clinical/DiagnosisStep'
 import ProblemListStep from '@/components/clinical/ProblemListStep'
 import TreatmentPlanStep from '@/components/clinical/TreatmentPlanStep'
+import SessionStructureRunner from '@/components/clinical/SessionStructureRunner'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 
@@ -457,6 +458,17 @@ function CaseRunnerPage({ auth }) {
         }
         if (step.phase === 'treatment') {
           return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
+        }
+        if (step.phase === 'session_structure') {
+          return (
+             <SessionStructureRunner 
+                step={step}
+                notes={essayAnswer}
+                setNotes={setEssayAnswer}
+                onSubmit={handleEssaySubmit}
+                isReviewMode={caseData?.isCompleted}
+             />
+          )
         }
         return <ClinicalStepRunner step={step} hideHeader={hideHeader} />
       default:

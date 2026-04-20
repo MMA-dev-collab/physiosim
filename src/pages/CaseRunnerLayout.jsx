@@ -347,7 +347,7 @@ export default function CaseRunnerLayout({
               </svg>
               Back
             </button>
-            {(!isReviewMode || currentStepIndex < totalSteps - 1) && (
+            {(!isReviewMode || currentStepIndex < totalSteps - 1) && steps[currentStepIndex]?.phase !== 'session_structure' && (
               <button
                 className="cf-btn cf-btn-primary bg-[#2563eb] text-white hover:bg-blue-700"
                 onClick={onNext}

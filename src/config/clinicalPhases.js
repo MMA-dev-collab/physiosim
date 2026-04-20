@@ -61,6 +61,14 @@ export const CLINICAL_PHASES = [
         icon: '💊',
         description: 'Interventions linked to problem IDs',
         order: 7
+    },
+    {
+        id: 'session_structure',
+        label: 'Session Structure',
+        shortLabel: 'Session',
+        icon: '🗓️',
+        description: 'Session frequency, duration, and objective definition',
+        order: 8
     }
 ]
 
@@ -104,6 +112,9 @@ export const PHASE_CATEGORIES = {
     ],
     treatment: [
         { id: 'treatment_table', label: 'Treatment Plan', inputMode: 'author_only', dataTypes: ['text', 'links'] }
+    ],
+    session_structure: [
+        { id: 'session_plan', label: 'Session Plan', inputMode: 'author_only', dataTypes: ['text', 'numbers'] }
     ]
 }
 
@@ -245,6 +256,12 @@ export const CATEGORY_TEMPLATES = {
     },
     treatment_table: {
         treatments: [] // [{ problem_id, problem_label, intervention, benefit, links }]
+    },
+    session_plan: {
+        frequency: { value: '', unit: 'per week' },
+        duration: { value: '', unit: 'minutes' },
+        reassess: { value: '', unit: 'weeks' },
+        objectives: [] // array of strings
     },
     mcq: {
         question: '',

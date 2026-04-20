@@ -5,7 +5,7 @@ import { HistoryPhaseEditor } from './HistoryPhaseEditor'
 import CompositeHistoryEditor from './CompositeHistoryEditor'
 import { AssessmentPhaseEditor } from './AssessmentPhaseEditor'
 import CompositeAssessmentEditor from './CompositeAssessmentEditor'
-import { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor } from './ClinicalPhaseEditors'
+import { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor, SessionStructureEditor } from './ClinicalPhaseEditors'
 import ImageUpload from '../common/ImageUpload'
 import './PhaseEditors.css'
 
@@ -162,6 +162,8 @@ export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel })
                 return <ProblemPhaseEditor {...editorProps} />
             case 'treatment':
                 return <TreatmentPhaseEditor {...editorProps} />
+            case 'session_structure':
+                return <SessionStructureEditor {...editorProps} />
             default:
                 return <div className="phase-editor">Unknown phase: {editedStep.phase}</div>
         }
@@ -226,7 +228,8 @@ function getPhaseColor(phase) {
         imaging: 'linear-gradient(135deg, #0ea5e9, #0ea5e9)', // Cyan gradient
         diagnosis: 'linear-gradient(135deg, #f59e0b, #d97706)',
         problem_list: 'linear-gradient(135deg, #ef4444, #dc2626)',
-        treatment: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+        treatment: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+        session_structure: 'linear-gradient(135deg, #64748b, #475569)'
     }
     return colors[phase] || 'linear-gradient(135deg, #6b7280, #4b5563)'
 }

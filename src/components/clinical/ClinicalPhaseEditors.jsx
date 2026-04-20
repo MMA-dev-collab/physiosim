@@ -632,4 +632,169 @@ export function TreatmentPhaseEditor({ step, allSteps, onUpdate, errors, touched
     )
 }
 
-export default { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor }
+/**
+ * Session Structure Phase Editor
+ * Admin configures: frequency, duration, reassess phase, and objectives.
+ */
+export function SessionStructureEditor({ step, onUpdate, errors, touched, setTouched }) {
+    const content = step.content || {}
+    // We already defined session_plan template previously but it might be nested
+    const sessionPlan = content.session_plan || {
+        frequency: { value: '', unit: 'per week' },
+        duration: { value: '', unit: 'minutes' },
+        reassess: { value: '', unit: 'weeks' },
+        objectives: []
+    }
+
+    const updatePlan = (field, subfield, value) => {
+        if (subfield) {
+            onUpdate({
+                ...step,
+                content: {
+                    ...content,
+                    session_plan: {
+                        ...sessionPlan,
+                        [field]: { ...sessionPlan[field], [subfield]: value }
+                    }
+                }
+            })
+        } else {
+            onUpdate({
+                ...step,
+                content: {
+                    ...content,
+                    session_plan: {
+                        ...sessionPlan,
+                        [field]: value
+                    }
+                }
+            })
+        }
+    }
+
+    const addObjective = () => {
+        const objectives = sessionPlan.objectives || []
+        updatePlan('objectives', null, [...objectives, ''])
+    }
+
+    const updateObjective = (idx, value) => {
+        const objectives = [...(sessionPlan.objectives || [])]
+        objectives[idx] = value
+        updatePlan('objectives', null, objectives)
+    }
+
+    const removeObjective = (idx) => {
+        const objectives = (sessionPlan.objectives || []).filter((_, i) => i !== idx)
+        updatePlan('objectives', null, objectives)
+    }
+
+    return (
+        <div className="phase-editor session-structure-phase">
+            <div className="phase-header">
+                <h4>🗓️ Session Structure</h4>
+                <p>Define session frequency, duration, reassessment, and objectives</p>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
+                    {/* Frequency */}
+                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <label style={{ fontWeight: 700, color: '#475569', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.5px', marginBottom: '12px' }}>Frequency</label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                                type="number"
+                                value={sessionPlan.frequency?.value || ''}
+                                onChange={e => updatePlan('frequency', 'value', e.target.value)}
+                                style={{ width: '60px', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', textAlign: 'center', fontSize: '1rem', fontWeight: 600 }}
+                            />
+                            <select
+                                value={sessionPlan.frequency?.unit || 'per week'}
+                                onChange={e => updatePlan('frequency', 'unit', e.target.value)}
+                                style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#334155', fontWeight: 500 }}
+                            >
+                                <option value="per day">per day</option>
+                                <option value="per week">per week</option>
+                                <option value="per month">per month</option>
+                            </select>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>sessions {sessionPlan.frequency?.unit || 'per week'}</span>
+                    </div>
+
+                    {/* Duration */}
+                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <label style={{ fontWeight: 700, color: '#475569', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.5px', marginBottom: '12px' }}>Duration</label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                                type="number"
+                                value={sessionPlan.duration?.value || ''}
+                                onChange={e => updatePlan('duration', 'value', e.target.value)}
+                                style={{ width: '70px', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', textAlign: 'center', fontSize: '1rem', fontWeight: 600 }}
+                            />
+                            <select
+                                value={sessionPlan.duration?.unit || 'minutes'}
+                                onChange={e => updatePlan('duration', 'unit', e.target.value)}
+                                style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#334155', fontWeight: 500 }}
+                            >
+                                <option value="minutes">minutes</option>
+                                <option value="hours">hours</option>
+                            </select>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>per session</span>
+                    </div>
+
+                    {/* Reassess */}
+                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <label style={{ fontWeight: 700, color: '#475569', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.5px', marginBottom: '12px' }}>Reassess</label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                                type="number"
+                                value={sessionPlan.reassess?.value || ''}
+                                onChange={e => updatePlan('reassess', 'value', e.target.value)}
+                                style={{ width: '60px', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', textAlign: 'center', fontSize: '1rem', fontWeight: 600 }}
+                            />
+                            <select
+                                value={sessionPlan.reassess?.unit || 'weeks'}
+                                onChange={e => updatePlan('reassess', 'unit', e.target.value)}
+                                style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#334155', fontWeight: 500 }}
+                            >
+                                <option value="days">days</option>
+                                <option value="weeks">weeks</option>
+                                <option value="months">months</option>
+                            </select>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>then reassess</span>
+                    </div>
+                </div>
+
+                {/* Session Objectives */}
+                <div>
+                    <h5 style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b', marginBottom: '12px' }}>Session Objectives</h5>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {(sessionPlan.objectives || []).map((obj, idx) => (
+                            <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                <span style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0f2fe', color: '#0369a1', borderRadius: '50%', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0, marginTop: '4px' }}>
+                                    {idx + 1}
+                                </span>
+                                <textarea
+                                    value={obj}
+                                    onChange={e => updateObjective(idx, e.target.value)}
+                                    placeholder={`Objective ${idx + 1}...`}
+                                    rows={2}
+                                    style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', resize: 'vertical' }}
+                                />
+                                <button type="button" onClick={() => removeObjective(idx)} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', padding: '10px 12px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', marginTop: '2px' }}>
+                                    🗑
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <button type="button" onClick={addObjective} style={{ marginTop: '12px', padding: '10px 16px', borderRadius: '8px', background: '#f1f5f9', color: '#475569', border: '1px dashed #cbd5e1', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', width: '100%', transition: 'all 0.2s ease' }} onMouseOver={e => e.target.style.background = '#e2e8f0'} onMouseOut={e => e.target.style.background = '#f1f5f9'}>
+                        + Add Objective
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor, SessionStructureEditor }
