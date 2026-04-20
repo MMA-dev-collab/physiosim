@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { X, Plus, Check, AlertCircle, ListChecks } from 'lucide-react'
 import { evaluateProblemList } from '@/utils/matchingUtils'
 
@@ -17,28 +17,50 @@ export default function ProblemListStep({
   isReviewMode,
   initialValue
 }) {
-  // ─── Local state ──────────────────────────────
-  const [items, setItems] = useState(initialValue?.problemListItems?.length ? initialValue.problemListItems : [''])
+  // ─── Local state ──────────────────────────────────────────────────────────
+  // Use lazy initialisers so that if props are already populated on first render
+  // (e.g. after a page refresh that rehydrates from cache), state is correct
+  // immediately without needing an extra effect cycle.
+  const [items, setItems] = useState(() =>
+    initialValue?.problemListItems?.length ? initialValue.problemListItems : ['']
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(essayScore !== null)
-  const [evalResult, setEvalResult] = useState(initialValue?.evalResult || null)
 
-  // ─── Re-hydrate from initialValue when it changes (navigation/refresh) ────
+  // "submitted" is only true when we have BOTH a numeric score AND saved items.
+  // Relying on essayScore alone caused a race: the score could arrive before
+  // items were hydrated, locking the form in a broken submitted state.
+  const [submitted, setSubmitted] = useState(() =>
+    essayScore !== null && essayScore !== undefined && !!initialValue?.problemListItems?.length
+  )
+  const [evalResult, setEvalResult] = useState(() => initialValue?.evalResult || null)
+
+  // ─── Single, coordinated hydration effect ─────────────────────────────────
+  // Replaces the two previous racing effects (initialValue watcher + essayScore
+  // watcher). Using a ref ensures we only hydrate once per component instance,
+  // preventing an infinite loop and making the update atomic.
+  const hydratedRef = useRef(false)
+
   useEffect(() => {
-    if (initialValue?.problemListItems?.length) {
+    // Guard: only run when we receive real data and haven't already hydrated.
+    if (!initialValue || hydratedRef.current) return
+    hydratedRef.current = true
+
+    if (initialValue.problemListItems?.length) {
       setItems(initialValue.problemListItems)
     }
-    if (initialValue?.evalResult) {
+    if (initialValue.evalResult) {
       setEvalResult(initialValue.evalResult)
     }
-  }, [initialValue])
-
-  // ─── Sync submitted state with essayScore ────
-  useEffect(() => {
-    if (essayScore !== null && essayScore !== undefined) {
+    // Only lock as submitted when BOTH the score AND the saved items are present,
+    // so the form is never disabled with an empty list.
+    if (
+      essayScore !== null &&
+      essayScore !== undefined &&
+      initialValue.problemListItems?.length
+    ) {
       setSubmitted(true)
     }
-  }, [essayScore])
+  }, [initialValue, essayScore])
 
   const isActuallySubmitted = submitted || isReviewMode
 

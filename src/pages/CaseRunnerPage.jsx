@@ -384,6 +384,7 @@ function CaseRunnerPage({ auth }) {
       case 'problem_list':
         return (
           <ProblemListStep
+            key={step.id}
             step={step}
             essayFeedback={essayFeedback}
             essayScore={essayScore}
@@ -447,6 +448,7 @@ function CaseRunnerPage({ auth }) {
         if (step.phase === 'problem_list') {
           return (
             <ProblemListStep
+              key={step.id}
               step={step}
               essayFeedback={essayFeedback}
               essayScore={essayScore}
