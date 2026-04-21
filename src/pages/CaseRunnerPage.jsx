@@ -59,6 +59,8 @@ function CaseRunnerPage({ auth }) {
   const [hintShown, setHintShown] = useState(false)
   const [attemptNumber, setAttemptNumber] = useState(1)
   const stepStartTimeRef = useRef(Date.now())
+  const runStartTimeRef = useRef(Date.now())
+  const [caseDurationSeconds, setCaseDurationSeconds] = useState(0)
 
   useEffect(() => {
     const load = async () => {
@@ -467,7 +469,13 @@ function CaseRunnerPage({ auth }) {
                 step={step}
                 notes={essayAnswer}
                 setNotes={setEssayAnswer}
-                onSubmit={handleEssaySubmit}
+                onSubmit={async () => {
+                   if (essayAnswer) {
+                     // Optionally save the custom notes into progress payload payload
+                     await saveProgress({ session_notes: essayAnswer })
+                   }
+                   handleFinish()
+                }}
                 isReviewMode={caseData?.isCompleted}
              />
           )
@@ -883,6 +891,7 @@ function CaseRunnerPage({ auth }) {
       })
       if (!res.ok) throw new Error('Failed to complete case')
       const data = await res.json()
+      setCaseDurationSeconds(Math.floor((Date.now() - runStartTimeRef.current) / 1000))
       setCaseData(prev => ({ ...prev, isCompleted: true }))
       setFinalSummary(data)
       saveProgress()
@@ -932,6 +941,13 @@ function CaseRunnerPage({ auth }) {
               <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Final Score</p>
               <p className="text-4xl font-bold text-slate-900">{finalSummary.score}</p>
               <p className="text-xs text-slate-400 mt-1">out of {finalSummary.maxPossibleScore}</p>
+            </div>
+            <div className="text-center border-l pl-12 border-slate-200">
+              <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Duration</p>
+              <p className="text-4xl font-bold text-slate-900">
+                 {Math.floor(caseDurationSeconds / 60)}<span className="text-2xl text-slate-500 ml-1">m</span> {caseDurationSeconds % 60}<span className="text-2xl text-slate-500 ml-1">s</span>
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Total time taken</p>
             </div>
           </div>
           <div className="flex space-x-4 justify-center">
