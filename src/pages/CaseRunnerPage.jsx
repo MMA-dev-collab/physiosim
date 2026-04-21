@@ -247,7 +247,7 @@ function CaseRunnerPage({ auth }) {
         setFeedback(foundFeedback)
 
         // Hydrate Essay / Clinical Step answers
-        setEssayAnswer(progress.essay_answer || ad.essayAnswer || '')
+        setEssayAnswer(progress.essay_answer || ad.essayAnswer || caseData?.feedback || '')
         setEssayScore(progress.score !== undefined && progress.score !== null ? progress.score : (ad.essayScore !== undefined ? ad.essayScore : null))
         setEssayFeedback(ad.feedback || progress.feedback || null)
 
@@ -471,10 +471,10 @@ function CaseRunnerPage({ auth }) {
                 setNotes={setEssayAnswer}
                 onSubmit={async () => {
                    if (essayAnswer) {
-                     // Optionally save the custom notes into progress payload payload
+                     // Optionally save the custom notes into progress payload
                      await saveProgress({ session_notes: essayAnswer })
                    }
-                   handleFinish()
+                   handleFinish(essayAnswer)
                 }}
                 isReviewMode={caseData?.isCompleted}
              />
@@ -879,7 +879,7 @@ function CaseRunnerPage({ auth }) {
     }
   }, [id, auth.token, currentStepIndex, maxReachedIndex, activeSubStepId, completedSubSteps, hubProgress, caseData])
 
-  const handleFinish = useCallback(async () => {
+  const handleFinish = useCallback(async (feedbackText) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/cases/${id}/complete`, {
         method: 'POST',
@@ -887,7 +887,8 @@ function CaseRunnerPage({ auth }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
           'ngrok-skip-browser-warning': 'true'
-        }
+        },
+        body: JSON.stringify({ feedback: feedbackText || '' })
       })
       if (!res.ok) throw new Error('Failed to complete case')
       const data = await res.json()

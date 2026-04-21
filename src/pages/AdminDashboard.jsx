@@ -6,6 +6,7 @@ import CategoriesTab from '../components/admin/CategoriesTab'
 import SubscriptionsTab from '../components/admin/SubscriptionsTab'
 import CaseAccessTab from '../components/admin/CaseAccessTab'
 import SubscriptionPlansTab from '../components/admin/SubscriptionPlansTab'
+import FeedbackTab from '../components/admin/FeedbackTab'
 import DashboardLayout from '../components/admin/DashboardLayout'
 import SidebarNavigation from '../components/admin/SidebarNavigation'
 import { API_BASE_URL } from '../config'
@@ -28,6 +29,7 @@ function AdminDashboard({ auth, logout }) {
         {activeTab === 'subscriptions' && <SubscriptionsTab auth={auth} />}
         {activeTab === 'case-access' && <CaseAccessTab auth={auth} />}
         {activeTab === 'plans' && <SubscriptionPlansTab auth={auth} />}
+        {activeTab === 'feedback' && <FeedbackTab auth={auth} />}
       </div>
     </DashboardLayout>
   )

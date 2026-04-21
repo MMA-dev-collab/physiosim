@@ -4,6 +4,7 @@ const navItems = [
     { id: 'overview', label: 'Dashboard', icon: 'dashboard' },
     { id: 'cases', label: 'Case Library', icon: 'clinical_notes' },
     { id: 'users', label: 'User Management', icon: 'group' },
+    { id: 'feedback', label: 'Users Feedback', icon: 'rate_review' },
     { id: 'categories', label: 'Categories', icon: 'category' },
     { id: 'subscriptions', label: 'Subscriptions', icon: 'credit_card' },
     { id: 'case-access', label: 'Case Access', icon: 'lock' },

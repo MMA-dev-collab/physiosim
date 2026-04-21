@@ -91,9 +91,9 @@ export default function SessionStructureRunner({ step, notes, setNotes, onSubmit
                 )}
             </div>
 
-            {/* Additional Notes Section */}
+            {/* Additional Notes / Feedback Section */}
             <div className="mb-12">
-                <h3 className="text-sm font-black text-slate-900 mb-4 uppercase tracking-tight">Additional Notes / Free Text</h3>
+                <h3 className="text-sm font-black text-slate-900 mb-4 uppercase tracking-tight">Your Feedback / Notes</h3>
                 <textarea 
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
