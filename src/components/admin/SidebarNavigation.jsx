@@ -10,7 +10,7 @@ const navItems = [
     { id: 'plans', label: 'Pricing Plans', icon: 'payments' },
 ]
 
-export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen, setIsOpen }) {
+export default function SidebarNavigation({ activeTab, onTabChange, auth, logout, isOpen, setIsOpen }) {
     const user = auth?.user
     const [showProfileMenu, setShowProfileMenu] = React.useState(false)
 
@@ -88,7 +88,10 @@ export default function SidebarNavigation({ activeTab, onTabChange, auth, isOpen
                             ))}
                         </div>
                         <div className="border-t border-admin-border py-2 bg-slate-50/50">
-                            <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-admin-danger hover:bg-admin-danger/5 transition-colors">
+                            <button 
+                                onClick={logout}
+                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-admin-danger hover:bg-admin-danger/5 transition-colors"
+                            >
                                 <span className="material-symbols-outlined text-lg">logout</span>
                                 Logout
                             </button>

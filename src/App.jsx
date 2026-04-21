@@ -208,7 +208,7 @@ function App() {
               />
               <Route
                 path="/admin"
-                element={isAdmin ? <AdminDashboard auth={auth} /> : <Navigate to="/" />}
+                element={isAdmin ? <AdminDashboard auth={auth} logout={logout} /> : <Navigate to="/" />}
               />
               <Route
                 path="/admin/cases/new"

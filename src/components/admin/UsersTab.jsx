@@ -8,6 +8,7 @@ export default function UsersTab({ auth }) {
   const [filter, setFilter] = useState('all')
   const [selectedUser, setSelectedUser] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [roleConfirm, setRoleConfirm] = useState({ isOpen: false, user: null, newRole: null, isUpdating: false })
   const pageSize = 10
 
   const loadUsers = async () => {
@@ -61,6 +62,46 @@ export default function UsersTab({ auth }) {
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [])
+
+  const handleRoleChange = (userId, newRole) => {
+    const user = users.find(u => u.id === userId);
+    setRoleConfirm({
+      isOpen: true,
+      user,
+      newRole,
+      isUpdating: false
+    });
+  }
+
+  const confirmRoleChange = async () => {
+    const { user, newRole } = roleConfirm;
+    setRoleConfirm(prev => ({ ...prev, isUpdating: true }));
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify({ role: newRole })
+      })
+      if (res.ok) {
+        setUsers(users.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+        if (selectedUser?.id === user.id) {
+          setSelectedUser(prev => ({ ...prev, role: newRole }));
+        }
+        setRoleConfirm({ isOpen: false, user: null, newRole: null, isUpdating: false });
+      } else {
+        alert('Failed to update role');
+        setRoleConfirm(prev => ({ ...prev, isUpdating: false }));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update role');
+      setRoleConfirm(prev => ({ ...prev, isUpdating: false }));
+    }
+  }
 
   const getRoleBadge = (role) => {
     const styles = {
@@ -361,9 +402,73 @@ export default function UsersTab({ auth }) {
                 <span className="material-symbols-outlined text-[18px]">mail</span>
                 Contact User
               </button>
+
+              {/* Role Action Buttons */}
+              {selectedUser.role !== 'admin' && (
+                <button
+                  className="w-full mt-2 py-3 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+                  onClick={() => handleRoleChange(selectedUser.id, 'admin')}
+                >
+                  <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                  Promote to Admin
+                </button>
+              )}
+              {selectedUser.role === 'admin' && selectedUser.id !== auth?.user?.id && (
+                <button
+                  className="w-full mt-2 py-3 bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-slate-800 font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+                  onClick={() => handleRoleChange(selectedUser.id, 'student')}
+                >
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                  Demote to Student
+                </button>
+              )}
             </div>
           </div>
         </>
+      )}
+
+      {/* Role Confirmation Modal */}
+      {roleConfirm.isOpen && (
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-admin-overlay backdrop-blur-sm transition-opacity"
+            onClick={() => !roleConfirm.isUpdating && setRoleConfirm({ isOpen: false, user: null, newRole: null, isUpdating: false })}
+          />
+          <div className="relative bg-white rounded-3xl shadow-admin-modal border border-admin-border max-w-md w-full overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-4xl">warning</span>
+              </div>
+              
+              <h3 className="text-2xl font-black text-admin-text mb-2">Change User Role?</h3>
+              <p className="text-admin-text-muted text-sm leading-relaxed mb-8">
+                You are about to promote <span className="font-bold text-admin-text">"{roleConfirm.user?.name || roleConfirm.user?.email}"</span> to <span className="font-bold text-admin-accent">{roleConfirm.newRole?.toUpperCase()}</span>. This will grant them administrative access to the system.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  disabled={roleConfirm.isUpdating}
+                  onClick={() => setRoleConfirm({ isOpen: false, user: null, newRole: null, isUpdating: false })}
+                  className="flex-1 py-3.5 px-4 bg-slate-50 text-slate-600 hover:bg-slate-100 font-bold rounded-2xl transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={roleConfirm.isUpdating}
+                  onClick={confirmRoleChange}
+                  className="flex-1 py-3.5 px-4 bg-admin-primary text-white hover:bg-admin-primary/90 font-bold rounded-2xl transition-all shadow-lg shadow-admin-primary/20 flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {roleConfirm.isUpdating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Updating...
+                    </>
+                  ) : 'Yes, Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

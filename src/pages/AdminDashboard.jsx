@@ -10,7 +10,7 @@ import DashboardLayout from '../components/admin/DashboardLayout'
 import SidebarNavigation from '../components/admin/SidebarNavigation'
 import { API_BASE_URL } from '../config'
 
-function AdminDashboard({ auth }) {
+function AdminDashboard({ auth, logout }) {
   const [activeTab, setActiveTab] = useState('overview')
 
   // Function to switch tabs, useful for "View in Library" buttons
@@ -19,7 +19,7 @@ function AdminDashboard({ auth }) {
   }
 
   return (
-    <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange} auth={auth}>
+    <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange} auth={auth} logout={logout}>
       <div className="flex-1">
         {activeTab === 'overview' && <OverviewTab auth={auth} onTabChange={handleTabChange} />}
         {activeTab === 'cases' && <CasesTab auth={auth} />}

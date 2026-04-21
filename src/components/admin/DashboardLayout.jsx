@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import SidebarNavigation from './SidebarNavigation'
 
-export default function DashboardLayout({ activeTab, onTabChange, auth, children }) {
+export default function DashboardLayout({ activeTab, onTabChange, auth, logout, children }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     return (
@@ -18,6 +18,7 @@ export default function DashboardLayout({ activeTab, onTabChange, auth, children
                 activeTab={activeTab}
                 onTabChange={onTabChange}
                 auth={auth}
+                logout={logout}
                 isOpen={isMobileMenuOpen}
                 setIsOpen={setIsMobileMenuOpen}
             />
