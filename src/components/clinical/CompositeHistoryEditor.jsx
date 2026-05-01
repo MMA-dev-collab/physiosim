@@ -20,7 +20,8 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
   const chief_complaint = content.chief_complaint || ''
   const key_findings = content.key_findings || []
   const lifestyle = content.lifestyle || { occupational: '', household: '' }
-  const pain = content.pain_characteristics || { intensity: '', pain_type: '', relief: '', aggravating: '' }
+  const pain = content.pain_characteristics || { intensity: '', pain_type: '', relief: '', aggravating: '', history_of_pain: '', frequency: '', time_of_day: '' }
+  const present_history = content.present_history || { onset: '', course: '', duration: '' }
   const past_history = Array.isArray(content.past_history) ? content.past_history : []
   const medication = Array.isArray(content.medication) ? content.medication : []
 
@@ -39,6 +40,10 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
 
   const handlePainUpdate = (field, value) => {
     handleUpdate('pain_characteristics', { ...pain, [field]: value })
+  }
+
+  const handlePresentHistoryUpdate = (field, value) => {
+    handleUpdate('present_history', { ...present_history, [field]: value })
   }
 
   const handleAddTag = (e) => {
@@ -183,6 +188,36 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
             </label>
 
             <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>History of Pain</span>
+              <input
+                value={pain.history_of_pain || ''}
+                onChange={e => handlePainUpdate('history_of_pain', e.target.value)}
+                placeholder="e.g. 3 months, 2 years"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Frequency</span>
+              <input
+                value={pain.frequency || ''}
+                onChange={e => handlePainUpdate('frequency', e.target.value)}
+                placeholder="e.g. Intermittent, Constant"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Time of Day</span>
+              <input
+                value={pain.time_of_day || ''}
+                onChange={e => handlePainUpdate('time_of_day', e.target.value)}
+                placeholder="e.g. Worse at night, Morning stiffness"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+
+            <label>
               <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Pain Type / Quality</span>
               <input
                 value={pain.pain_type}
@@ -214,10 +249,47 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
           </div>
         </div>
 
-        {/* SECTION 4: Past History */}
+        {/* SECTION 4: Present History */}
+        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h5 style={{ marginTop: 0, marginBottom: '16px', color: '#1e293b', fontSize: '1.1rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
+            Part 4: Present History
+          </h5>
+          
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Onset</span>
+              <input
+                value={present_history.onset}
+                onChange={e => handlePresentHistoryUpdate('onset', e.target.value)}
+                placeholder="e.g. Sudden, Insidious"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Course</span>
+              <input
+                value={present_history.course}
+                onChange={e => handlePresentHistoryUpdate('course', e.target.value)}
+                placeholder="e.g. Progressive, Static"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Duration</span>
+              <input
+                value={present_history.duration}
+                onChange={e => handlePresentHistoryUpdate('duration', e.target.value)}
+                placeholder="e.g. 5 days, 2 weeks"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* SECTION 5: Past History */}
         <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
-            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 4: Past History</h5>
+            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 5: Past History</h5>
             <button type="button" onClick={handleAddPastHistory} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>+ Add Condition</button>
           </div>
           
@@ -251,10 +323,10 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
           </div>
         </div>
 
-        {/* SECTION 5: Medication */}
+        {/* SECTION 6: Medication */}
         <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
-            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 5: Medication</h5>
+            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 6: Medication</h5>
             <button type="button" onClick={handleAddMedication} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>+ Add Medication</button>
           </div>
           

@@ -15,13 +15,15 @@ export default function CompositeHistoryRunner({ step }) {
     key_findings = [], 
     lifestyle = {}, 
     pain_characteristics = {},
+    present_history = {},
     past_history = [],
     medication = []
   } = content
 
   // Conditional Helpers
   const hasLifestyle = lifestyle.occupational || lifestyle.household
-  const hasPain = pain_characteristics.intensity || pain_characteristics.pain_type || pain_characteristics.relief || pain_characteristics.aggravating
+  const hasPain = pain_characteristics.intensity || pain_characteristics.pain_type || pain_characteristics.relief || pain_characteristics.aggravating || pain_characteristics.history_of_pain || pain_characteristics.frequency || pain_characteristics.time_of_day
+  const hasPresentHistory = present_history.onset || present_history.course || present_history.duration
   const hasPastHistory = Array.isArray(past_history) && past_history.length > 0
   const hasMedication = Array.isArray(medication) && medication.length > 0
 
@@ -111,6 +113,24 @@ export default function CompositeHistoryRunner({ step }) {
                   <span className="text-slate-600 font-medium">{pain_characteristics.pain_type}</span>
                 </div>
               )}
+              {pain_characteristics.history_of_pain && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-900 font-bold">History of Pain :</span>
+                  <span className="text-slate-600 font-medium">{pain_characteristics.history_of_pain}</span>
+                </div>
+              )}
+              {pain_characteristics.frequency && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-900 font-bold">Frequency :</span>
+                  <span className="text-slate-600 font-medium">{pain_characteristics.frequency}</span>
+                </div>
+              )}
+              {pain_characteristics.time_of_day && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-900 font-bold">Time of Day :</span>
+                  <span className="text-slate-600 font-medium">{pain_characteristics.time_of_day}</span>
+                </div>
+              )}
               {pain_characteristics.relief && (
                 <div className="flex justify-between items-center">
                   <span className="text-slate-900 font-bold">Relief :</span>
@@ -121,6 +141,39 @@ export default function CompositeHistoryRunner({ step }) {
                 <div className="flex justify-between items-center">
                   <span className="text-slate-900 font-bold">Aggravating :</span>
                   <span className="text-slate-600 font-medium line-clamp-1">{pain_characteristics.aggravating}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Card: Present History */}
+        {hasPresentHistory && (
+          <div className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm space-y-6 flex flex-col h-full">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-xl font-bold text-slate-800">Present History</h3>
+              <div className="flex items-center gap-2">
+                 <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl shadow-sm border border-slate-100">📅</div>
+                 <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl shadow-sm border border-slate-100">⏱️</div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {present_history.onset && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-900 font-bold">Onset :</span>
+                  <span className="text-slate-600 font-medium">{present_history.onset}</span>
+                </div>
+              )}
+              {present_history.course && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-900 font-bold">Course :</span>
+                  <span className="text-slate-600 font-medium">{present_history.course}</span>
+                </div>
+              )}
+              {present_history.duration && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-900 font-bold">Duration :</span>
+                  <span className="text-slate-600 font-medium">{present_history.duration}</span>
                 </div>
               )}
             </div>
