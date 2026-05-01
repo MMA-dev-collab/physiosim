@@ -243,7 +243,7 @@ export default function CategoriesTab({ auth }) {
             {/* Create/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-admin-overlay backdrop-blur-sm px-4">
-                    <div className="bg-admin-card w-full max-w-lg rounded-2xl shadow-admin-modal border border-admin-border overflow-hidden">
+                    <div style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="bg-admin-card w-full max-w-lg rounded-2xl shadow-admin-modal border border-admin-border overflow-hidden overflow-y-auto max-h-[98vh]">
                         {/* Modal Header */}
                         <div className="p-6 border-b border-admin-border flex items-center justify-between bg-admin-bg/50">
                             <h3 className="text-xl font-bold text-admin-text">
@@ -367,7 +367,7 @@ export default function CategoriesTab({ auth }) {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 bg-admin-bg flex gap-3 border-t border-admin-border">
+                        <div className="p-6 bg-admin-bg flex gap-3 border-t border-admin-border sticky bottom-0">
                             <button
                                 onClick={() => setShowModal(false)}
                                 className="flex-1 px-4 py-3 rounded-xl bg-admin-bg border border-admin-border text-admin-text-muted font-bold hover:bg-admin-card transition-colors"
