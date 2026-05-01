@@ -191,7 +191,7 @@ function RomSection({ section }) {
         {section.title || `Range of Motion${romType ? ` (${romType.toUpperCase()})` : ''}`}
       </h3>
       {entries.length > 0 ? (
-        <div className="overflow-visible">
+        <div className="car-rom-table-container overflow-visible">
           <table className="w-full text-sm border-separate border-spacing-y-3">
             <thead>
               <tr className="text-slate-400">
@@ -210,7 +210,7 @@ function RomSection({ section }) {
                   <td className="py-4 border-y border-slate-100 font-medium text-slate-700 text-center relative whitespace-nowrap">
                     {/* Hover Image */}
                     {entry.image_url && (
-                      <div className="absolute top-1/2 -translate-y-1/2 -left-6 w-32 h-32 bg-white border-2 border-slate-100 rounded-xl shadow-2xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 pointer-events-none flex items-center justify-center overflow-hidden" style={{ transform: 'translate(-100%, -50%)' }}>
+                      <div className="car-rom-hover-img absolute top-1/2 -translate-y-1/2 -left-6 w-32 h-32 bg-white border-2 border-slate-100 rounded-xl shadow-2xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 pointer-events-none flex items-center justify-center overflow-hidden" style={{ transform: 'translate(-100%, -50%)' }}>
                         <img
                           src={entry.image_url}
                           alt={entry.movement}
@@ -562,7 +562,7 @@ function MmtSection({ section }) {
     <div className="car-mmt">
       <h3 className="car-section-title">{section.title || 'Motor Examination - Myotomes'}</h3>
       {entries.length > 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="car-mmt-table-container bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">

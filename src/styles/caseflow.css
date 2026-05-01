@@ -50,6 +50,14 @@
   box-shadow: 1px 0 10px rgba(0,0,0,0.02);
 }
 
+.cf-sidebar-close {
+  display: none;
+}
+
+.cf-mobile-sidebar-toggle {
+  display: none;
+}
+
 .cf-main {
   flex: 1;
   min-width: 0;
@@ -1666,22 +1674,183 @@
     --cf-sidebar-w: 0px;
   }
   .cf-sidebar {
-    display: none;
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: -280px; /* Hidden by default */
+    bottom: 0;
+    width: 280px;
+    z-index: 1000;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
   }
+
+  .cf-sidebar.open {
+    left: 0;
+    display: flex;
+  }
+
+  .cf-sidebar-close {
+    display: flex;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    color: #64748b;
+    z-index: 10;
+    cursor: pointer;
+  }
+
+  .cf-mobile-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 100;
+    background: white;
+    padding: 6px 12px 6px 6px;
+    border-radius: 30px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    cursor: pointer;
+  }
+
+  .cf-mobile-avatar-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--cf-primary-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cf-primary);
+    overflow: hidden;
+  }
+
+  .cf-mobile-avatar-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .cf-main {
     margin-left: 0;
   }
   .cf-main-scroll {
     padding: 16px;
+    padding-top: 80px; /* Space for the toggle button */
   }
+  
   .cf-footer {
-    left: 0;
-    right: 0;
-    padding: 0 16px;
+    left: 0 !important; /* Ensure it overrides any inline styles */
+    right: 0 !important;
+    padding: 0 12px;
+    height: 90px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .cf-footer-progress {
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cf-footer-dots {
+    display: none; /* Hide dots on mobile to save space */
+  }
+
+  .cf-footer-nav {
+    flex-shrink: 0;
+    gap: 8px;
+  }
+
+  .cf-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
   }
   
   .cf-layout {
-    /* If sidebars hidden, allow the top margin or padding so content is visible under global headers if any */
-    padding-top: 80px; 
+    padding-top: 0; /* Handled by cf-main-scroll */
+  }
+
+  .cf-clinical-tip-popover {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.1) !important;
+    min-height: 200px;
+  }
+
+  .cf-sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 999; /* Just below the sidebar (1000) */
+  }
+}
+
+/* ──────────── ADDITIONAL RESPONSIVE FIXES (< 600px) ──────────── */
+@media (max-width: 600px) {
+  .car-rom-table-container,
+  .car-mmt-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px; /* Bleed to edges */
+    padding: 0 16px;
+    width: calc(100% + 32px);
+  }
+
+  .car-rom-table-container table,
+  .car-mmt-table-container table {
+    min-width: 500px; /* Force minimum width to prevent compression */
+  }
+
+  .car-rom-hover-img {
+    left: 50% !important;
+    top: auto !important;
+    bottom: 100% !important;
+    transform: translate(-50%, -10px) !important;
+    z-index: 100;
+  }
+
+  .group:hover .car-rom-hover-img {
+    opacity: 1 !important;
+    transform: translate(-50%, -20px) !important;
+  }
+
+  /* Reduce section padding for more room */
+  .cf-main-scroll > div > div {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Fix for Motor Examination grid columns */
+  .car-mmt-table-container table th,
+  .car-mmt-table-container table td {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
   }
 }

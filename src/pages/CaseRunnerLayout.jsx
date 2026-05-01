@@ -36,6 +36,7 @@ export default function CaseRunnerLayout({
 
   const [expandedHubs, setExpandedHubs] = React.useState({})
   const [showClinicalTip, setShowClinicalTip] = React.useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false)
 
   // Automatically expand current step if it has sub-steps
   React.useEffect(() => {
@@ -53,9 +54,40 @@ export default function CaseRunnerLayout({
   return (
     <div className="cf-page-wrapper bg-[#f8fafc]">
       <div className="cf-layout" style={{ background: 'transparent' }}>
+        {/* ─── MOBILE TOGGLE BUTTON ─── */}
+        <button 
+          className="cf-mobile-sidebar-toggle"
+          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          aria-label="Toggle Patient Card"
+        >
+          <div className="cf-mobile-avatar-icon">
+            {patientData?.imageUrl ? (
+              <img src={patientData.imageUrl} alt="Patient" />
+            ) : (
+              (patientData?.patientName || 'P').charAt(0).toUpperCase()
+            )}
+          </div>
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Patient Card</span>
+        </button>
+
         {/* ─── LEFT SIDEBAR: Patient Card ─── */}
         {!hideSidebar && (
-          <aside className="cf-sidebar bg-white">
+          <>
+            {/* Backdrop for mobile */}
+            {isMobileSidebarOpen && (
+              <div 
+                className="cf-sidebar-backdrop"
+                onClick={() => setIsMobileSidebarOpen(false)}
+              />
+            )}
+            <aside className={`cf-sidebar bg-white ${isMobileSidebarOpen ? 'open' : ''}`}>
+            {/* Close button for mobile */}
+            <button 
+              className="cf-sidebar-close"
+              onClick={() => setIsMobileSidebarOpen(false)}
+            >
+              ×
+            </button>
             <div className="cf-patient-card text-left">
               {/* Header */}
               <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Patient Card</h3>
@@ -139,7 +171,7 @@ export default function CaseRunnerLayout({
                   {/* Floating Popover */}
                   {showClinicalTip && (
                     <div
-                      className="absolute left-full bottom-0 ml-4 w-[340px] bg-[#fff9e6] border-2 border-[#fde68a] rounded-2xl p-6 shadow-2xl z-[100] cursor-default text-left animate-in fade-in zoom-in-95 duration-200"
+                      className="cf-clinical-tip-popover absolute left-full bottom-0 ml-4 w-[340px] bg-[#fff9e6] border-2 border-[#fde68a] rounded-2xl p-6 shadow-2xl z-[100] cursor-default text-left animate-in fade-in zoom-in-95 duration-200"
                       onClick={e => e.stopPropagation()}
                     >
                       <div className="flex items-center gap-3 mb-4">
@@ -163,9 +195,10 @@ export default function CaseRunnerLayout({
                     </div>
                   )}
                 </button>
-              </div>
-            )}
-          </aside>
+                </div>
+              )}
+            </aside>
+          </>
         )}
 
         {/* ─── CENTER: Step Content ─── */}

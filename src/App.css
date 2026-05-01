@@ -497,6 +497,21 @@
   gap: 2rem;
 }
 
+@media (max-width: 900px) {
+  .cases-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cases-filter-dropdowns{
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .cases-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
 .case-library-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
