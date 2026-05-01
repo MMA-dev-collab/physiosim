@@ -12,6 +12,8 @@ export default function CompositeHistoryRunner({ step }) {
   const content = step?.content || {}
   const { 
     chief_complaint, 
+    history_of_pain_text,
+    history_of_pain_findings = [],
     key_findings = [], 
     lifestyle = {}, 
     pain_characteristics = {},
@@ -22,7 +24,8 @@ export default function CompositeHistoryRunner({ step }) {
 
   // Conditional Helpers
   const hasLifestyle = lifestyle.occupational || lifestyle.household
-  const hasPain = pain_characteristics.intensity || pain_characteristics.pain_type || pain_characteristics.relief || pain_characteristics.aggravating || pain_characteristics.history_of_pain || pain_characteristics.frequency || pain_characteristics.time_of_day
+  const hasHistoryOfPain = history_of_pain_text || history_of_pain_findings.length > 0
+  const hasPain = pain_characteristics.intensity || pain_characteristics.pain_type || pain_characteristics.relief || pain_characteristics.aggravating || pain_characteristics.frequency || pain_characteristics.time_of_day
   const hasPresentHistory = present_history.onset || present_history.course || present_history.duration
   const hasPastHistory = Array.isArray(past_history) && past_history.length > 0
   const hasMedication = Array.isArray(medication) && medication.length > 0
@@ -33,7 +36,7 @@ export default function CompositeHistoryRunner({ step }) {
       {/* 1. ROW 1: Chief Complaint (Always visible if exists) */}
       <div className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
         <div className="flex justify-between items-start mb-6">
-          <h3 className="text-xl font-bold text-slate-800">History of pain</h3>
+          <h3 className="text-xl font-bold text-slate-800">Case Context & Chief Complaint</h3>
         </div>
         
         {chief_complaint && (
@@ -111,12 +114,6 @@ export default function CompositeHistoryRunner({ step }) {
                 <div className="flex justify-between items-center">
                   <span className="text-slate-900 font-bold">Type :</span>
                   <span className="text-slate-600 font-medium">{pain_characteristics.pain_type}</span>
-                </div>
-              )}
-              {pain_characteristics.history_of_pain && (
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-900 font-bold">History of Pain :</span>
-                  <span className="text-slate-600 font-medium">{pain_characteristics.history_of_pain}</span>
                 </div>
               )}
               {pain_characteristics.frequency && (
@@ -226,6 +223,37 @@ export default function CompositeHistoryRunner({ step }) {
         )}
 
       </div>
+
+      {/* 3. ROW 3: Detailed History of Pain (Full Width) */}
+      {hasHistoryOfPain && (
+        <div className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm relative overflow-hidden mt-8">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-xl font-bold text-slate-800">History of Pain</h3>
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl shadow-sm border border-slate-100">📖</div>
+          </div>
+          
+          {history_of_pain_text && (
+            <div className="mb-6">
+              <p className="text-lg font-medium text-slate-700 leading-relaxed font-inter whitespace-pre-wrap">
+                {history_of_pain_text}
+              </p>
+            </div>
+          )}
+
+          {/* Key Findings Tags for History of Pain */}
+          <div className="flex flex-wrap gap-2">
+            {history_of_pain_findings.map((tag, idx) => (
+              <span 
+                key={idx} 
+                className="px-4 py-1.5 bg-yellow-50 text-yellow-600 rounded-full text-sm font-bold border border-yellow-100 shadow-sm transition-all hover:scale-105"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

@@ -18,14 +18,17 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
   
   // Safe extraction with fallbacks
   const chief_complaint = content.chief_complaint || ''
+  const history_of_pain_text = content.history_of_pain_text || ''
+  const history_of_pain_findings = content.history_of_pain_findings || []
   const key_findings = content.key_findings || []
   const lifestyle = content.lifestyle || { occupational: '', household: '' }
-  const pain = content.pain_characteristics || { intensity: '', pain_type: '', relief: '', aggravating: '', history_of_pain: '', frequency: '', time_of_day: '' }
+  const pain = content.pain_characteristics || { intensity: '', pain_type: '', relief: '', aggravating: '', frequency: '', time_of_day: '' }
   const present_history = content.present_history || { onset: '', course: '', duration: '' }
   const past_history = Array.isArray(content.past_history) ? content.past_history : []
   const medication = Array.isArray(content.medication) ? content.medication : []
 
   const [tagInput, setTagInput] = useState('')
+  const [historyTagInput, setHistoryTagInput] = useState('')
 
   const handleUpdate = (field, value) => {
     onUpdate({
@@ -57,6 +60,19 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
 
   const handleRemoveTag = (tagToRemove) => {
     handleUpdate('key_findings', key_findings.filter(t => t !== tagToRemove))
+  }
+
+  const handleAddHistoryTag = (e) => {
+    e.preventDefault()
+    if (!historyTagInput.trim()) return
+    if (!history_of_pain_findings.includes(historyTagInput.trim())) {
+      handleUpdate('history_of_pain_findings', [...history_of_pain_findings, historyTagInput.trim()])
+    }
+    setHistoryTagInput('')
+  }
+
+  const handleRemoveHistoryTag = (tagToRemove) => {
+    handleUpdate('history_of_pain_findings', history_of_pain_findings.filter(t => t !== tagToRemove))
   }
 
   const handlePastHistoryListUpdate = (index, field, value) => {
@@ -185,16 +201,6 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
                 <option value="">Select Intensity...</option>
                 {[0,1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}/10</option>)}
               </select>
-            </label>
-
-            <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>History of Pain</span>
-              <input
-                value={pain.history_of_pain || ''}
-                onChange={e => handlePainUpdate('history_of_pain', e.target.value)}
-                placeholder="e.g. 3 months, 2 years"
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-              />
             </label>
 
             <label>
@@ -361,6 +367,50 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
               </div>
             ))}
             {medication.length === 0 && <p style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center' }}>No medications added.</p>}
+          </div>
+        </div>
+
+        {/* SECTION 7: History of Pain */}
+        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h5 style={{ marginTop: 0, marginBottom: '16px', color: '#1e293b', fontSize: '1.1rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
+            Part 7: History of Pain
+          </h5>
+          
+          <label style={{ display: 'block' }}>
+            <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Detailed History of Pain</span>
+            <textarea
+              value={history_of_pain_text}
+              onChange={e => handleUpdate('history_of_pain_text', e.target.value)}
+              rows={5}
+              placeholder="Enter comprehensive history, context, and timeline of the pain..."
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+            />
+          </label>
+
+          <div style={{ marginTop: '16px' }}>
+            <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Key Findings (History of Pain)</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+              {history_of_pain_findings.map((tag, idx) => (
+                <span key={idx} style={{ 
+                  background: '#fef08a', color: '#854d0e', padding: '4px 12px', 
+                  borderRadius: '16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px'
+                }}>
+                  {tag}
+                  <button type="button" onClick={() => handleRemoveHistoryTag(tag)} style={{ background: 'none', border: 'none', color: '#a16207', cursor: 'pointer', padding: 0 }}>&times;</button>
+                </span>
+              ))}
+              {history_of_pain_findings.length === 0 && <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>No tags added.</span>}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                value={historyTagInput}
+                onChange={e => setHistoryTagInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddHistoryTag(e) }}
+                placeholder="e.g. Radiculopathy, Insidious outset"
+                style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              />
+              <button type="button" onClick={handleAddHistoryTag} className="btn-secondary">Add Tag</button>
+            </div>
           </div>
         </div>
 
