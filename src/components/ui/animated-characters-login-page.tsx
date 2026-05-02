@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 
 interface PupilProps {
@@ -599,7 +600,9 @@ export function LoginPageComponent({
                                     Remember for 30 days
                                 </Label>
                             </div>
-                          
+                            <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+                                Forgot password?
+                            </Link>
                         </div>
 
                         {error && (

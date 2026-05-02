@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import ComponentShowcase from './pages/ComponentShowcase'
 
@@ -196,6 +197,7 @@ function App() {
               <Route path="/membership" element={<MembershipPage auth={auth} />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/login" element={auth ? <Navigate to="/" /> : <LoginPage setAuth={setAuth} />} />
+              <Route path="/forgot-password" element={auth ? <Navigate to="/" /> : <ForgotPasswordPage />} />
               <Route path="/register" element={auth ? <Navigate to="/" /> : <RegisterPage setAuth={setAuth} />} />
               <Route path="/verify-email" element={<VerifyEmailPage setAuth={setAuth} />} />
               <Route
