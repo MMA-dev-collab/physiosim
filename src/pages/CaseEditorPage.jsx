@@ -470,7 +470,7 @@ export default function CaseEditorPage({ auth }) {
     return (
         <div className="case-editor-page">
             <div className="editor-header">
-                <button className="back-btn" onClick={handleSaveDraftAndExit}>← Back to Dashboard</button>
+                <button className="back-btn" onClick={() => navigate('/admin')}>← Back to Dashboard</button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <h1>{isEdit ? `Edit Case: ${caseData.title}` : 'Create New Case'}</h1>
                     {isEdit && (

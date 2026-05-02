@@ -21,6 +21,7 @@ export default function ClinicalPhaseManager({
     const [expandedPhase, setExpandedPhase] = useState('history_presentation')
     const [editingStepId, setEditingStepId] = useState(null)
     const [addingCategory, setAddingCategory] = useState(null)
+    const [addingStepId, setAddingStepId] = useState(null)
 
     // Reorder Mode State
     const [isReordering, setIsReordering] = useState(false)
@@ -110,18 +111,35 @@ export default function ClinicalPhaseManager({
 
     // Handle adding a step with phase/category
     const handleAddClinicalStep = async (phase, category) => {
-        const categoryInfo = getCategoriesForPhase(phase).find(c => c.id === category)
-        const newStep = {
-            stepIndex: steps.length,
-            type: 'clinical', // New type for clinical steps
-            phase,
-            category,
-            input_mode: categoryInfo?.inputMode || 'author_only',
-            content: {},
-            logic: null
+        if (addingStepId) return;
+        const btnId = `${phase}-${category}`;
+        setAddingStepId(btnId);
+        try {
+            const categoryInfo = getCategoriesForPhase(phase).find(c => c.id === category)
+            const newStep = {
+                stepIndex: steps.length,
+                type: 'clinical', // New type for clinical steps
+                phase,
+                category,
+                input_mode: categoryInfo?.inputMode || 'author_only',
+                content: {},
+                logic: null
+            }
+            await onAddStep(newStep)
+            setAddingCategory(null)
+        } finally {
+            setAddingStepId(null);
         }
-        await onAddStep(newStep)
-        setAddingCategory(null)
+    }
+
+    const executeAddStep = async (stepData, buttonId) => {
+        if (addingStepId) return;
+        setAddingStepId(buttonId);
+        try {
+            await onAddStep(stepData);
+        } finally {
+            setAddingStepId(null);
+        }
     }
 
     // Handle step save
@@ -422,8 +440,10 @@ export default function ClinicalPhaseManager({
                                                         <button
                                                             className="btn-add-category"
                                                             onClick={() => handleAddClinicalStep(phase.id, cat.id)}
+                                                            disabled={addingStepId !== null}
+                                                            style={{ opacity: addingStepId !== null ? 0.6 : 1, cursor: addingStepId !== null ? 'not-allowed' : 'pointer' }}
                                                         >
-                                                            + Add {cat.label}
+                                                            {addingStepId === `${phase.id}-${cat.id}` ? 'Adding...' : `+ Add ${cat.label}`}
                                                         </button>
                                                     )}
                                                 </div>
@@ -443,9 +463,15 @@ export default function ClinicalPhaseManager({
                                                 </div>
                                                 <button
                                                     className="btn-small"
-                                                    style={{ background: '#4338ca', color: '#fff', whiteSpace: 'nowrap' }}
+                                                    style={{ 
+                                                        background: '#4338ca', 
+                                                        color: '#fff', 
+                                                        whiteSpace: 'nowrap',
+                                                        opacity: addingStepId !== null ? 0.6 : 1,
+                                                        cursor: addingStepId !== null ? 'not-allowed' : 'pointer'
+                                                    }}
                                                     onClick={() => {
-                                                        onAddStep({
+                                                        executeAddStep({
                                                             stepIndex: steps.length,
                                                             type: 'clinical',
                                                             phase: 'assessment',
@@ -453,10 +479,11 @@ export default function ClinicalPhaseManager({
                                                             title: 'New Assessment Step',
                                                             content: { sections: [], clinicalTip: '' },
                                                             logic: null
-                                                        })
+                                                        }, 'composite-assessment')
                                                     }}
+                                                    disabled={addingStepId !== null}
                                                 >
-                                                    ＋ Add Composite Step
+                                                    {addingStepId === 'composite-assessment' ? 'Adding...' : '＋ Add Composite Step'}
                                                 </button>
                                             </div>
 
@@ -519,15 +546,19 @@ export default function ClinicalPhaseManager({
                     <div className="educational-actions flex gap-2">
                         <button
                             className="btn-add-mcq"
-                            onClick={() => onAddStep('mcq')}
+                            onClick={() => executeAddStep('mcq', 'mcq')}
+                            disabled={addingStepId !== null}
+                            style={{ opacity: addingStepId !== null ? 0.6 : 1, cursor: addingStepId !== null ? 'not-allowed' : 'pointer' }}
                         >
-                            + MCQ Step
+                            {addingStepId === 'mcq' ? 'Adding...' : '+ MCQ Step'}
                         </button>
                         <button
                             className="btn-add-essay"
-                            onClick={() => onAddStep('essay')}
+                            onClick={() => executeAddStep('essay', 'essay')}
+                            disabled={addingStepId !== null}
+                            style={{ opacity: addingStepId !== null ? 0.6 : 1, cursor: addingStepId !== null ? 'not-allowed' : 'pointer' }}
                         >
-                            + Essay Step
+                            {addingStepId === 'essay' ? 'Adding...' : '+ Essay Step'}
                         </button>
                     </div>
                 </div>
