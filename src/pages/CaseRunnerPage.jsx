@@ -30,7 +30,9 @@ function CaseRunnerPage({ auth }) {
   const [essayAnswer, setEssayAnswer] = useState('')
   const [essayFeedback, setEssayFeedback] = useState(null)
   const [essayScore, setEssayScore] = useState(null)
-  const [stepInitialData, setStepInitialData] = useState(null)
+  // stepInitialData is computed synchronously so child components receive the
+  // correct initialValue on their very first render (avoids the async-effect gap).
+  // ── defined as useMemo below, after `activeSubStep` ──
 
   // Structured step data (Diagnosis / Problem List)
   const [diagnosisData, setDiagnosisData] = useState(null)
@@ -206,6 +208,18 @@ function CaseRunnerPage({ auth }) {
     return sub
   }, [currentStep, activeSubStepId])
 
+  // ─── Synchronous initial data for interactive steps ───────────────────────
+  // Computing this with useMemo (instead of useState + useEffect) guarantees
+  // that child components like ProblemListStep and DiagnosisStep always receive
+  // the correct `initialValue` on their very first render, eliminating the
+  // async timing gap that caused the problem list to appear empty on re-visit.
+  const stepInitialData = useMemo(() => {
+    const stepIdToLoad = activeSubStepId || currentStep?.id
+    if (!caseData?.userProgress || !stepIdToLoad) return null
+    const progress = caseData.userProgress[stepIdToLoad]
+    return progress?.answer_data ?? null
+  }, [currentStep, activeSubStepId, caseData?.userProgress])
+
   useEffect(() => {
     // Reset state first
     setShowHint(false)
@@ -251,12 +265,6 @@ function CaseRunnerPage({ auth }) {
         setEssayScore(progress.score !== undefined && progress.score !== null ? progress.score : (ad.essayScore !== undefined ? ad.essayScore : null))
         setEssayFeedback(ad.feedback || progress.feedback || null)
 
-        // Hydrate Structured Answer Data
-        if (progress.answer_data) {
-          setStepInitialData(progress.answer_data)
-        } else {
-          setStepInitialData(null)
-        }
       } else {
         setSelectedOption(null)
         setIsCorrect(null)
@@ -264,7 +272,6 @@ function CaseRunnerPage({ auth }) {
         setEssayAnswer('')
         setEssayFeedback(null)
         setEssayScore(null)
-        setStepInitialData(null)
       }
     } else {
       setSelectedOption(null)
@@ -273,7 +280,6 @@ function CaseRunnerPage({ auth }) {
       setEssayAnswer('')
       setEssayFeedback(null)
       setEssayScore(null)
-      setStepInitialData(null)
     }
   }, [currentStepIndex, activeSubStepId, caseData, currentStep, activeSubStep])
 

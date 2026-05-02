@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { X, Plus, Check, AlertCircle, ListChecks } from 'lucide-react'
 import { evaluateProblemList } from '@/utils/matchingUtils'
 
@@ -34,16 +34,13 @@ export default function ProblemListStep({
   )
   const [evalResult, setEvalResult] = useState(() => initialValue?.evalResult || null)
 
-  // ─── Single, coordinated hydration effect ─────────────────────────────────
-  // Replaces the two previous racing effects (initialValue watcher + essayScore
-  // watcher). Using a ref ensures we only hydrate once per component instance,
-  // preventing an infinite loop and making the update atomic.
-  const hydratedRef = useRef(false)
-
+  // ─── Hydration effect ────────────────────────────────────────────────────────
+  // Re-runs whenever the parent provides a new `initialValue` (e.g. navigating
+  // back to this step in review mode). The `key={step.id}` prop on the parent
+  // already guarantees a fresh component instance per step, so there is no risk
+  // of an infinite loop — we simply don't need a one-shot guard here.
   useEffect(() => {
-    // Guard: only run when we receive real data and haven't already hydrated.
-    if (!initialValue || hydratedRef.current) return
-    hydratedRef.current = true
+    if (!initialValue) return
 
     if (initialValue.problemListItems?.length) {
       setItems(initialValue.problemListItems)
@@ -51,7 +48,7 @@ export default function ProblemListStep({
     if (initialValue.evalResult) {
       setEvalResult(initialValue.evalResult)
     }
-    // Only lock as submitted when BOTH the score AND the saved items are present,
+    // Lock as submitted only when BOTH the score AND saved items are present
     // so the form is never disabled with an empty list.
     if (
       essayScore !== null &&
