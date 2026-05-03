@@ -143,7 +143,41 @@ export default function CompositeHistoryRunner({ step }) {
             </div>
           </div>
         )}
+      </div>
 
+      {/* 3. ROW 3: History of Pain (Full Width) */}
+      {hasHistoryOfPain && (
+        <div className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-xl font-bold text-slate-800">History of Pain</h3>
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl shadow-sm border border-slate-100">📖</div>
+          </div>
+          
+          {history_of_pain_text && (
+            <div className="mb-6">
+              <p className="text-lg font-medium text-slate-700 leading-relaxed font-inter whitespace-pre-wrap">
+                {history_of_pain_text}
+              </p>
+            </div>
+          )}
+
+          {/* Key Findings Tags for History of Pain */}
+          <div className="flex flex-wrap gap-2">
+            {history_of_pain_findings.map((tag, idx) => (
+              <span 
+                key={idx} 
+                className="px-4 py-1.5 bg-yellow-50 text-yellow-600 rounded-full text-sm font-bold border border-yellow-100 shadow-sm transition-all hover:scale-105"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. DYNAMIC GRID 2: Remaining sections */}
+      <div className="grid grid-cols-1 min-[1090px]:grid-cols-2 gap-8 items-start">
+        
         {/* Card: Present History */}
         {hasPresentHistory && (
           <div className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm space-y-6 flex flex-col h-full">
@@ -223,36 +257,6 @@ export default function CompositeHistoryRunner({ step }) {
         )}
 
       </div>
-
-      {/* 3. ROW 3: Detailed History of Pain (Full Width) */}
-      {hasHistoryOfPain && (
-        <div className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm relative overflow-hidden mt-8">
-          <div className="flex justify-between items-start mb-6">
-            <h3 className="text-xl font-bold text-slate-800">History of Pain</h3>
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl shadow-sm border border-slate-100">📖</div>
-          </div>
-          
-          {history_of_pain_text && (
-            <div className="mb-6">
-              <p className="text-lg font-medium text-slate-700 leading-relaxed font-inter whitespace-pre-wrap">
-                {history_of_pain_text}
-              </p>
-            </div>
-          )}
-
-          {/* Key Findings Tags for History of Pain */}
-          <div className="flex flex-wrap gap-2">
-            {history_of_pain_findings.map((tag, idx) => (
-              <span 
-                key={idx} 
-                className="px-4 py-1.5 bg-yellow-50 text-yellow-600 rounded-full text-sm font-bold border border-yellow-100 shadow-sm transition-all hover:scale-105"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
 
     </div>
   )

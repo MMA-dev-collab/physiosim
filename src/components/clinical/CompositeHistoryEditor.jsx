@@ -255,125 +255,10 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
           </div>
         </div>
 
-        {/* SECTION 4: Present History */}
+        {/* SECTION 4: History of Pain */}
         <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <h5 style={{ marginTop: 0, marginBottom: '16px', color: '#1e293b', fontSize: '1.1rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
-            Part 4: Present History
-          </h5>
-          
-          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-            <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Onset</span>
-              <input
-                value={present_history.onset}
-                onChange={e => handlePresentHistoryUpdate('onset', e.target.value)}
-                placeholder="e.g. Sudden, Insidious"
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-              />
-            </label>
-            <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Course</span>
-              <input
-                value={present_history.course}
-                onChange={e => handlePresentHistoryUpdate('course', e.target.value)}
-                placeholder="e.g. Progressive, Static"
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-              />
-            </label>
-            <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Duration</span>
-              <input
-                value={present_history.duration}
-                onChange={e => handlePresentHistoryUpdate('duration', e.target.value)}
-                placeholder="e.g. 5 days, 2 weeks"
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* SECTION 5: Past History */}
-        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
-            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 5: Past History</h5>
-            <button type="button" onClick={handleAddPastHistory} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>+ Add Condition</button>
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {past_history.map((item, idx) => (
-              <div key={idx} style={{ padding: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', position: 'relative' }}>
-                <button 
-                  type="button" 
-                  onClick={() => handleRemovePastHistory(idx)}
-                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.2rem' }}
-                >
-                  &times;
-                </button>
-                <div className="form-grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '8px' }}>
-                  <label>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Condition</span>
-                    <input value={item.condition} onChange={e => handlePastHistoryListUpdate(idx, 'condition', e.target.value)} placeholder="e.g. Hypertension" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                  </label>
-                  <label>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Since</span>
-                    <input value={item.since} onChange={e => handlePastHistoryListUpdate(idx, 'since', e.target.value)} placeholder="e.g. 2018" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                  </label>
-                </div>
-                <label>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Notes</span>
-                  <textarea value={item.notes} onChange={e => handlePastHistoryListUpdate(idx, 'notes', e.target.value)} rows={2} placeholder="Optional details..." style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                </label>
-              </div>
-            ))}
-            {past_history.length === 0 && <p style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center' }}>No past history conditions added.</p>}
-          </div>
-        </div>
-
-        {/* SECTION 6: Medication */}
-        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
-            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 6: Medication</h5>
-            <button type="button" onClick={handleAddMedication} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>+ Add Medication</button>
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {medication.map((item, idx) => (
-              <div key={idx} style={{ padding: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', position: 'relative' }}>
-                <button 
-                  type="button" 
-                  onClick={() => handleRemoveMedication(idx)}
-                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.2rem' }}
-                >
-                  &times;
-                </button>
-                <div className="form-grid" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '8px' }}>
-                  <label>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Name</span>
-                    <input value={item.name} onChange={e => handleMedicationListUpdate(idx, 'name', e.target.value)} placeholder="e.g. Lisinopril" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                  </label>
-                  <label>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Dose</span>
-                    <input value={item.dose} onChange={e => handleMedicationListUpdate(idx, 'dose', e.target.value)} placeholder="e.g. 10mg" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                  </label>
-                  <label>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Freq.</span>
-                    <input value={item.frequency} onChange={e => handleMedicationListUpdate(idx, 'frequency', e.target.value)} placeholder="e.g. 1x/day" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                  </label>
-                </div>
-                <label>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Notes</span>
-                  <input value={item.notes} onChange={e => handleMedicationListUpdate(idx, 'notes', e.target.value)} placeholder="Additional instructions..." style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                </label>
-              </div>
-            ))}
-            {medication.length === 0 && <p style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center' }}>No medications added.</p>}
-          </div>
-        </div>
-
-        {/* SECTION 7: History of Pain */}
-        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <h5 style={{ marginTop: 0, marginBottom: '16px', color: '#1e293b', fontSize: '1.1rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
-            Part 7: History of Pain
+            Part 4: History of Pain
           </h5>
           
           <label style={{ display: 'block' }}>
@@ -411,6 +296,121 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
               />
               <button type="button" onClick={handleAddHistoryTag} className="btn-secondary">Add Tag</button>
             </div>
+          </div>
+        </div>
+
+        {/* SECTION 5: Present History */}
+        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h5 style={{ marginTop: 0, marginBottom: '16px', color: '#1e293b', fontSize: '1.1rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
+            Part 5: Present History
+          </h5>
+          
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Onset</span>
+              <input
+                value={present_history.onset}
+                onChange={e => handlePresentHistoryUpdate('onset', e.target.value)}
+                placeholder="e.g. Sudden, Insidious"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Course</span>
+              <input
+                value={present_history.course}
+                onChange={e => handlePresentHistoryUpdate('course', e.target.value)}
+                placeholder="e.g. Progressive, Static"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+            <label>
+              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Duration</span>
+              <input
+                value={present_history.duration}
+                onChange={e => handlePresentHistoryUpdate('duration', e.target.value)}
+                placeholder="e.g. 5 days, 2 weeks"
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* SECTION 6: Past History */}
+        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
+            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 6: Past History</h5>
+            <button type="button" onClick={handleAddPastHistory} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>+ Add Condition</button>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {past_history.map((item, idx) => (
+              <div key={idx} style={{ padding: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', position: 'relative' }}>
+                <button 
+                  type="button" 
+                  onClick={() => handleRemovePastHistory(idx)}
+                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.2rem' }}
+                >
+                  &times;
+                </button>
+                <div className="form-grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '8px' }}>
+                  <label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Condition</span>
+                    <input value={item.condition} onChange={e => handlePastHistoryListUpdate(idx, 'condition', e.target.value)} placeholder="e.g. Hypertension" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </label>
+                  <label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Since</span>
+                    <input value={item.since} onChange={e => handlePastHistoryListUpdate(idx, 'since', e.target.value)} placeholder="e.g. 2018" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </label>
+                </div>
+                <label>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Notes</span>
+                  <textarea value={item.notes} onChange={e => handlePastHistoryListUpdate(idx, 'notes', e.target.value)} rows={2} placeholder="Optional details..." style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </label>
+              </div>
+            ))}
+            {past_history.length === 0 && <p style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center' }}>No past history conditions added.</p>}
+          </div>
+        </div>
+
+        {/* SECTION 7: Medication */}
+        <div className="editor-card" style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
+            <h5 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem' }}>Part 7: Medication</h5>
+            <button type="button" onClick={handleAddMedication} className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>+ Add Medication</button>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {medication.map((item, idx) => (
+              <div key={idx} style={{ padding: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', position: 'relative' }}>
+                <button 
+                  type="button" 
+                  onClick={() => handleRemoveMedication(idx)}
+                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.2rem' }}
+                >
+                  &times;
+                </button>
+                <div className="form-grid" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '8px' }}>
+                  <label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Name</span>
+                    <input value={item.name} onChange={e => handleMedicationListUpdate(idx, 'name', e.target.value)} placeholder="e.g. Lisinopril" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </label>
+                  <label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Dose</span>
+                    <input value={item.dose} onChange={e => handleMedicationListUpdate(idx, 'dose', e.target.value)} placeholder="e.g. 10mg" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </label>
+                  <label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Freq.</span>
+                    <input value={item.frequency} onChange={e => handleMedicationListUpdate(idx, 'frequency', e.target.value)} placeholder="e.g. 1x/day" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </label>
+                </div>
+                <label>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Notes</span>
+                  <input value={item.notes} onChange={e => handleMedicationListUpdate(idx, 'notes', e.target.value)} placeholder="Additional instructions..." style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </label>
+              </div>
+            ))}
+            {medication.length === 0 && <p style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center' }}>No medications added.</p>}
           </div>
         </div>
 
