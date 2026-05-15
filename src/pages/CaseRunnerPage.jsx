@@ -1014,10 +1014,10 @@ function CaseRunnerPage({ auth }) {
         completedSubSteps={completedSubSteps}
       >
         {/* Watermark — absolute inside the case content box */}
-        {/* <WatermarkOverlay
+        { <WatermarkOverlay
           userId={auth.user.id || auth.user._id || ''}
           userEmail={auth.user.email || ''}
-        /> */}
+        />}
         {/* Step Content */}
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
 
