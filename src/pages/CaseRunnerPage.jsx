@@ -15,6 +15,7 @@ import TreatmentPlanStep from '@/components/clinical/TreatmentPlanStep'
 import SessionStructureRunner from '@/components/clinical/SessionStructureRunner'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import WatermarkOverlay from '@/components/common/WatermarkOverlay'
+import ImageWithWatermark from '@/components/common/ImageWithWatermark'
 
 function CaseRunnerPage({ auth }) {
   const { id } = useParams()
@@ -353,7 +354,7 @@ function CaseRunnerPage({ auth }) {
 
     switch (step.type) {
       case 'info':
-        return <PatientInfoStep content={step.content} />
+        return <PatientInfoStep content={step.content} watermarkEnabled={!!caseData?.watermarkEnabled} />
       case 'history':
         return <HistoryStep step={step} />
       case 'mcq':
@@ -404,7 +405,7 @@ function CaseRunnerPage({ auth }) {
       case 'treatment':
         return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
       case 'investigation':
-        return <InvestigationsStep step={step} />
+        return <InvestigationsStep step={step} watermarkEnabled={!!caseData?.watermarkEnabled} />
       case 'clinical':
         if (step.phase === 'case_overview') {
           return (
@@ -416,7 +417,7 @@ function CaseRunnerPage({ auth }) {
                   ...(caseData.patientData || {}), 
                   patientImageUrl: caseData.patientData?.imageUrl,
                   illustrationUrl: step.content?.imageUrl 
-               }} />
+               }} watermarkEnabled={!!caseData?.watermarkEnabled} />
             </div>
           )
         }
@@ -424,7 +425,7 @@ function CaseRunnerPage({ auth }) {
              return (
                <div className="animate-in fade-in duration-500">
                   {!hideHeader && <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective Data</h2>}
-                  <ClinicalStepRunner step={step} hideHeader={true} />
+                  <ClinicalStepRunner step={step} hideHeader={true} watermarkEnabled={!!caseData?.watermarkEnabled} />
                </div>
              )
         }
@@ -436,6 +437,7 @@ function CaseRunnerPage({ auth }) {
                 essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
                 hideHeader={hideHeader}
                 initialValue={stepInitialData}
+                watermarkEnabled={!!caseData?.watermarkEnabled}
             />
           )
         }
@@ -486,7 +488,7 @@ function CaseRunnerPage({ auth }) {
              />
           )
         }
-        return <ClinicalStepRunner step={step} hideHeader={hideHeader} />
+        return <ClinicalStepRunner step={step} hideHeader={hideHeader} watermarkEnabled={!!caseData?.watermarkEnabled} />
       default:
         return null
     }
@@ -1055,7 +1057,7 @@ function CaseRunnerPage({ auth }) {
 
 
 
-function PatientInfoStep({ content }) {
+function PatientInfoStep({ content, watermarkEnabled = false }) {
   if (!content) return null
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center mx-auto mt-4 px-4 h-full min-h-[500px] w-full max-w-[1200px]">
@@ -1066,7 +1068,7 @@ function PatientInfoStep({ content }) {
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 rounded-full bg-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                {content.patientImageUrl || content.imageUrl ? (
-                  <img src={content.patientImageUrl || content.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  <ImageWithWatermark src={content.patientImageUrl || content.imageUrl} alt="Avatar" className="w-full h-full object-cover" watermarkEnabled={watermarkEnabled} wrapperClassName="w-full h-full" />
                ) : (
                  <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xl">
                    {(content.patientName || 'P').charAt(0).toUpperCase()}
@@ -1095,7 +1097,7 @@ function PatientInfoStep({ content }) {
       {/* Right: Main Image */}
       <div className="w-full lg:w-[60%] flex shrink-0 rounded-2xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-200 bg-white min-h-[400px]">
          {content.illustrationUrl || content.imageUrl ? (
-            <img src={content.illustrationUrl || content.imageUrl} alt="Case Illustration" className="w-full h-full object-cover" />
+            <ImageWithWatermark src={content.illustrationUrl || content.imageUrl} alt="Case Illustration" className="w-full h-full object-cover" watermarkEnabled={watermarkEnabled} wrapperClassName="w-full h-full" />
          ) : (
             <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400 font-medium">
                Image / Diagram
@@ -1142,7 +1144,7 @@ function HistoryStep({ step }) {
   )
 }
 
-function InvestigationsStep({ step }) {
+function InvestigationsStep({ step, watermarkEnabled = false }) {
   const groupedTests = {}
   step.investigations?.forEach((inv) => {
     if (!groupedTests[inv.groupLabel]) {
@@ -1230,10 +1232,12 @@ function InvestigationsStep({ step }) {
               return (
                 <div key={x.id} className="xray-finding-card">
                   {hasImage ? (
-                    <img
+                    <ImageWithWatermark
                       src={x.imageUrl}
                       alt={x.label}
                       className="xray-image"
+                      watermarkEnabled={watermarkEnabled}
+                      wrapperClassName="xray-image-wrapper"
                       onError={(e) => {
                         console.error('Failed to load X-ray image:', {
                           label: x.label,
@@ -1242,7 +1246,6 @@ function InvestigationsStep({ step }) {
                         });
                         e.target.style.display = 'none';
                       }}
-
                     />
                   ) : (
                     <div style={{

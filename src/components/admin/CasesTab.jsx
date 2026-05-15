@@ -11,6 +11,7 @@ export default function CasesTab({ auth }) {
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState(null)
   const [caseToDelete, setCaseToDelete] = useState(null)
+  const [watermarkToggling, setWatermarkToggling] = useState({})
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -76,6 +77,29 @@ export default function CasesTab({ auth }) {
       setCaseToDelete(null)
     } catch (e) {
       showToast('error', e.message)
+    }
+  }
+
+  const handleWatermarkToggle = async (caseItem) => {
+    const newValue = !caseItem.watermarkEnabled
+    setWatermarkToggling(prev => ({ ...prev, [caseItem.id]: true }))
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/cases/${caseItem.id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify({ watermarkEnabled: newValue })
+      })
+      if (!res.ok) throw new Error('Failed to update watermark')
+      setCases(prev => prev.map(c => c.id === caseItem.id ? { ...c, watermarkEnabled: newValue } : c))
+      showToast('success', `Watermark ${newValue ? 'enabled' : 'disabled'}`)
+    } catch (e) {
+      showToast('error', e.message)
+    } finally {
+      setWatermarkToggling(prev => ({ ...prev, [caseItem.id]: false }))
     }
   }
 
@@ -174,6 +198,7 @@ export default function CasesTab({ auth }) {
               <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Difficulty</th>
               <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Steps</th>
               <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider">Duration</th>
+              <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider text-center">Watermark</th>
               <th className="py-4 px-4 text-xs font-bold text-admin-text-muted uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
@@ -201,6 +226,28 @@ export default function CasesTab({ auth }) {
                 </td>
                 <td className="py-4 px-4 text-sm text-admin-text-muted font-medium">{c.stepCount || 0} Steps</td>
                 <td className="py-4 px-4 text-sm text-admin-text-muted">{c.duration} min</td>
+                {/* Watermark Toggle */}
+                <td className="py-4 px-4 text-center">
+                  <div className="flex items-center justify-center">
+                    {watermarkToggling[c.id] ? (
+                      <div className="w-9 h-5 rounded-full bg-slate-200 animate-pulse" />
+                    ) : (
+                      <button
+                        onClick={() => handleWatermarkToggle(c)}
+                        title={c.watermarkEnabled ? 'Watermark ON — click to disable' : 'Watermark OFF — click to enable'}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                          c.watermarkEnabled ? 'bg-admin-primary' : 'bg-slate-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                            c.watermarkEnabled ? 'translate-x-4' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+                </td>
                 <td className="py-4 px-4 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <button

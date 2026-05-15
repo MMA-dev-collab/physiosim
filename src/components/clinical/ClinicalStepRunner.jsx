@@ -3,9 +3,10 @@ import { getCategoriesForPhase } from '../../config/clinicalPhases'
 import { ClinicalCard, ClinicalTable, StatusBadge, KeyValueRow, SectionHeader } from './ClinicalComponents'
 import CompositeAssessmentRunner from './CompositeAssessmentRunner'
 import CompositeHistoryRunner from './CompositeHistoryRunner'
+import ImageWithWatermark from '../common/ImageWithWatermark'
 import './PhaseEditors.css'
 
-export default function ClinicalStepRunner({ step, hideHeader = false }) {
+export default function ClinicalStepRunner({ step, hideHeader = false, watermarkEnabled = false }) {
     const { phase, category, content } = step
 
     // Helper to render specific content types
@@ -188,7 +189,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {data.image_url && (
                             <div className="lg:col-span-1">
-                                <img src={data.image_url} alt="Observation" className="w-full rounded-lg shadow-md border border-slate-200" />
+                                <ImageWithWatermark src={data.image_url} alt="Observation" className="w-full rounded-lg shadow-md border border-slate-200" watermarkEnabled={watermarkEnabled} />
                             </div>
                         )}
                         <div className={data.image_url ? 'lg:col-span-2' : 'col-span-full'}>
@@ -244,7 +245,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                         {hasImage && (
                             <div className="w-full lg:w-1/2 shrink-0">
                                 <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
-                                    <img src={data.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" />
+                                    <ImageWithWatermark src={data.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" watermarkEnabled={watermarkEnabled} />
                                 </div>
                             </div>
                         )}
@@ -517,10 +518,11 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                                         isSelected ? 'border-blue-200 shadow-inner' : 'border-slate-100'
                                     }`}>
                                         {displayImage ? (
-                                            <img 
-                                                src={displayImage} 
-                                                alt={opt.title} 
+                                            <ImageWithWatermark
+                                                src={displayImage}
+                                                alt={opt.title}
                                                 className="max-w-full max-h-full object-contain"
+                                                watermarkEnabled={watermarkEnabled}
                                             />
                                         ) : (
                                             <div className="text-slate-200">
@@ -577,10 +579,11 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
 
                                 <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
                                     {e.image_url ? (
-                                        <img
+                                        <ImageWithWatermark
                                             src={e.image_url}
                                             alt={e.test_name}
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            watermarkEnabled={watermarkEnabled}
                                         />
                                     ) : (
                                         <div className="text-slate-300 flex flex-col items-center">
@@ -672,7 +675,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {e.image_url ? (
                                     <div className="bg-black/5 rounded-lg overflow-hidden border border-black/10 flex items-center justify-center">
-                                        <img src={e.image_url} alt={e.modality} className="max-h-64 object-contain" />
+                                        <ImageWithWatermark src={e.image_url} alt={e.modality} className="max-h-64 object-contain" watermarkEnabled={watermarkEnabled} />
                                     </div>
                                 ) : (
                                     <div className="bg-slate-50 flex items-center justify-center rounded-lg h-40 text-slate-400 text-sm border-2 border-dashed border-slate-200">
