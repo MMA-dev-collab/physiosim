@@ -713,10 +713,9 @@ function CaseRunnerPage({ auth }) {
       setIsCorrect(data.correct)
       if (!data.correct) {
         setFeedback(data.feedback || currentStep.explanationOnFail)
-      } else if (data.final) {
-        setFinalSummary(data)
       } else {
-        setFeedback(null)
+        setFeedback(data.feedback || null)
+        if (data.final) setFinalSummary(data)
       }
 
       // If MCQ answered correctly inside a hub, mark sub-step as completed
@@ -1035,7 +1034,7 @@ function CaseRunnerPage({ auth }) {
           )}
 
           {/* MCQ Retry button */}
-          {feedback && (currentStep?.type === 'mcq' || activeSubStep?.type === 'mcq') && (
+          {feedback && isCorrect === false && (currentStep?.type === 'mcq' || activeSubStep?.type === 'mcq') && (
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
               <button
                 className="cf-btn cf-btn-secondary"

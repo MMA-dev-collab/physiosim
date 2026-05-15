@@ -84,7 +84,8 @@ export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel })
         setTouched({ all: true })
 
         if (hasErrors) {
-            toast.error('Please fix validation errors before saving')
+            const firstError = Object.values(errors)[0]
+            toast.error(firstError || 'Please fix validation errors before saving')
             return
         }
 
@@ -211,7 +212,7 @@ export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel })
                 <button className="btn-secondary" onClick={onCancel} disabled={saving}>
                     Close
                 </button>
-                <button className="btn-primary" onClick={handleSave} disabled={saving || hasErrors}>
+                <button className="btn-primary" onClick={handleSave} disabled={saving}>
                     {saving ? 'Saving...' : 'Save Step'}
                 </button>
             </div>

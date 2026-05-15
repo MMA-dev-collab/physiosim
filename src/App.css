@@ -1001,6 +1001,12 @@
   font-weight: 500;
 }
 
+.mcq-feedback.mcq-feedback-correct {
+  color: #065f46;
+  background: #ecfdf5;
+  border-left-color: #10b981;
+}
+
 /* --- Rich MCQ Card Styles --- */
 .mcq-rich-card {
   padding: 0;

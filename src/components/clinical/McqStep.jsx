@@ -168,7 +168,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             </span>
           </div>
         )}
-        {feedback && <div className="mcq-feedback mt-4">{feedback}</div>}
+        {feedback && <div className={`mcq-feedback mt-4${isCorrect ? ' mcq-feedback-correct' : ''}`}>{feedback}</div>}
       </div>
 
       {hints.length > 0 && (

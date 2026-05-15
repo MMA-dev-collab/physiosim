@@ -35,19 +35,6 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 errors.explanationOnFail = 'Explanation on fail is required'
             }
 
-            // Expected Time Validation - Moved inside hint_enabled check
-            /* 
-            const et = editedStep.expected_time
-            if (et === undefined || et === null || et === '') {
-                errors.expected_time = 'Expected time is required'
-            } else {
-                const num = parseInt(et)
-                if (isNaN(num) || num < 1 || num > 600) {
-                    errors.expected_time = 'Expected time must be between 1 and 600 seconds'
-                }
-            } 
-            */
-
             const options = editedStep.options || []
             if (options.length < 2) {
                 errors.options = 'At least 2 options are required'
@@ -63,24 +50,6 @@ export default function StepEditor({ step, onSave, onCancel }) {
             const correctCount = options.filter(o => o.isCorrect).length
             if (correctCount !== 1) {
                 errors.correctAnswer = `Exactly one correct answer is required (currently ${correctCount})`
-            }
-
-            // Hint Validation - Only run if hint is enabled
-            if (editedStep.hint_enabled === true) {
-                if (!editedStep.tag) {
-                    errors.tag = 'Tag / Category is required'
-                }
-                if (!editedStep.hint_text) {
-                    errors.hint_text = 'Hint text is required'
-                }
-                // Expected Time Validation - Optional (has default)
-                const et = editedStep.expected_time
-                if (et !== undefined && et !== null && et !== '') {
-                    const num = parseInt(et)
-                    if (isNaN(num) || num < 1 || num > 600) {
-                        errors.expected_time = 'Expected time must be between 1 and 600 seconds'
-                    }
-                }
             }
         }
 
@@ -210,7 +179,8 @@ export default function StepEditor({ step, onSave, onCancel }) {
         setTouched({ all: true })
 
         if (hasErrors) {
-            toast.error('Please fix validation errors before saving')
+            const firstError = Object.values(errors)[0]
+            toast.error(firstError || 'Please fix validation errors before saving')
             return
         }
 
@@ -268,7 +238,7 @@ export default function StepEditor({ step, onSave, onCancel }) {
                 <button className="btn-secondary" onClick={onCancel} disabled={saving}>
                     Close
                 </button>
-                <button className="btn-primary" onClick={handleSave} disabled={saving || hasErrors}>
+                <button className="btn-primary" onClick={handleSave} disabled={saving}>
                     {saving ? 'Saving...' : 'Save Step'}
                 </button>
             </div>
