@@ -373,88 +373,91 @@ function SpecialTestsSection({ section, watermarkEnabled = false }) {
             const displayImage = entry.image_url || thumbnailUrl
 
             return (
-            <div key={i} className="bg-white h-full rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
-              
-              <div className="w-full text-left flex-1 flex flex-col">
-                <h4 className="font-bold text-slate-700 text-lg leading-tight">
-                  {i + 1}. {entry.test_name}
-                </h4>
-              </div>
+              <div key={i} className="bg-white h-full rounded-[1.5rem] border border-slate-200 p-6 flex flex-col transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
+                
+                {/* Header Section: Title + Notes */}
+                <div className="w-full text-left mb-4">
+                  <h4 className="font-bold text-slate-700 text-lg leading-tight mb-2">
+                    {i + 1}. {entry.test_name}
+                  </h4>
+                  {entry.notes && (
+                    <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
+                      {entry.notes}
+                    </p>
+                  )}
+                </div>
 
-              <div className="w-full shrink-0 aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative mt-auto">
-                {displayImage ? (
-                  <>
-                    {entry.image_url ? (
-                      <ImageWithWatermark
-                        src={entry.image_url} 
-                        alt={entry.test_name} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        watermarkEnabled={watermarkEnabled}
-                        wrapperClassName="w-full h-full"
-                      />
+                {/* Body Section: Image + Button (Pushed to bottom) */}
+                <div className="mt-auto w-full flex flex-col items-center gap-4">
+                  <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
+                    {displayImage ? (
+                      <>
+                        {entry.image_url ? (
+                          <ImageWithWatermark
+                            src={entry.image_url} 
+                            alt={entry.test_name} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                            watermarkEnabled={watermarkEnabled}
+                            wrapperClassName="w-full h-full"
+                          />
+                        ) : (
+                          <img
+                            src={thumbnailUrl}
+                            alt={entry.test_name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        )}
+                        {/* Play button overlay when showing YouTube thumbnail */}
+                        {thumbnailUrl && !entry.image_url && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none">
+                            <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                              <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <img
-                        src={thumbnailUrl}
-                        alt={entry.test_name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    )}
-                    {/* Play button overlay when showing YouTube thumbnail */}
-                    {thumbnailUrl && !entry.image_url && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none">
-                        <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </div>
+                      <div className="text-slate-300 flex flex-col items-center">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                        <span className="text-[10px] font-bold uppercase tracking-widest mt-2">No Image</span>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <div className="text-slate-300 flex flex-col items-center">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <span className="text-[10px] font-bold uppercase tracking-widest mt-2">No Image</span>
+                    
+                    {entry.result && (
+                      <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${getResultClass(entry.result)}`}>
+                        {entry.result}
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                {entry.result && (
-                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${getResultClass(entry.result)}`}>
-                    {entry.result}
-                  </div>
-                )}
-              </div>
 
-              {entry.link && (
-                <a 
-                  href={entry.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{
-                                            border: "2px solid #F14722",
-                                            boxShadow: "0px 2px 0px #F14722",
-                                            borderRadius: "10px",
-                                        }}
-                  className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-800 font-bold text-sm transition-all hover:bg-rose-50 hover:scale-105"
-                >
-                  <svg width="20" height="20" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" />
-                    <path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" />
-                  </svg>
-                  View
-                </a>
-              )}
-              
-              {entry.notes && (
-                <p className="w-full text-center text-xs text-slate-400 italic mt-auto pt-2 border-t border-slate-50">
-                  {entry.notes}
-                </p>
-              )}
-            </div>
+                  {entry.link && (
+                    <a 
+                      href={entry.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      style={{
+                        border: "2px solid #F14722",
+                        boxShadow: "0px 2px 0px #F14722",
+                        borderRadius: "10px",
+                      }}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-800 font-bold text-sm transition-all hover:bg-rose-50 hover:scale-105"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" />
+                        <path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" />
+                      </svg>
+                      View
+                    </a>
+                  )}
+                </div>
+              </div>
             )
           })}
         </div>
