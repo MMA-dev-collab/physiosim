@@ -345,12 +345,34 @@ function SpecialTestsSection({ section, watermarkEnabled = false }) {
     return 'bg-blue-50 text-blue-600 border border-blue-100'
   }
 
+  // Extract YouTube video thumbnail from a URL
+  const getYouTubeThumbnail = (url) => {
+    if (!url) return null
+    let videoId = ''
+    try {
+      const raw = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/)
+      if (raw[2] !== undefined) {
+        videoId = raw[2].split(/[^0-9a-z_\-]/i)[0]
+      } else {
+        videoId = raw[0]
+      }
+    } catch (e) {
+      return null
+    }
+    if (!videoId || videoId.includes('http')) return null
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  }
+
   return (
     <div className="car-special mb-8">
       <h3 className="text-xl font-black text-slate-800 mb-6 px-0 md:px-2">Special Tests:</h3>
       {entries.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 px-0 md:px-2">
-          {entries.map((entry, i) => (
+          {entries.map((entry, i) => {
+            const thumbnailUrl = !entry.image_url ? getYouTubeThumbnail(entry.link) : null
+            const displayImage = entry.image_url || thumbnailUrl
+
+            return (
             <div key={i} className="bg-white h-full rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
               
               <div className="w-full text-left flex-1 flex flex-col">
@@ -360,14 +382,35 @@ function SpecialTestsSection({ section, watermarkEnabled = false }) {
               </div>
 
               <div className="w-full shrink-0 aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative mt-auto">
-                {entry.image_url ? (
-                  <ImageWithWatermark
-                    src={entry.image_url} 
-                    alt={entry.test_name} 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                    watermarkEnabled={watermarkEnabled}
-                    wrapperClassName="w-full h-full"
-                  />
+                {displayImage ? (
+                  <>
+                    {entry.image_url ? (
+                      <ImageWithWatermark
+                        src={entry.image_url} 
+                        alt={entry.test_name} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        watermarkEnabled={watermarkEnabled}
+                        wrapperClassName="w-full h-full"
+                      />
+                    ) : (
+                      <img
+                        src={thumbnailUrl}
+                        alt={entry.test_name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    )}
+                    {/* Play button overlay when showing YouTube thumbnail */}
+                    {thumbnailUrl && !entry.image_url && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none">
+                        <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-slate-300 flex flex-col items-center">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -412,7 +455,8 @@ function SpecialTestsSection({ section, watermarkEnabled = false }) {
                 </p>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <p className="car-no-data px-2">No special test data available</p>
