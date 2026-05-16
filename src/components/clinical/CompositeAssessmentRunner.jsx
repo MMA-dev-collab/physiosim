@@ -12,7 +12,7 @@ import ImageWithWatermark from '../common/ImageWithWatermark'
  *   step.content.clinicalTip - optional clinical tip text
  *   step.title - admin-given name of this Main Step
  */
-export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, hideHeader = false, initialValue, watermarkEnabled = false }) {
+export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, hideHeader = false, initialValue }) {
   const content = step?.content || {}
   const sections = content.sections || []
   const clinicalTip = content.clinicalTip || null
@@ -38,7 +38,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
       {/* Render each section */}
       {sections.map((section, idx) => (
         <div key={idx} className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm mb-6">
-          {renderSection(section, mcqProps, essayProps, watermarkEnabled)}
+          {renderSection(section, mcqProps, essayProps)}
         </div>
       ))}
 
@@ -67,30 +67,30 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
   )
 }
 
-function renderSection(section, mcqProps, essayProps, watermarkEnabled = false) {
+function renderSection(section, mcqProps, essayProps) {
   switch (section.type) {
     case 'observation':
-      return <ObservationSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <ObservationSection section={section} />
     case 'rom':
-      return <RomSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <RomSection section={section} />
     case 'flexibility_test':
-      return <FlexibilitySection section={section} watermarkEnabled={watermarkEnabled} />
+      return <FlexibilitySection section={section} />
     case 'special_tests':
-      return <SpecialTestsSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <SpecialTestsSection section={section} />
     case 'investigations':
-      return <InvestigationsSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <InvestigationsSection section={section} />
     case 'mmt':
-      return <MmtSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <MmtSection section={section} />
     case 'sensory_exam':
       return <SensoryExamSection section={section} />
     case 'palpation':
-      return <PalpationSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <PalpationSection section={section} />
     case 'cervical_curve':
-      return <CervicalCurveSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <CervicalCurveSection section={section} />
     case 'mri_findings':
-      return <MriFindingsSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <MriFindingsSection section={section} />
     case 'mri_imaging':
-      return <MriImagingSection section={section} watermarkEnabled={watermarkEnabled} />
+      return <MriImagingSection section={section} />
     case 'umnl_screening':
       return <UmnlScreeningSection section={section} />
     case 'mcq':
@@ -106,7 +106,7 @@ function renderSection(section, mcqProps, essayProps, watermarkEnabled = false) 
    OBSERVATION SECTION
    3-column image grid with labels and findings
 ========================== */
-function ObservationSection({ section, watermarkEnabled = false }) {
+function ObservationSection({ section }) {
   const views = section.views || []
   const findings = section.findings || []
 
@@ -125,7 +125,7 @@ function ObservationSection({ section, watermarkEnabled = false }) {
                     alt={view.label || 'Observation view'}
                     className="h-full object-contain rounded-lg"
                     loading="lazy"
-                    watermarkEnabled={watermarkEnabled}
+                    watermarkEnabled={!!view.watermarkEnabled}
                   />
                 </div>
               )}
@@ -161,7 +161,7 @@ function ObservationSection({ section, watermarkEnabled = false }) {
    ROM SECTION
    Table with movement, ROM value (badge), and pain status
 ========================== */
-function RomSection({ section, watermarkEnabled = false }) {
+function RomSection({ section }) {
   const entries = section.entries || []
   const endFeelMode = section.endFeelMode || 'overall'
   const endFeel = section.endFeel || section.end_feel || null
@@ -216,7 +216,7 @@ function RomSection({ section, watermarkEnabled = false }) {
                           alt={entry.movement}
                           className="w-full h-full object-cover"
                           loading="lazy"
-                          watermarkEnabled={watermarkEnabled}
+                          watermarkEnabled={!!entry.watermarkEnabled}
                           wrapperClassName="w-full h-full"
                         />
                       </div>
@@ -262,7 +262,7 @@ function RomSection({ section, watermarkEnabled = false }) {
    FLEXIBILITY SECTION
    Tag pills + cards with images
 ========================== */
-function FlexibilitySection({ section, watermarkEnabled = false }) {
+function FlexibilitySection({ section }) {
   const tags = section.tags || []
   const entries = section.entries || []
 
@@ -306,7 +306,7 @@ function FlexibilitySection({ section, watermarkEnabled = false }) {
                     alt={entry.test_name || 'Flexibility test'}
                     className="h-full w-full object-cover rounded-lg"
                     loading="lazy"
-                    watermarkEnabled={watermarkEnabled}
+                    watermarkEnabled={!!entry.watermarkEnabled}
                   />
                 </div>
               )}
@@ -334,7 +334,7 @@ function FlexibilitySection({ section, watermarkEnabled = false }) {
    SPECIAL TESTS SECTION
    Cards with test name + positive/negative result
 ========================== */
-function SpecialTestsSection({ section, watermarkEnabled = false }) {
+function SpecialTestsSection({ section }) {
   const entries = section.entries || []
 
   const getResultClass = (result) => {
@@ -397,7 +397,7 @@ function SpecialTestsSection({ section, watermarkEnabled = false }) {
                             src={entry.image_url} 
                             alt={entry.test_name} 
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                            watermarkEnabled={watermarkEnabled}
+                            watermarkEnabled={!!entry.watermarkEnabled}
                             wrapperClassName="w-full h-full"
                           />
                         ) : (
@@ -472,7 +472,7 @@ function SpecialTestsSection({ section, watermarkEnabled = false }) {
    INVESTIGATIONS SECTION
    Image + report text + conclusion
 ========================== */
-function InvestigationsSection({ section, watermarkEnabled = false }) {
+function InvestigationsSection({ section }) {
   const entries = section.entries || []
 
   return (
@@ -495,7 +495,7 @@ function InvestigationsSection({ section, watermarkEnabled = false }) {
                       alt={entry.modality || 'Investigation'}
                       className="max-h-64 object-contain rounded-lg shadow-sm"
                       loading="lazy"
-                      watermarkEnabled={watermarkEnabled}
+                      watermarkEnabled={!!entry.watermarkEnabled}
                     />
                   </div>
                 ) : (
@@ -685,7 +685,7 @@ function MmtSection({ section }) {
 /* ==========================
    PALPATION SECTION
 ========================== */
-function PalpationSection({ section, watermarkEnabled = false }) {
+function PalpationSection({ section }) {
   const entries = section.entries || []
   const hasImage = !!section.image_url
   const statusOptions = section.status_options || []
@@ -719,7 +719,7 @@ function PalpationSection({ section, watermarkEnabled = false }) {
                 src={section.image_url} 
                 alt="Palpation Reference" 
                 className="w-full h-full object-fill" 
-                watermarkEnabled={watermarkEnabled}
+                watermarkEnabled={!!section.watermarkEnabled}
                 wrapperClassName="w-full h-full"
               />
             </div>
@@ -789,7 +789,7 @@ function PalpationSection({ section, watermarkEnabled = false }) {
    CERVICAL CURVE SECTION
    Visual selection grid with highlighting for detected finding
 ========================== */
-function CervicalCurveSection({ section, watermarkEnabled = false }) {
+function CervicalCurveSection({ section }) {
   const options = section.options || []
   const selectedId = section.selected_option_id
 
@@ -835,7 +835,7 @@ function CervicalCurveSection({ section, watermarkEnabled = false }) {
                     src={displayImage} 
                     alt={opt.title} 
                     className="max-w-full max-h-full object-contain"
-                    watermarkEnabled={watermarkEnabled}
+                    watermarkEnabled={!!opt.watermarkEnabled}
                   />
                 ) : (
                   <div className="text-slate-200">
@@ -922,7 +922,7 @@ function MriFindingsSection({ section, watermarkEnabled = false }) {
                 src={section.image_url} 
                 alt="MRI Reference" 
                 className="w-full h-full object-fill rounded-xl"
-                watermarkEnabled={watermarkEnabled}
+                watermarkEnabled={!!section.watermarkEnabled}
                 wrapperClassName="w-full h-full"
               />
             </div>
@@ -1022,7 +1022,7 @@ function MriImagingSection({ section, watermarkEnabled = false }) {
                     src={img.image_url}
                     alt={img.title || 'MRI'}
                     className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:grayscale"
-                    watermarkEnabled={watermarkEnabled}
+                    watermarkEnabled={!!img.watermarkEnabled}
                     wrapperClassName="w-full h-full"
                   />
                   {/* Hover overlay */}
@@ -1075,13 +1075,13 @@ function MriImagingSection({ section, watermarkEnabled = false }) {
           className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-pointer"
           onClick={() => setLightboxIdx(null)}
         >
-          <div className="relative w-[50vw] h-[90vh] mx-auto" onClick={e => e.stopPropagation()}>
+          <div className="relative flex flex-col items-center justify-center max-w-[90vw] max-h-[90vh] mx-auto" onClick={e => e.stopPropagation()}>
             <ImageWithWatermark
               src={images[lightboxIdx].image_url}
               alt={images[lightboxIdx].title || 'MRI'}
-              className="w-full h-full object-contain rounded-2xl shadow-2xl"
-              watermarkEnabled={watermarkEnabled}
-              wrapperClassName="w-full h-full"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              watermarkEnabled={!!images[lightboxIdx]?.watermarkEnabled}
+              wrapperClassName="flex items-center justify-center"
             />
             {images[lightboxIdx].title && (
               <p className="text-center text-white/90 font-bold text-lg mt-4">{images[lightboxIdx].title}</p>

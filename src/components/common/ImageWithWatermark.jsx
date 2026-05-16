@@ -4,12 +4,11 @@ const APP_LOGO_URL =
   'https://res.cloudinary.com/dhicz31vg/image/upload/v1770665363/WhatsApp_Image_2026-02-07_at_12.41.01_AM-removebg-preview_cwfaaa.png'
 
 const APP_NAME = 'PhysioSim'
-const REPEAT_COUNT = 30
 
 /**
  * ImageWithWatermark
  *
- * Drop-in replacement for <img> that optionally overlays a branded watermark.
+ * Drop-in replacement for <img> that optionally overlays 4 corner watermark stamps.
  *
  * Props
  * ─────
@@ -30,26 +29,25 @@ function ImageWithWatermark({
   wrapperClassName = '',
   ...imgProps
 }) {
-  let userDetails = APP_NAME;
+  let userEmail = ''
+  let userIdLabel = ''
   try {
-    const authData = localStorage.getItem('auth');
+    const authData = localStorage.getItem('auth')
     if (authData) {
-      const parsedAuth = JSON.parse(authData);
+      const parsedAuth = JSON.parse(authData)
       if (parsedAuth && parsedAuth.user) {
-        const { email, id, _id } = parsedAuth.user;
-        const userId = id || _id;
-        if (email && userId) {
-          userDetails = `${email}  •  ID: ${userId}`;
-        } else if (email) {
-          userDetails = email;
-        } else if (userId) {
-          userDetails = `ID: ${userId}`;
-        }
+        const { email, id, _id } = parsedAuth.user
+        const userId = id || _id
+        
+        if (email) userEmail = email
+        if (userId) userIdLabel = `ID: ${userId}`
       }
     }
   } catch (err) {
-    console.error('Failed to parse auth for watermark', err);
+    // silently ignore
   }
+
+  const corners = ['tl', 'tr', 'bl', 'br', 'cl', 'cr']
 
   return (
     <div className={`img-wm-wrapper ${wrapperClassName}`} style={style}>
@@ -63,22 +61,16 @@ function ImageWithWatermark({
 
       {watermarkEnabled && (
         <>
-          {/* Diagonal repeating text overlay */}
-          <div className="img-wm-diagonal" aria-hidden="true">
-            <div className="img-wm-diagonal-inner">
-              {Array.from({ length: REPEAT_COUNT }).map((_, i) => (
-                <span key={i} className="img-wm-diagonal-text">
-                  {userDetails}
-                </span>
-              ))}
+          {corners.map((pos) => (
+            <div key={pos} className={`img-wm-corner img-wm-corner--${pos}`} aria-hidden="true">
+              <img src={APP_LOGO_URL} alt="" draggable={false} className="img-wm-corner-logo" />
+              <div className="img-wm-corner-text">
+                <span className="img-wm-corner-brand">{APP_NAME}</span>
+                {userIdLabel && <span className="img-wm-corner-user">{userIdLabel}</span>}
+                {userEmail && <span className="img-wm-corner-user">{userEmail}</span>}
+              </div>
             </div>
-          </div>
-
-          {/* Corner stamp */}
-          <div className="img-wm-stamp" aria-hidden="true">
-            <img src={APP_LOGO_URL} alt="" draggable={false} />
-            <span className="img-wm-stamp-text" style={{ fontSize: '10px' }}>{userDetails}</span>
-          </div>
+          ))}
         </>
       )}
     </div>

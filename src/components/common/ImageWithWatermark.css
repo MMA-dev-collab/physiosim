@@ -1,5 +1,5 @@
 /* ============================================================
-   ImageWithWatermark — Per-image watermark stamp
+   ImageWithWatermark — 4-corner watermark stamps
    ============================================================ */
 
 .img-wm-wrapper {
@@ -9,77 +9,70 @@
   height: 100%;
 }
 
-/* The watermark bar that sits at the bottom-right corner */
-.img-wm-stamp {
+/* ── Shared corner stamp ── */
+.img-wm-corner {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  gap: 5px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   pointer-events: none;
   user-select: none;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  opacity: 0.6;
+  z-index: 3;
+  max-width: 46%;
 }
 
-.img-wm-stamp img {
-  width: 22px;
-  height: 22px;
+/* ── Corner positions ── */
+.img-wm-corner--tl { top: 8px;    left: 8px;    }
+.img-wm-corner--tr { top: 8px;    right: 8px;   }
+.img-wm-corner--bl { bottom: 8px; left: 8px;    }
+.img-wm-corner--br { bottom: 8px; right: 8px;   }
+.img-wm-corner--cl { top: 50%;    left: 8px;    transform: translateY(-50%); }
+.img-wm-corner--cr { top: 50%;    right: 8px;   transform: translateY(-50%); }
+
+/* ── Logo inside stamp ── */
+.img-wm-corner-logo {
+  width: 18px;
+  height: 18px;
   object-fit: contain;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
   flex-shrink: 0;
+  filter: brightness(1.2) drop-shadow(0 1px 2px rgba(0,0,0,0.4));
 }
 
-.img-wm-stamp-text {
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* Diagonal repeating pattern across full image (subtle) */
-.img-wm-diagonal {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  user-select: none;
-  z-index: 9;
-  overflow: hidden;
-  border-radius: inherit;
-}
-
-.img-wm-diagonal-inner {
-  position: absolute;
-  inset: -20%;
-  width: 140%;
-  height: 140%;
+/* ── Text block ── */
+.img-wm-corner-text {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  transform: rotate(-25deg);
+  flex-direction: column;
+  line-height: 1.2;
+  overflow: hidden;
 }
 
-.img-wm-diagonal-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.12);
-  white-space: nowrap;
-  padding: 18px 28px;
+.img-wm-corner-brand {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  pointer-events: none;
-  user-select: none;
+  white-space: nowrap;
+}
+
+.img-wm-corner-user {
+  display: block;
+  font-size: 8px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.03em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }

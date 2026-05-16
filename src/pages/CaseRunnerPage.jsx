@@ -354,7 +354,7 @@ function CaseRunnerPage({ auth }) {
 
     switch (step.type) {
       case 'info':
-        return <PatientInfoStep content={step.content} watermarkEnabled={!!caseData?.watermarkEnabled} />
+        return <PatientInfoStep content={step.content} />
       case 'history':
         return <HistoryStep step={step} />
       case 'mcq':
@@ -405,7 +405,7 @@ function CaseRunnerPage({ auth }) {
       case 'treatment':
         return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
       case 'investigation':
-        return <InvestigationsStep step={step} watermarkEnabled={!!caseData?.watermarkEnabled} />
+        return <InvestigationsStep step={step} />
       case 'clinical':
         if (step.phase === 'case_overview') {
           return (
@@ -417,7 +417,7 @@ function CaseRunnerPage({ auth }) {
                   ...(caseData.patientData || {}), 
                   patientImageUrl: caseData.patientData?.imageUrl,
                   illustrationUrl: step.content?.imageUrl 
-               }} watermarkEnabled={!!caseData?.watermarkEnabled} />
+               }} />
             </div>
           )
         }
@@ -437,7 +437,6 @@ function CaseRunnerPage({ auth }) {
                 essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
                 hideHeader={hideHeader}
                 initialValue={stepInitialData}
-                watermarkEnabled={!!caseData?.watermarkEnabled}
             />
           )
         }
@@ -488,7 +487,7 @@ function CaseRunnerPage({ auth }) {
              />
           )
         }
-        return <ClinicalStepRunner step={step} hideHeader={hideHeader} watermarkEnabled={!!caseData?.watermarkEnabled} />
+        return <ClinicalStepRunner step={step} hideHeader={hideHeader} />
       default:
         return null
     }
@@ -1236,7 +1235,7 @@ function InvestigationsStep({ step, watermarkEnabled = false }) {
                       src={x.imageUrl}
                       alt={x.label}
                       className="xray-image"
-                      watermarkEnabled={watermarkEnabled}
+                      watermarkEnabled={!!x.watermarkEnabled}
                       wrapperClassName="xray-image-wrapper"
                       onError={(e) => {
                         console.error('Failed to load X-ray image:', {

@@ -58,6 +58,14 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                             initialUrl={content.image_url}
                             onUpload={(url) => updateField('image_url', url)}
                         />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
+                            <input
+                                type="checkbox"
+                                checked={!!content.watermarkEnabled}
+                                onChange={(e) => updateField('watermarkEnabled', e.target.checked)}
+                            />
+                            🔒 Watermark this image
+                        </label>
                     </div>
 
                     <div className="findings-section" style={{ gridColumn: '1 / -1' }}>
@@ -174,6 +182,14 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                             initialUrl={content.image_url} 
                             onUpload={url => onUpdate({ ...step, content: { ...content, image_url: url } })} 
                         />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
+                            <input
+                                type="checkbox"
+                                checked={!!content.watermarkEnabled}
+                                onChange={(e) => onUpdate({ ...step, content: { ...content, watermarkEnabled: e.target.checked } })}
+                            />
+                            🔒 Watermark this image
+                        </label>
                     </div>
                 </div>
 
@@ -739,6 +755,14 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                         initialUrl={entry.image_url}
                                         onUpload={(url) => updateEntry(idx, 'image_url', url)}
                                     />
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!entry.watermarkEnabled}
+                                            onChange={(e) => updateEntry(idx, 'watermarkEnabled', e.target.checked)}
+                                        />
+                                        🔒 Watermark this image
+                                    </label>
                                 </div>
                                 <label>
                                     Result
@@ -855,6 +879,14 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     initialUrl={opt.image_url} 
                                     onUpload={url => updateOption(idx, 'image_url', url)} 
                                 />
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={!!opt.watermarkEnabled}
+                                        onChange={(e) => updateOption(idx, 'watermarkEnabled', e.target.checked)}
+                                    />
+                                    🔒 Watermark this image
+                                </label>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                     <label>
@@ -948,6 +980,14 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                         initialUrl={entry.image_url}
                                         onUpload={(url) => updateEntry(idx, 'image_url', url)}
                                     />
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!entry.watermarkEnabled}
+                                            onChange={(e) => updateEntry(idx, 'watermarkEnabled', e.target.checked)}
+                                        />
+                                        🔒 Watermark this image
+                                    </label>
                                 </div>
                                 <label style={{ gridColumn: '1 / -1' }}>
                                     Report Text
