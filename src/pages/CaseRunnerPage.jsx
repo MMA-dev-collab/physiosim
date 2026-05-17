@@ -425,7 +425,13 @@ function CaseRunnerPage({ auth }) {
              return (
                <div className="animate-in fade-in duration-500">
                   {!hideHeader && <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective Data</h2>}
-                  <ClinicalStepRunner step={step} hideHeader={true} watermarkEnabled={!!caseData?.watermarkEnabled} />
+                  <ClinicalStepRunner 
+                    step={step} 
+                    hideHeader={true} 
+                    watermarkEnabled={!!caseData?.watermarkEnabled} 
+                    mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
+                    essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
+                  />
                </div>
              )
         }
@@ -487,7 +493,14 @@ function CaseRunnerPage({ auth }) {
              />
           )
         }
-        return <ClinicalStepRunner step={step} hideHeader={hideHeader} />
+        return (
+            <ClinicalStepRunner 
+                step={step} 
+                hideHeader={hideHeader} 
+                mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
+                essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
+            />
+        )
       default:
         return null
     }
@@ -982,6 +995,15 @@ function CaseRunnerPage({ auth }) {
     )
   }
 
+  const checkHasMcq = (stepToCheck) => {
+    if (!stepToCheck) return false;
+    if (stepToCheck.type === 'mcq') return true;
+    if (stepToCheck.type === 'clinical' && stepToCheck.content?.sections) {
+      return stepToCheck.content.sections.some(s => s.type === 'mcq');
+    }
+    return false;
+  }
+
   return (
     <div className="page" style={{ padding: 0 }}> {/* Reset padding for full-screen layout */}
       <HintModal
@@ -1035,7 +1057,7 @@ function CaseRunnerPage({ auth }) {
           )}
 
           {/* MCQ Retry button */}
-          {feedback && isCorrect === false && (currentStep?.type === 'mcq' || activeSubStep?.type === 'mcq') && (
+          {feedback && isCorrect === false && (checkHasMcq(activeSubStep) || checkHasMcq(currentStep)) && (
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
               <button
                 className="cf-btn cf-btn-secondary"

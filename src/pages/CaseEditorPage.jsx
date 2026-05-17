@@ -247,7 +247,7 @@ export default function CaseEditorPage({ auth }) {
             // General check for empty content
             if (!step.content || Object.keys(step.content).length === 0) {
                 // Exception for some types if they use other fields like 'options' or 'investigations'
-                if (step.type !== 'mcq' && step.type !== 'investigation' && step.type !== 'essay') {
+                if (step.type !== 'mcq' && step.type !== 'investigation' && step.type !== 'essay' && step.type !== 'clinical') {
                     toast.error(`Step ${step.stepIndex + 1}: Content is empty`)
                     return
                 }
@@ -292,9 +292,16 @@ export default function CaseEditorPage({ auth }) {
             // Clinical specific validation
             if (step.type === 'clinical') {
                 // Check if there is ANY data in content
-                const hasContent = step.content && Object.values(step.content).some(v =>
+                let hasContent = step.content && Object.values(step.content).some(v =>
                     v && (Array.isArray(v) ? v.length > 0 : typeof v === 'object' ? Object.keys(v).length > 0 : true)
                 )
+
+                // For diagnosis or problem_list, check essayQuestions
+                if (step.phase === 'diagnosis' || step.phase === 'problem_list' || step.category === 'problem_entry' || step.category === 'diagnosis') {
+                    if (step.essayQuestions && step.essayQuestions.length > 0) {
+                        hasContent = true;
+                    }
+                }
 
                 if (!hasContent) {
                     toast.error(`Step ${step.stepIndex + 1} (${step.category || 'Clinical'}): Please add content`)

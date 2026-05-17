@@ -47,22 +47,23 @@ export default function ClinicalPhaseManager({
             const otherPhases = CLINICAL_PHASES.filter(p => p.id !== 'case_overview' && p.id !== 'history_presentation')
             const eduSteps = steps.filter(s => s.type === 'mcq' || s.type === 'essay')
 
-            // Create phase group items
-            const phaseItems = otherPhases.map(phase => {
+            // Create phase group items ONLY for phases that have steps
+            const phaseItems = otherPhases.reduce((acc, phase) => {
                 const pSteps = steps
                     .filter(s => s.phase === phase.id && s.type === 'clinical')
                     .sort((a, b) => a.stepIndex - b.stepIndex)
 
-                const startIndex = pSteps.length > 0 ? pSteps[0].stepIndex : Infinity
-
-                return {
-                    itemType: 'phase',
-                    id: phase.id,
-                    ...phase,
-                    steps: pSteps,
-                    startIndex
+                if (pSteps.length > 0) {
+                    acc.push({
+                        itemType: 'phase',
+                        id: phase.id,
+                        ...phase,
+                        steps: pSteps,
+                        startIndex: pSteps[0].stepIndex
+                    })
                 }
-            })
+                return acc
+            }, [])
 
             // Create standalone educational step items
             const eduItems = eduSteps.map(s => ({

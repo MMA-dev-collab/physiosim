@@ -79,10 +79,10 @@ export const PHASE_CATEGORIES = {
     ],
     history_presentation: [
         { id: 'composite_history', label: 'Subjective History (Unified)', inputMode: 'composite', dataTypes: ['text', 'tags', 'numbers'] },
-        { id: 'present_history', label: 'Present History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
-        { id: 'history_of_pain', label: 'History of Pain (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
-        { id: 'past_history', label: 'Past History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
-        { id: 'medication', label: 'Medication (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] }
+        // { id: 'present_history', label: 'Present History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
+        // { id: 'history_of_pain', label: 'History of Pain (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
+        // { id: 'past_history', label: 'Past History (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] },
+        // { id: 'medication', label: 'Medication (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] }
     ],
     assessment: [
         // { id: 'observation_anterior', label: 'Observation - Anterior View', inputMode: 'author_only', dataTypes: ['image', 'text'] },
