@@ -1,24 +1,34 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import HomePage from './pages/HomePage'
-import MembershipPage from './pages/MembershipPage'
-import AboutPage from './pages/AboutPage'
-import CasesPage from './pages/CasesPage'
-import CaseRunnerPage from './pages/CaseRunnerPage'
-import AdminDashboard from './pages/AdminDashboard'
-import CaseEditorPage from './pages/CaseEditorPage'
-import ProfilePage from './pages/ProfilePage'
-import LeaderboardPage from './pages/LeaderboardPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import VerifyEmailPage from './pages/VerifyEmailPage'
-import ComponentShowcase from './pages/ComponentShowcase'
-
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { API_BASE_URL } from './config'
-
 import { ToastProvider } from './context/ToastContext'
 import './App.css'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const MembershipPage = lazy(() => import('./pages/MembershipPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const CasesPage = lazy(() => import('./pages/CasesPage'))
+const CaseRunnerPage = lazy(() => import('./pages/CaseRunnerPage'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const CaseEditorPage = lazy(() => import('./pages/CaseEditorPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'))
+const ComponentShowcase = lazy(() => import('./pages/ComponentShowcase'))
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm text-slate-500">Loading...</p>
+      </div>
+    </div>
+  )
+}
 
 function Navbar({ auth, logout, menuOpen, toggleMenu, closeMenu, isAdmin, showDropdown, setShowDropdown }) {
   const location = useLocation()
@@ -192,44 +202,46 @@ function App() {
             setShowDropdown={setShowDropdown}
           />
           <main className="app-main">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/membership" element={<MembershipPage auth={auth} />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/login" element={auth ? <Navigate to="/" /> : <LoginPage setAuth={setAuth} />} />
-              <Route path="/forgot-password" element={auth ? <Navigate to="/" /> : <ForgotPasswordPage />} />
-              <Route path="/register" element={auth ? <Navigate to="/" /> : <RegisterPage setAuth={setAuth} />} />
-              <Route path="/verify-email" element={<VerifyEmailPage setAuth={setAuth} />} />
-              <Route
-                path="/cases"
-                element={<CasesPage auth={auth} />}
-              />
-              <Route
-                path="/cases/:id"
-                element={auth ? <CaseRunnerPage auth={auth} /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/admin"
-                element={isAdmin ? <AdminDashboard auth={auth} logout={logout} /> : <Navigate to="/" />}
-              />
-              <Route
-                path="/admin/cases/new"
-                element={isAdmin ? <CaseEditorPage auth={auth} /> : <Navigate to="/" />}
-              />
-              <Route
-                path="/admin/cases/:id/edit"
-                element={isAdmin ? <CaseEditorPage auth={auth} /> : <Navigate to="/" />}
-              />
-              <Route
-                path="/profile"
-                element={auth ? <ProfilePage auth={auth} setAuth={setAuth} /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/leaderboard"
-                element={auth ? <LeaderboardPage auth={auth} /> : <Navigate to="/login" />}
-              />
-              <Route path="/showcase" element={<ComponentShowcase />} />
-            </Routes>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/membership" element={<MembershipPage auth={auth} />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/login" element={auth ? <Navigate to="/" /> : <LoginPage setAuth={setAuth} />} />
+                <Route path="/forgot-password" element={auth ? <Navigate to="/" /> : <ForgotPasswordPage />} />
+                <Route path="/register" element={auth ? <Navigate to="/" /> : <RegisterPage setAuth={setAuth} />} />
+                <Route path="/verify-email" element={<VerifyEmailPage setAuth={setAuth} />} />
+                <Route
+                  path="/cases"
+                  element={<CasesPage auth={auth} />}
+                />
+                <Route
+                  path="/cases/:id"
+                  element={auth ? <CaseRunnerPage auth={auth} /> : <Navigate to="/login" />}
+                />
+                <Route
+                  path="/admin"
+                  element={isAdmin ? <AdminDashboard auth={auth} logout={logout} /> : <Navigate to="/" />}
+                />
+                <Route
+                  path="/admin/cases/new"
+                  element={isAdmin ? <CaseEditorPage auth={auth} /> : <Navigate to="/" />}
+                />
+                <Route
+                  path="/admin/cases/:id/edit"
+                  element={isAdmin ? <CaseEditorPage auth={auth} /> : <Navigate to="/" />}
+                />
+                <Route
+                  path="/profile"
+                  element={auth ? <ProfilePage auth={auth} setAuth={setAuth} /> : <Navigate to="/login" />}
+                />
+                <Route
+                  path="/leaderboard"
+                  element={auth ? <LeaderboardPage auth={auth} /> : <Navigate to="/login" />}
+                />
+                <Route path="/showcase" element={<ComponentShowcase />} />
+              </Routes>
+            </Suspense>
           </main>
         </div>
       </Router>

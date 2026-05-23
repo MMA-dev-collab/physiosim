@@ -337,7 +337,7 @@ function CaseRunnerPage({ auth }) {
   const { resetTimer } = useIdleTimer({
     idleTimeout: getIdleTimeout(),
     onIdle: fetchHint,
-    enabled: (currentStep?.type === 'mcq' || currentStep?.type === 'essay') && !isCorrect && !showHint && (currentStep?.hint_enabled !== false) && essayScore === null
+    enabled: (currentStep?.type === 'mcq' || currentStep?.type === 'essay') && !isCorrect && !showHint && (currentStep?.hint_enabled !== false) && essayScore === null && !caseData?.isCompleted
   })
 
   const progressPercent = useMemo(() => {

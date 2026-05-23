@@ -43,31 +43,35 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
 
   // Hint Delay Logic
   useEffect(() => {
+    // Clear any existing hints and timeouts when starting fresh or submitting
     setVisibleHints(new Array(hints.length).fill(false))
     const timeouts = []
 
-    hints.forEach((hint, idx) => {
-      const delay = hint.delaySeconds || 0
-      if (delay > 0) {
-        const tid = setTimeout(() => {
+    // Only set up hint timers if not submitted and not in review mode
+    if (!isSubmitted && !isReviewMode) {
+      hints.forEach((hint, idx) => {
+        const delay = hint.delaySeconds || 0
+        if (delay > 0) {
+          const tid = setTimeout(() => {
+            setVisibleHints(prev => {
+              const next = [...prev]
+              next[idx] = true
+              return next
+            })
+          }, delay * 1000)
+          timeouts.push(tid)
+        } else {
           setVisibleHints(prev => {
             const next = [...prev]
             next[idx] = true
             return next
           })
-        }, delay * 1000)
-        timeouts.push(tid)
-      } else {
-        setVisibleHints(prev => {
-          const next = [...prev]
-          next[idx] = true
-          return next
-        })
-      }
-    })
+        }
+      })
+    }
 
     return () => timeouts.forEach(clearTimeout)
-  }, [step.id, JSON.stringify(hints)])
+  }, [step.id, JSON.stringify(hints), isSubmitted, isReviewMode])
 
   // Show all hints immediately on wrong answer
   useEffect(() => {
