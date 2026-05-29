@@ -641,7 +641,8 @@ export default function CaseEditorPage({ auth }) {
                                     <input
                                         value={caseData.patientData?.patientName || ''}
                                         onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, patientName: e.target.value } })}
-                                        placeholder="e.g. Ahmed Hassan"
+                                        placeholder="Enter patient name"
+                                        className={`w-full p-2 border rounded ${touched.patientData?.patientName && errors.patientData?.patientName ? 'border-red-500' : 'border-gray-300'}`}
                                     />
                                 </label>
                                 <label>
@@ -650,7 +651,7 @@ export default function CaseEditorPage({ auth }) {
                                         type="number"
                                         value={caseData.patientData?.age || ''}
                                         onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, age: parseInt(e.target.value) || '' } })}
-                                        placeholder="e.g. 35"
+                                        placeholder="35"
                                     />
                                 </label>
                                 <label>
@@ -676,10 +677,12 @@ export default function CaseEditorPage({ auth }) {
                                 </label>
                                 <label style={{ gridColumn: '1 / -1' }}>
                                     <span>Chief Complaint</span>
-                                    <input
+                                    <textarea
                                         value={caseData.patientData?.chiefComplaint || ''}
                                         onChange={e => setCaseData({ ...caseData, patientData: { ...caseData.patientData, chiefComplaint: e.target.value } })}
-                                        placeholder="e.g. ألم في الركبة اليمنى"
+                                        placeholder="Enter chief complaint"
+                                        className={`w-full p-2 border rounded ${touched.patientData?.chiefComplaint && errors.patientData?.chiefComplaint ? 'border-red-500' : 'border-gray-300'}`}
+                                        rows="3"
                                     />
                                 </label>
                                 <label style={{ gridColumn: '1 / -1' }}>

@@ -149,7 +149,7 @@ export default function DiagnosisStep({
           <input
             type="text"
             className="diagnosis-step__input"
-            placeholder="write the condition here"
+            placeholder="Enter clinical condition"
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
             disabled={isActuallySubmitted}
@@ -184,7 +184,7 @@ export default function DiagnosisStep({
                 <input
                   type="text"
                   className="diagnosis-step__input diagnosis-step__input--tag"
-                  placeholder="write the level here"
+                  placeholder="Enter level"
                   value={levelInput}
                   onChange={(e) => setLevelInput(e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, addLevel)}
@@ -230,7 +230,7 @@ export default function DiagnosisStep({
                 <input
                   type="text"
                   className="diagnosis-step__input diagnosis-step__input--tag"
-                  placeholder="write the finding here"
+                  placeholder="Enter clinical finding"
                   value={findingInput}
                   onChange={(e) => setFindingInput(e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, addFinding)}

@@ -366,7 +366,7 @@ function ObservationSectionEditor({ section, onUpdate }) {
           <div className="form-grid">
             <label>
               Label <span className="required">*</span>
-              <input value={view.label || ''} onChange={e => updateView(idx, 'label', e.target.value)} placeholder="e.g. Anterior, Posterior, Sagittal" />
+              <input value={view.label || ''} onChange={e => updateView(idx, 'label', e.target.value)} placeholder="Enter view label" />
             </label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="View Image" folderType="observation" initialUrl={view.image_url} onUpload={url => updateView(idx, 'image_url', url)} />
@@ -379,7 +379,7 @@ function ObservationSectionEditor({ section, onUpdate }) {
               <div className="section-header"><h5>Findings</h5><button type="button" className="btn-small" onClick={() => addViewFinding(idx)}>+ Add</button></div>
               {(view.findings || []).map((f, fIdx) => (
                 <div key={fIdx} className="finding-item" style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
-                  <input value={f} onChange={e => updateViewFinding(idx, fIdx, e.target.value)} placeholder="e.g. Forward head posture" style={{ flex: 1 }} />
+                  <input value={f} onChange={e => updateViewFinding(idx, fIdx, e.target.value)} placeholder="Enter clinical finding" style={{ flex: 1 }} />
                   <button type="button" className="btn-delete-small" onClick={() => removeViewFinding(idx, fIdx)}>×</button>
                 </div>
               ))}
@@ -427,8 +427,8 @@ function RomSectionEditor({ section, onUpdate }) {
         <div key={idx} className="list-item" style={{ marginBottom: '12px' }}>
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label style={{ gridColumn: 'span 2' }}>Movement *<input value={e.movement || ''} onChange={ev => updateEntry(idx, 'movement', ev.target.value)} placeholder="e.g. Flexion" /></label>
-            <label>ROM Value<input value={e.value || ''} onChange={ev => updateEntry(idx, 'value', ev.target.value)} placeholder="e.g. Normal, Limited" /></label>
+            <label style={{ gridColumn: 'span 2' }}>Movement *<input value={e.movement || ''} onChange={ev => updateEntry(idx, 'movement', ev.target.value)} placeholder="Enter joint movement" /></label>
+            <label>ROM Value<input value={e.value || ''} onChange={ev => updateEntry(idx, 'value', ev.target.value)} placeholder="Enter measurement" /></label>
             <label>Pain
               <select value={e.pain || ''} onChange={ev => updateEntry(idx, 'pain', ev.target.value)}>
                 <option value="">Select</option><option value="Absent">Absent</option><option value="Present">Present</option><option value="Slightly">Slightly</option>
@@ -444,7 +444,7 @@ function RomSectionEditor({ section, onUpdate }) {
             </div>
 
             {endFeelMode === 'per_movement' && (
-              <label style={{ gridColumn: '1 / -1' }}>End Feel<input value={e.endFeel || ''} onChange={ev => updateEntry(idx, 'endFeel', ev.target.value)} placeholder="e.g. Firm, Empty" /></label>
+              <label style={{ gridColumn: '1 / -1' }}>End Feel<input value={e.endFeel || ''} onChange={ev => updateEntry(idx, 'endFeel', ev.target.value)} placeholder="Enter end feel findings" /></label>
             )}
           </div>
         </div>
@@ -455,7 +455,7 @@ function RomSectionEditor({ section, onUpdate }) {
         <div style={{ marginTop: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <label>
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Overall End Feel</span>
-            <input value={endFeel} onChange={e => onUpdate({ ...section, endFeel: e.target.value })} placeholder="e.g. EMPTY" style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+            <input value={endFeel} onChange={e => onUpdate({ ...section, endFeel: e.target.value })} placeholder="Describe overall end feel" style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
           </label>
         </div>
       )}
@@ -477,8 +477,8 @@ function MmtSectionEditor({ section, onUpdate }) {
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label>Level (e.g. C5)<input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C5" /></label>
-            <label>Muscle Action *<input value={e.muscle_action || e.muscle || ''} onChange={ev => updateEntry(idx, 'muscle_action', ev.target.value)} placeholder="e.g. Shoulder abduction" /></label>
+            <label>Level<input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="Specify spinal level" /></label>
+            <label>Muscle Action *<input value={e.muscle_action || e.muscle || ''} onChange={ev => updateEntry(idx, 'muscle_action', ev.target.value)} placeholder="Enter muscle name or action" /></label>
             <label>Grade (0-5)
               <select value={e.grade || ''} onChange={ev => updateEntry(idx, 'grade', ev.target.value)}>
                 <option value="">Select</option>{[0,1,2,3,4,5].map(g => <option key={g} value={g}>{g}</option>)}
@@ -515,8 +515,8 @@ function SensoryExamSectionEditor({ section, onUpdate }) {
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label>Level (e.g. C5, Thumb)<input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C5, Web space, Thumb..." /></label>
-            <label>Sense / Area *<input value={e.sense || ''} onChange={ev => updateEntry(idx, 'sense', ev.target.value)} placeholder="e.g. Light touch, Pin prick" /></label>
+            <label>Level<input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="Specify dermatome level" /></label>
+            <label>Sense / Area *<input value={e.sense || ''} onChange={ev => updateEntry(idx, 'sense', ev.target.value)} placeholder="Specify sensory area" /></label>
             <label>Status
               <select value={e.status || ''} onChange={ev => updateEntry(idx, 'status', ev.target.value)}>
                 <option value="">Select status</option>
@@ -576,7 +576,7 @@ function FlexibilityTestSectionEditor({ section, onUpdate }) {
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="e.g. 1. Upper Trap Tight" /></label>
+            <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="Enter flexibility test name" /></label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="Test Image" folderType="flexibility" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
@@ -584,7 +584,7 @@ function FlexibilityTestSectionEditor({ section, onUpdate }) {
                 🔒 Watermark this image
               </label>
             </div>
-            <label>Result<input value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)} placeholder="e.g. Positive / Tight" /></label>
+            <label>Result<input value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)} placeholder="Enter test result" /></label>
             <label>Link<input value={e.link || ''} onChange={ev => updateEntry(idx, 'link', ev.target.value)} placeholder="https://..." /></label>
             <label style={{ gridColumn: '1 / -1' }}>Notes<textarea value={e.notes || ''} onChange={ev => updateEntry(idx, 'notes', ev.target.value)} rows={1} /></label>
           </div>
@@ -609,7 +609,7 @@ function SpecialTestsSectionEditor({ section, onUpdate }) {
         <div key={idx} className="list-item">
           <div className="item-header"><span>{idx + 1}</span><button type="button" className="btn-delete-small" onClick={() => removeEntry(idx)}>🗑</button></div>
           <div className="form-grid">
-            <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="e.g. Spurling" /></label>
+            <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="Enter special test name" /></label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="Test Image" folderType="special_tests" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
@@ -661,7 +661,7 @@ function PalpationSectionEditor({ section, onUpdate }) {
           <input 
             value={section.status_title || 'Status'} 
             onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
-            placeholder="e.g. Rotation status, Tender status" 
+            placeholder="Enter column title" 
           />
         </label>
         <div style={{ gridColumn: '1 / -1' }}>
@@ -720,8 +720,8 @@ function PalpationSectionEditor({ section, onUpdate }) {
             </div>
             <div className="form-grid">
               <label>
-                Level (e.g. C3-C4)
-                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C4" />
+                Level
+                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="Specify clinical level or structure" />
               </label>
               <label>
                 {section.status_title || 'Status'}
@@ -858,7 +858,7 @@ function InvestigationsSectionEditor({ section, onUpdate }) {
                 🔒 Watermark this image
               </label>
             </div>
-            <label style={{ gridColumn: '1/-1' }}>Report<textarea value={e.report_text || ''} onChange={ev => updateEntry(idx, 'report_text', ev.target.value)} rows={2} placeholder="Findings..." /></label>
+            <label style={{ gridColumn: '1/-1' }}>Report<textarea value={e.report_text || ''} onChange={ev => updateEntry(idx, 'report_text', ev.target.value)} rows={2} placeholder="Provide detailed interpretation of images" /></label>
             <label style={{ gridColumn: '1/-1' }}>Conclusion *<textarea value={e.conclusion || ''} onChange={ev => updateEntry(idx, 'conclusion', ev.target.value)} rows={2} placeholder="Clinical implication..." /></label>
           </div>
         </div>
@@ -973,7 +973,7 @@ function McqSectionEditor({ section, onUpdate }) {
             max="100"
             value={section.maxScore || ''}
             onChange={e => onUpdate({ ...section, maxScore: parseInt(e.target.value) || '' })}
-            placeholder="e.g. 10"
+            placeholder="Enter max score"
             className="w-full mt-1 p-2 border border-slate-300 rounded-md text-sm"
           />
         </label>
@@ -1041,7 +1041,7 @@ function EssaySectionEditor({ section, onUpdate }) {
           onChange={e => onUpdate({ ...section, placeholder: e.target.value })}
           rows={2}
           className="w-full mt-1 p-2 border border-slate-300 rounded-md text-sm"
-          placeholder="e.g. Type your reasoning here..."
+          placeholder="Provide guidance for student answer"
         />
       </label>
 
@@ -1078,7 +1078,7 @@ function EssaySectionEditor({ section, onUpdate }) {
           max="100"
           value={section.maxScore || ''}
           onChange={e => onUpdate({ ...section, maxScore: parseInt(e.target.value) || '' })}
-          placeholder="e.g. 20"
+          placeholder="Enter max score"
           className="w-full md:w-1/3 mt-1 p-2 border border-slate-300 rounded-md text-sm"
         />
       </label>
@@ -1197,7 +1197,7 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
           <input 
             value={section.status_title || 'Status'} 
             onChange={e => onUpdate({ ...section, status_title: e.target.value })} 
-            placeholder="e.g. Tenderness, Bulge Status" 
+            placeholder="Enter column title" 
           />
         </label>
         <div style={{ gridColumn: '1 / -1' }}>
@@ -1258,8 +1258,8 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
             </div>
             <div className="form-grid">
               <label>
-                Level (e.g. C5-C6)
-                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="C5-C6" />
+                Level
+                <input value={e.level || ''} onChange={ev => updateEntry(idx, 'level', ev.target.value)} placeholder="Specify spinal level" />
               </label>
               <label>
                 {section.status_title || 'Status'}
@@ -1290,7 +1290,7 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
                       <input 
                         value={e.warning_title || ''} 
                         onChange={ev => updateEntry(idx, 'warning_title', ev.target.value)} 
-                        placeholder="e.g. C5-C6 disc is touching the spinal cord" 
+                        placeholder="Enter warning title" 
                         style={{ 
                           border: '1px solid #fca5a5', 
                           background: '#fef2f2',
@@ -1303,7 +1303,7 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
                       <input 
                         value={e.warning_text || ''} 
                         onChange={ev => updateEntry(idx, 'warning_text', ev.target.value)} 
-                        placeholder="e.g. Possible cervical myelopathy (UMNL). Must rule out before treatment." 
+                        placeholder="Describe the clinical significance" 
                         style={{ 
                           border: '1px solid #fca5a5', 
                           background: '#fef2f2',
@@ -1349,7 +1349,7 @@ function MriImagingSectionEditor({ section, onUpdate }) {
             <div className="form-grid">
               <label style={{ gridColumn: '1 / -1' }}>
                 Image Title
-                <input value={img.title || ''} onChange={e => updateImage(idx, 'title', e.target.value)} placeholder="e.g. Sagittal View" />
+                <input value={img.title || ''} onChange={e => updateImage(idx, 'title', e.target.value)} placeholder="Enter image title" />
               </label>
               <div style={{ gridColumn: '1 / -1' }}>
                 <ImageUpload 
@@ -1387,7 +1387,7 @@ function MriImagingSectionEditor({ section, onUpdate }) {
               <input 
                 value={section.warning_level || ''} 
                 onChange={e => onUpdate({ ...section, warning_level: e.target.value })} 
-                placeholder="e.g. C5-C6" 
+                placeholder="Specify affected level" 
               />
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
@@ -1395,7 +1395,7 @@ function MriImagingSectionEditor({ section, onUpdate }) {
               <input 
                 value={section.warning_text || ''} 
                 onChange={e => onUpdate({ ...section, warning_text: e.target.value })} 
-                placeholder="e.g. C5-C6 disc is touching the spinal cord" 
+                placeholder="Enter warning message" 
                 style={{ border: '1px solid #fca5a5', background: '#fff', color: '#991b1b' }}
               />
             </label>
@@ -1454,7 +1454,7 @@ function UmnlScreeningSectionEditor({ section, onUpdate }) {
           <input 
             value={section.subtitle || ''} 
             onChange={e => onUpdate({ ...section, subtitle: e.target.value })} 
-            placeholder="e.g. Perform the following tests..." 
+            placeholder="Enter section description" 
           />
         </label>
       </div>
@@ -1474,11 +1474,11 @@ function UmnlScreeningSectionEditor({ section, onUpdate }) {
               <div className="form-grid">
                 <label>
                   Test Title
-                  <input value={e.title || ''} onChange={ev => updateEntry(idx, 'title', ev.target.value)} placeholder="e.g. Babinski Sign" />
+                  <input value={e.title || ''} onChange={ev => updateEntry(idx, 'title', ev.target.value)} placeholder="Enter test title" />
                 </label>
                 <label>
                   Test Subtitle
-                  <input value={e.subtitle || ''} onChange={ev => updateEntry(idx, 'subtitle', ev.target.value)} placeholder="e.g. Dorsiflexion of big toe = positive" />
+                  <input value={e.subtitle || ''} onChange={ev => updateEntry(idx, 'subtitle', ev.target.value)} placeholder="Enter test subtitle" />
                 </label>
                 <label style={{ gridColumn: '1 / -1' }}>
                   <strong>Selected Result (Presented to Student)</strong>
@@ -1543,7 +1543,7 @@ function UmnlScreeningSectionEditor({ section, onUpdate }) {
             <input 
               value={section.outcome_title || ''} 
               onChange={e => onUpdate({ ...section, outcome_title: e.target.value })} 
-              placeholder="e.g. Outcome: UMNL Excluded" 
+              placeholder="Enter outcome title" 
             />
           </label>
           <label>
@@ -1562,7 +1562,7 @@ function UmnlScreeningSectionEditor({ section, onUpdate }) {
             <input 
               value={section.outcome_subtitle || ''} 
               onChange={e => onUpdate({ ...section, outcome_subtitle: e.target.value })} 
-              placeholder="e.g. Safe to Proceed" 
+              placeholder="Provide summary of screening" 
             />
           </label>
         </div>

@@ -260,7 +260,7 @@ export default function CategoriesTab({ auth }) {
                                 <label className="text-sm font-bold text-admin-text">Category Name <span className="text-red-500">*</span></label>
                                 <input
                                     className={`w-full bg-admin-bg border rounded-lg px-4 py-3 focus:ring-2 focus:ring-admin-primary/20 text-sm text-admin-text placeholder:text-admin-text-muted transition-colors ${errors.name && touched.name ? 'border-red-500' : 'border-admin-border'}`}
-                                    placeholder="e.g. Cardiopulmonary Rehab"
+                                    placeholder="Enter category name (e.g., Spine)"
                                     value={formName}
                                     onChange={(e) => {
                                         setFormName(e.target.value)

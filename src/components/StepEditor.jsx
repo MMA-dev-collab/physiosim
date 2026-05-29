@@ -212,7 +212,7 @@ export default function StepEditor({ step, onSave, onCancel }) {
                     <input
                         value={editedStep.title || ''}
                         onChange={e => setEditedStep({ ...editedStep, title: e.target.value })}
-                        placeholder="e.g. Flexibility Tests — Cervical"
+                        placeholder="Enter step title"
                         style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                     />
                 </div>
@@ -335,7 +335,7 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     value={editedStep.content?.patientName || ''}
                     onChange={(e) => updateContent('patientName', e.target.value)}
                     onBlur={() => handleBlur('patientName')}
-                    placeholder="Ms. A"
+                    placeholder="Enter patient name"
                     style={{ borderColor: touched.patientName && errors.patientName ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.patientName && errors.patientName && (
@@ -362,7 +362,7 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                         }
                     }}
                     onBlur={() => handleBlur('age')}
-                    placeholder="54"
+                    placeholder="Enter age"
                     style={{ borderColor: (touched.all || touched.age) && errors.age ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.age && errors.age && (
@@ -400,7 +400,7 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                         value={editedStep.content?.imageUrl || ''}
                         onChange={(e) => updateContent('imageUrl', e.target.value)}
                         onBlur={() => handleBlur('imageUrl')}
-                        placeholder="https://... or data:image/..."
+                        placeholder="Enter image URL"
                         style={{ marginTop: '0.25rem', borderColor: touched.imageUrl && errors.imageUrl ? 'var(--step-editor-danger)' : undefined }}
                     />
                     {touched.imageUrl && errors.imageUrl && (
@@ -417,7 +417,7 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     onChange={(e) => updateContent('description', e.target.value)}
                     onBlur={() => handleBlur('description')}
                     rows={4}
-                    placeholder="I have had knee pain for a few months..."
+                    placeholder="Describe the clinical presentation..."
                     style={{ borderColor: touched.description && errors.description ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.description && errors.description && (
@@ -433,7 +433,7 @@ function InfoStepEditor({ editedStep, updateContent, errors, touched, setTouched
                     onChange={(e) => updateContent('chiefComplaint', e.target.value)}
                     onBlur={() => handleBlur('chiefComplaint')}
                     rows={2}
-                    placeholder="طلوع ونزل السلم بيتعبوني..."
+                    placeholder="Enter patient's exact words"
                     style={{ borderColor: touched.chiefComplaint && errors.chiefComplaint ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.chiefComplaint && errors.chiefComplaint && (
@@ -483,7 +483,7 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                     value={editedStep.content?.title || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, content: { ...editedStep.content, title: e.target.value } })}
                     onBlur={() => setTouched(prev => ({ ...prev, title: true }))}
-                    placeholder="History of Pain"
+                    placeholder="Enter section title"
                     style={{ borderColor: touched.title && errors.title ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {touched.title && errors.title && (
@@ -496,7 +496,7 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                     value={editedStep.content?.description || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, content: { ...editedStep.content, description: e.target.value } })}
                     rows={2}
-                    placeholder="Questions you should ask and patient answers"
+                    placeholder="Enter instructions for the student"
                 />
             </label>
 
@@ -526,7 +526,7 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                                     onChange={(e) => updateQuestion(idx, 'question', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`questions[${idx}].question`]: true }))}
                                     rows={2}
-                                    placeholder="When did the pain start?"
+                                    placeholder="Enter question text"
                                     style={{ borderColor: touched[`questions[${idx}].question`] && errors[`questions[${idx}].question`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`questions[${idx}].question`] && errors[`questions[${idx}].question`] && (
@@ -550,7 +550,7 @@ function HistoryStepEditor({ editedStep, setEditedStep, errors, touched, setTouc
                                     onChange={(e) => updateQuestion(idx, 'answer', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`questions[${idx}].answer`]: true }))}
                                     rows={2}
-                                    placeholder="It started about 3 months ago..."
+                                    placeholder="Enter patient's expected answer"
                                     style={{ borderColor: touched[`questions[${idx}].answer`] && errors[`questions[${idx}].answer`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`questions[${idx}].answer`] && errors[`questions[${idx}].answer`] && (
@@ -611,7 +611,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                     }}
                     onBlur={() => setTouched(prev => ({ ...prev, question: true }))}
                     rows={3}
-                    placeholder="What is the MOST appropriate next action?"
+                    placeholder="Enter clinical question or prompt"
                     style={{ borderColor: (touched.all || touched.question) && errors.question ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {(touched.all || touched.question) && errors.question && (
@@ -649,7 +649,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                     value={editedStep.explanationOnFail || ''}
                     onChange={(e) => setEditedStep({ ...editedStep, explanationOnFail: e.target.value })}
                     onBlur={() => setTouched(prev => ({ ...prev, explanationOnFail: true }))}
-                    placeholder="Remember that..."
+                    placeholder="Enter clinical explanation for failed attempt"
                     style={{ borderColor: (touched.all || touched.explanationOnFail) && errors.explanationOnFail ? 'var(--step-editor-danger)' : undefined }}
                 />
                 {(touched.all || touched.explanationOnFail) && errors.explanationOnFail && (
@@ -690,7 +690,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                     onChange={(e) => updateOption(idx, 'label', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`options[${idx}].label`]: true }))}
                                     rows={2}
-                                    placeholder="Order MRI of the knee immediately"
+                                    placeholder="Enter option text"
                                     style={{ borderColor: (touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {(touched.all || touched[`options[${idx}].label`]) && errors[`options[${idx}].label`] && (
@@ -714,7 +714,7 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
                                     value={opt.feedback || ''}
                                     onChange={(e) => updateOption(idx, 'feedback', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`options[${idx}].feedback`]: true }))}
-                                    placeholder="Jumping to advanced imaging without..."
+                                    placeholder="Enter feedback for student"
                                     style={{ borderColor: (touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {(touched.all || touched[`options[${idx}].feedback`]) && errors[`options[${idx}].feedback`] && (
@@ -844,7 +844,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     value={inv.groupLabel || ''}
                                     onChange={(e) => updateInvestigation(idx, 'groupLabel', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].groupLabel`]: true }))}
-                                    placeholder="Physical Examination"
+                                    placeholder="Enter investigation group name"
                                     style={{ borderColor: touched[`investigations[${idx}].groupLabel`] && errors[`investigations[${idx}].groupLabel`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].groupLabel`] && errors[`investigations[${idx}].groupLabel`] && (
@@ -859,7 +859,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     value={inv.testName || ''}
                                     onChange={(e) => updateInvestigation(idx, 'testName', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].testName`]: true }))}
-                                    placeholder="Lachman Test"
+                                    placeholder="Enter test name"
                                     style={{ borderColor: touched[`investigations[${idx}].testName`] && errors[`investigations[${idx}].testName`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].testName`] && errors[`investigations[${idx}].testName`] && (
@@ -875,7 +875,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     onChange={(e) => updateInvestigation(idx, 'description', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`investigations[${idx}].description`]: true }))}
                                     rows={2}
-                                    placeholder="Test to assess ACL integrity..."
+                                    placeholder="Enter test description / instructions"
                                     style={{ borderColor: touched[`investigations[${idx}].description`] && errors[`investigations[${idx}].description`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`investigations[${idx}].description`] && errors[`investigations[${idx}].description`] && (
@@ -944,7 +944,7 @@ function InvestigationStepEditor({ editedStep, setEditedStep, errors, touched, s
                                     value={xray.label || ''}
                                     onChange={(e) => updateXray(idx, 'label', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`xrays[${idx}].label`]: true }))}
-                                    placeholder="AP View"
+                                    placeholder="Enter imagery label"
                                     style={{ borderColor: touched[`xrays[${idx}].label`] && errors[`xrays[${idx}].label`] ? 'var(--step-editor-danger)' : undefined }}
                                 />
                                 {touched[`xrays[${idx}].label`] && errors[`xrays[${idx}].label`] && (
@@ -1060,7 +1060,7 @@ function DiagnosisStepEditor({ editedStep, setEditedStep, errors, touched, setTo
                     value={eq.perfect_answer || ''}
                     onChange={e => updateEq('perfect_answer', e.target.value)}
                     rows={3}
-                    placeholder="e.g. Multiple cervical disc bulges at C3-C4, C4-C5, C5-C6 with reversed cervical curve and stenosis"
+                    placeholder="Enter full professional diagnosis"
                 />
                 <span style={{ color: '#64748b', fontSize: '0.75rem' }}>This is shown to the student after submission as the model answer.</span>
             </label>
@@ -1099,7 +1099,7 @@ function DiagnosisStepEditor({ editedStep, setEditedStep, errors, touched, setTo
                         input.value = '';
                     }}>Add</button>
                 </div>
-                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Keywords the student's answer will be checked against (e.g. disc bulge, C3-C4, stenosis, reversed lordosis).</span>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Keywords the student's answer will be checked against.</span>
             </div>
 
             {/* Synonyms */}
@@ -1134,7 +1134,7 @@ function DiagnosisStepEditor({ editedStep, setEditedStep, errors, touched, setTo
                         input.value = '';
                     }}>Add</button>
                 </div>
-                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Alternate terms that mean the same thing (e.g. "reversed curve" = "loss of lordosis").</span>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Alternate terms that mean the same thing.</span>
             </div>
         </div>
     );
@@ -1234,7 +1234,7 @@ function ProblemListStepEditor({ editedStep, setEditedStep, errors, touched, set
                                     type="text"
                                     value={prob.question_text || ''}
                                     onChange={e => updateProblem(idx, 'question_text', e.target.value)}
-                                    placeholder="e.g. Reduced cervical ROM"
+                                    placeholder="Enter clinical problem"
                                 />
                             </label>
 
@@ -1270,7 +1270,7 @@ function ProblemListStepEditor({ editedStep, setEditedStep, errors, touched, set
                                         input.value = '';
                                     }}>Add</button>
                                 </div>
-                                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Keywords that match this problem (e.g. "cervical", "ROM", "range of motion").</span>
+                                <span style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Keywords that match this problem.</span>
                             </div>
                         </div>
                     </div>
@@ -1403,7 +1403,7 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
                                     onChange={(e) => updateEssayQuestion(idx, 'question_text', e.target.value)}
                                     onBlur={() => setTouched(prev => ({ ...prev, [`essayQuestions[${idx}].question_text`]: true }))}
                                     rows={3}
-                                    placeholder="Describe the pathophysiology of the patient's condition..."
+                                    placeholder="Enter question text"
                                     style={{
                                         borderColor: touched[`essayQuestions[${idx}].question_text`] && errors[`essayQuestions[${idx}].question_text`]
                                             ? 'var(--step-editor-danger)'
@@ -1425,7 +1425,7 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
                                 <input
                                     value={eq.placeholder || ''}
                                     onChange={(e) => updateEssayQuestion(idx, 'placeholder', e.target.value)}
-                                    placeholder="Enter your clinical findings here..."
+                                    placeholder="Enter placeholder for student response"
                                 />
                             </label>
 
@@ -1473,7 +1473,7 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
                                     value={eq.perfect_answer || ''}
                                     onChange={(e) => updateEssayQuestion(idx, 'perfect_answer', e.target.value)}
                                     rows={5}
-                                    placeholder="Enter the ideal answer that students can view after submission..."
+                                    placeholder="Enter model answer"
                                     style={{
                                         fontFamily: 'inherit',
                                         fontSize: '0.95rem'

@@ -39,7 +39,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                             onChange={(e) => updateField('chief_complaint', e.target.value)}
                             onBlur={() => handleBlur('chief_complaint')}
                             rows={3}
-                            placeholder="answer"
+                            placeholder="Enter patient's chief complaint"
                             className={touched.chief_complaint && errors?.chief_complaint ? 'error' : ''}
                         />
                         {touched.chief_complaint && errors?.chief_complaint && (
@@ -54,7 +54,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                             value={content.chief_complaint_arabic || ''}
                             onChange={(e) => updateField('chief_complaint_arabic', e.target.value)}
                             rows={2}
-                            placeholder="answer"
+                            placeholder="أدخل الشكوى الرئيسية هنا"
                             dir="rtl"
                         />
                     </label>
@@ -64,7 +64,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                             value={content.notes || ''}
                             onChange={(e) => updateField('notes', e.target.value)}
                             rows={2}
-                            placeholder="answer"
+                            placeholder="Provide additional clinical notes"
                         />
                     </label>
                 </div>
@@ -161,7 +161,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                         <input
                             value={painHistory.time_of_day || ''}
                             onChange={(e) => updatePainField('time_of_day', e.target.value)}
-                            placeholder="answer"
+                            placeholder="Specify time of pain onset"
                         />
                     </label>
 
@@ -179,7 +179,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={factor}
                                         onChange={(e) => updateFactor('aggravating_factors', idx, e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Specify aggravating factor"
                                     />
                                     <button type="button" className="btn-delete-small" onClick={() => removeFactor('aggravating_factors', idx)}>×</button>
                                 </div>
@@ -204,7 +204,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={factor}
                                         onChange={(e) => updateFactor('relieving_factors', idx, e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Specify relieving factor"
                                     />
                                     <button type="button" className="btn-delete-small" onClick={() => removeFactor('relieving_factors', idx)}>×</button>
                                 </div>
@@ -266,7 +266,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={cond.condition || ''}
                                         onChange={(e) => updateCondition(idx, 'condition', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Specify medical condition"
                                     />
                                 </label>
                                 <label>
@@ -274,7 +274,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={cond.since || ''}
                                         onChange={(e) => updateCondition(idx, 'since', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Specify duration"
                                     />
                                 </label>
                                 <label style={{ gridColumn: '1 / -1' }}>
@@ -283,7 +283,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                         value={cond.notes || ''}
                                         onChange={(e) => updateCondition(idx, 'notes', e.target.value)}
                                         rows={2}
-                                        placeholder="answer"
+                                        placeholder="Provide details about this condition"
                                     />
                                 </label>
                             </div>
@@ -346,7 +346,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={med.name || ''}
                                         onChange={(e) => updateMedication(idx, 'name', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter medication name"
                                     />
                                 </label>
                                 <label>
@@ -354,7 +354,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={med.dose || ''}
                                         onChange={(e) => updateMedication(idx, 'dose', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter dosage"
                                     />
                                 </label>
                                 <label>
@@ -362,7 +362,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={med.frequency || ''}
                                         onChange={(e) => updateMedication(idx, 'frequency', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter frequency"
                                     />
                                 </label>
                                 <label>
@@ -370,7 +370,7 @@ export function HistoryPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                     <input
                                         value={med.notes || ''}
                                         onChange={(e) => updateMedication(idx, 'notes', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Additional medication details"
                                     />
                                 </label>
                             </div>

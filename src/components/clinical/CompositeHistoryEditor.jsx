@@ -124,7 +124,7 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
               value={chief_complaint}
               onChange={e => handleUpdate('chief_complaint', e.target.value)}
               rows={4}
-              placeholder='e.g. "الألم كان بيجيلي زمان لما كنت بشتغل مندوبة مبيعات..."'
+              placeholder="Enter patient's chief complaint"
               style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
             />
           </label>
@@ -148,7 +148,7 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
                 value={tagInput}
                 onChange={e => setTagInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleAddTag(e) }}
-                placeholder="e.g. Chronic, Sharp/Numb, Progressive"
+                placeholder="Enter key finding"
                 style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
               />
               <button type="button" onClick={handleAddTag} className="btn-secondary">Add Tag</button>
@@ -168,7 +168,7 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
               <input
                 value={lifestyle.occupational}
                 onChange={e => handleLifestyleUpdate('occupational', e.target.value)}
-                placeholder="e.g. Sales (Repeated heavy lifting)"
+                placeholder="Enter occupational details"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
@@ -177,7 +177,7 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
               <input
                 value={lifestyle.household}
                 onChange={e => handleLifestyleUpdate('household', e.target.value)}
-                placeholder="e.g. Heavy lifting (Gas tanks)"
+                placeholder="Enter household/living environment"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
@@ -204,51 +204,46 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
             </label>
 
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Frequency</span>
               <input
                 value={pain.frequency || ''}
                 onChange={e => handlePainUpdate('frequency', e.target.value)}
-                placeholder="e.g. Intermittent, Constant"
+                placeholder="Enter frequency"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
 
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Time of Day</span>
               <input
                 value={pain.time_of_day || ''}
                 onChange={e => handlePainUpdate('time_of_day', e.target.value)}
-                placeholder="e.g. Worse at night, Morning stiffness"
+                placeholder="Enter time of day details"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
 
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Pain Type / Quality</span>
               <input
                 value={pain.pain_type}
                 onChange={e => handlePainUpdate('pain_type', e.target.value)}
-                placeholder="e.g. Tingling, Burning"
+                placeholder="Enter pain quality"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
 
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Relieving Factors</span>
               <input
                 value={pain.relief}
                 onChange={e => handlePainUpdate('relief', e.target.value)}
-                placeholder="e.g. Rest, Ice"
+                placeholder="Enter relieving factors"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
 
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Aggravating Factors</span>
               <input
                 value={pain.aggravating}
                 onChange={e => handlePainUpdate('aggravating', e.target.value)}
-                placeholder="e.g. Lifting, Prolonged sitting"
+                placeholder="Enter aggravating factors"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
@@ -267,7 +262,7 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
               value={history_of_pain_text}
               onChange={e => handleUpdate('history_of_pain_text', e.target.value)}
               rows={5}
-              placeholder="Enter comprehensive history, context, and timeline of the pain..."
+              placeholder="Describe the progression of pain over time"
               style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
             />
           </label>
@@ -291,7 +286,7 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
                 value={historyTagInput}
                 onChange={e => setHistoryTagInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleAddHistoryTag(e) }}
-                placeholder="e.g. Radiculopathy, Insidious outset"
+                placeholder="Enter key historical finding"
                 style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
               />
               <button type="button" onClick={handleAddHistoryTag} className="btn-secondary">Add Tag</button>
@@ -307,29 +302,26 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
           
           <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Onset</span>
               <input
                 value={present_history.onset}
                 onChange={e => handlePresentHistoryUpdate('onset', e.target.value)}
-                placeholder="e.g. Sudden, Insidious"
+                placeholder="Enter onset"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Course</span>
               <input
                 value={present_history.course}
                 onChange={e => handlePresentHistoryUpdate('course', e.target.value)}
-                placeholder="e.g. Progressive, Static"
+                placeholder="Enter course"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
             <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Duration</span>
               <input
                 value={present_history.duration}
                 onChange={e => handlePresentHistoryUpdate('duration', e.target.value)}
-                placeholder="e.g. 5 days, 2 weeks"
+                placeholder="Enter duration"
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
               />
             </label>
@@ -356,11 +348,11 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
                 <div className="form-grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '8px' }}>
                   <label>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Condition</span>
-                    <input value={item.condition} onChange={e => handlePastHistoryListUpdate(idx, 'condition', e.target.value)} placeholder="e.g. Hypertension" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                    <input value={item.condition} onChange={e => handlePastHistoryListUpdate(idx, 'condition', e.target.value)} placeholder="Enter clinical condition" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                   </label>
                   <label>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Since</span>
-                    <input value={item.since} onChange={e => handlePastHistoryListUpdate(idx, 'since', e.target.value)} placeholder="e.g. 2018" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                    <input value={item.since} onChange={e => handlePastHistoryListUpdate(idx, 'since', e.target.value)} placeholder="Enter time period" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                   </label>
                 </div>
                 <label>
@@ -393,15 +385,15 @@ export default function CompositeHistoryEditor({ step, onUpdate }) {
                 <div className="form-grid" style={{ gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '8px' }}>
                   <label>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Name</span>
-                    <input value={item.name} onChange={e => handleMedicationListUpdate(idx, 'name', e.target.value)} placeholder="e.g. Lisinopril" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                    <input value={item.name} onChange={e => handleMedicationListUpdate(idx, 'name', e.target.value)} placeholder="Enter medication name" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                   </label>
                   <label>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Dose</span>
-                    <input value={item.dose} onChange={e => handleMedicationListUpdate(idx, 'dose', e.target.value)} placeholder="e.g. 10mg" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                    <input value={item.dose} onChange={e => handleMedicationListUpdate(idx, 'dose', e.target.value)} placeholder="Enter dosage" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                   </label>
                   <label>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Freq.</span>
-                    <input value={item.frequency} onChange={e => handleMedicationListUpdate(idx, 'frequency', e.target.value)} placeholder="e.g. 1x/day" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                    <input value={item.frequency} onChange={e => handleMedicationListUpdate(idx, 'frequency', e.target.value)} placeholder="Enter frequency" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                   </label>
                 </div>
                 <label>

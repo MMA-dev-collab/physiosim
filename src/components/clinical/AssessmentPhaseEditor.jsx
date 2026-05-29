@@ -79,9 +79,8 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={finding}
                                         onChange={(e) => updateFinding(idx, e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter key observation entry"
                                     />
-                                    <button type="button" className="btn-delete-small" onClick={() => removeFinding(idx)}>×</button>
                                 </div>
                             ))}
                             {findings.length === 0 && (
@@ -96,7 +95,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                             value={content.notes || ''}
                             onChange={(e) => updateField('notes', e.target.value)}
                             rows={2}
-                            placeholder="answer"
+                            placeholder="Enter additional clinical notes"
                         />
                     </label>
                 </div>
@@ -172,7 +171,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                         <input 
                             value={content.status_title || 'Status'} 
                             onChange={e => onUpdate({ ...step, content: { ...content, status_title: e.target.value } })} 
-                            placeholder="answer" 
+                            placeholder="Enter column header (e.g., Status)" 
                         />
                     </label>
                     <div style={{ gridColumn: '1 / -1' }}>
@@ -204,7 +203,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                 <input 
                                     value={opt.label} 
                                     onChange={e => updateOption(oIdx, 'label', e.target.value)} 
-                                    placeholder="answer" 
+                                    placeholder="Enter option label" 
                                     style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
                                 />
                                 <select 
@@ -239,7 +238,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.level || ''}
                                         onChange={(e) => updateEntry(idx, 'level', e.target.value)}
-                                        placeholder="write the level here"
+                                        placeholder="Specify clinical level (e.g., C3-C4)"
                                     />
                                 </label>
                                 <label>
@@ -259,6 +258,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
+                                        placeholder="Enter key finding"
                                     />
                                 </label>
                             </div>
@@ -347,7 +347,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.movement || ''}
                                         onChange={(e) => updateEntry(idx, 'movement', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter joint movement"
                                     />
                                 </label>
                                 <label>
@@ -355,7 +355,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.value || ''}
                                         onChange={(e) => updateEntry(idx, 'value', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter measurement (e.g., 45° or 'Full')"
                                     />
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -388,7 +388,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter clinical notes"
                                     />
                                 </label>
                             </div>
@@ -451,7 +451,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.level || ''}
                                         onChange={(e) => updateEntry(idx, 'level', e.target.value)}
-                                        placeholder="write the level here"
+                                        placeholder="Specify clinical level (e.g., C5, C6)"
                                     />
                                 </label>
                                 <label>
@@ -459,7 +459,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.muscle_action || entry.muscle || ''}
                                         onChange={(e) => updateEntry(idx, 'muscle_action', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter muscle name or action"
                                     />
                                 </label>
                                 <label>
@@ -503,7 +503,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter clinical strength findings"
                                     />
                                 </label>
                             </div>
@@ -566,7 +566,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.level || ''}
                                         onChange={(e) => updateEntry(idx, 'level', e.target.value)}
-                                        placeholder="write the level here"
+                                        placeholder="Specify clinical level (e.g., C5, Thumb)"
                                     />
                                 </label>
                                 <label>
@@ -574,7 +574,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.sense || ''}
                                         onChange={(e) => updateEntry(idx, 'sense', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Specify sensory area or modality"
                                     />
                                 </label>
                                 <label>
@@ -593,7 +593,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter sensory testing findings"
                                     />
                                 </label>
                             </div>
@@ -657,7 +657,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.test_name || ''}
                                         onChange={(e) => updateEntry(idx, 'test_name', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter flexibility test name"
                                     />
                                 </label>
                                 <label>
@@ -665,7 +665,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.result || ''}
                                         onChange={(e) => updateEntry(idx, 'result', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter test result (e.g., Positive, Normal)"
                                     />
                                 </label>
                                 <label>
@@ -681,7 +681,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter test findings and notes"
                                     />
                                 </label>
                             </div>
@@ -745,7 +745,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.test_name || ''}
                                         onChange={(e) => updateEntry(idx, 'test_name', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter special test name"
                                     />
                                 </label>
                                 <div style={{ gridColumn: '1 / -1' }}>
@@ -790,7 +790,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                     <input
                                         value={entry.notes || ''}
                                         onChange={(e) => updateEntry(idx, 'notes', e.target.value)}
-                                        placeholder="answer"
+                                        placeholder="Enter test findings and notes"
                                     />
                                 </label>
                             </div>
@@ -995,7 +995,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                         value={entry.report_text || ''}
                                         onChange={(e) => updateEntry(idx, 'report_text', e.target.value)}
                                         rows={3}
-                                        placeholder="answer"
+                                        placeholder="Provide imaging report findings"
                                     />
                                 </label>
                                 <label style={{ gridColumn: '1 / -1' }}>
@@ -1006,7 +1006,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
                                         value={entry.conclusion || ''}
                                         onChange={(e) => updateEntry(idx, 'conclusion', e.target.value)}
                                         rows={2}
-                                        placeholder="answer"
+                                        placeholder="Provide clinical conclusion"
                                     />
                                 </label>
                             </div>

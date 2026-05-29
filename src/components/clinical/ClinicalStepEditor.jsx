@@ -193,7 +193,7 @@ export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel })
                         type="text"
                         value={editedStep.title || ''}
                         onChange={(e) => handleStepUpdate({ ...editedStep, title: e.target.value })}
-                        placeholder="e.g. Observation, Palpation, Examination..."
+                        placeholder="Enter clinical step title"
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-semibold"
                     />
                     <p className="text-[10px] text-slate-400 mt-1.5 ml-1 italic">This title will identify the step in the builder and runner sidebar.</p>

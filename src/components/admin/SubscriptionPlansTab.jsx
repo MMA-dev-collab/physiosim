@@ -429,7 +429,7 @@ export default function SubscriptionPlansTab({ auth }) {
                       if (touched.name) validate({ ...formData, name: e.target.value })
                     }}
                     onBlur={() => handleBlur('name')}
-                    placeholder="e.g., Premium, Enterprise"
+                    placeholder="Enter plan name (e.g., Premium Monthly)"
                     className={`w-full bg-slate-50 border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-admin-primary/20 transition-colors ${errors.name && touched.name ? 'border-red-500' : 'border-slate-200'}`} />
                   {errors.name && touched.name && (
                     <p className="text-red-500 text-xs mt-1">⚠ {errors.name}</p>
