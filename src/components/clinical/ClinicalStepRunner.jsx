@@ -6,6 +6,23 @@ import CompositeHistoryRunner from './CompositeHistoryRunner'
 import ImageWithWatermark from '../common/ImageWithWatermark'
 import './PhaseEditors.css'
 
+const getYouTubeThumbnail = (url) => {
+  if (!url) return null
+  let videoId = ''
+  try {
+    const raw = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/)
+    if (raw[2] !== undefined) {
+      videoId = raw[2].split(/[^0-9a-z_\-]/i)[0]
+    } else {
+      videoId = raw[0]
+    }
+  } catch (e) {
+    return null
+  }
+  if (!videoId || videoId.includes('http')) return null
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+}
+
 export default function ClinicalStepRunner({ step, hideHeader = false }) {
     const { phase, category, content } = step
 
@@ -250,52 +267,42 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                             </div>
                         )}
 
-                        <div className="flex-1 w-full overflow-x-auto">
+                        <div className="flex-1 w-full">
                             {entries.length > 0 ? (
                                 (() => {
                                     const hasAnyNotes = entries.some(e => e.notes && e.notes.trim() !== '');
                                     return (
-                                        <table className="w-full text-left border-separate border-spacing-y-2">
-                                            <thead>
-                                                <tr>
-                                                    <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
-                                                    <th className={`px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
-                                                        {data.status_title || 'Status'}
-                                                    </th>
+                                        <div className="space-y-3">
+                                            {entries.map((entry, i) => (
+                                                <div key={i} className="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-[1fr_auto] md:grid-cols-[1.5fr_200px_2fr] gap-4 items-start">
+                                                    {/* Level */}
+                                                    <div className="min-w-0">
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Level</span>
+                                                        <div className="inline-block px-3 py-1.5 bg-indigo-50 text-indigo-600 text-[13px] font-black rounded-lg border border-indigo-100 shadow-sm whitespace-normal break-words [overflow-wrap:anywhere]">
+                                                            {entry.level || '-'}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Status */}
+                                                    <div className="min-w-0">
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{data.status_title || 'Status'}</span>
+                                                        <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
+                                                            {getStatusLabel(entry.status_value)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Notes */}
                                                     {hasAnyNotes && (
-                                                        <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[30%] text-right font-inter">Notes</th>
+                                                        <div className="min-w-0 md:text-right">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Notes</span>
+                                                            <p className="text-xs text-slate-500 italic font-medium whitespace-normal break-words [overflow-wrap:anywhere]">
+                                                                {entry.notes || '-'}
+                                                            </p>
+                                                        </div>
                                                     )}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {entries.map((entry, i) => (
-                                                    <tr key={i} className="bg-white border border-slate-100 shadow-sm rounded-xl">
-                                                        <td className="px-4 py-4 first:rounded-l-xl border-y border-l border-slate-100 align-middle w-px whitespace-nowrap">
-                                                            <div className="flex items-center">
-                                                                <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-[13px] font-black text-indigo-600 border border-indigo-100 shadow-sm">
-                                                                    {entry.level || '-'}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className={`px-6 py-4 border-y border-slate-100 align-middle ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
-                                                            <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
-                                                                {getStatusLabel(entry.status_value)}
-                                                            </span>
-                                                        </td>
-                                                        {hasAnyNotes && (
-                                                            <td className="px-4 py-4 border-y border-r border-slate-100 text-[11px] text-slate-500 italic last:rounded-r-xl align-middle text-right font-inter">
-                                                                <div className="max-w-[180px] ml-auto truncate font-medium">
-                                                                    {entry.notes || '-'}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {!hasAnyNotes && (
-                                                            <td className="border-y border-r border-slate-100 last:rounded-r-xl w-1"></td>
-                                                        )}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </div>
+                                            ))}
+                                        </div>
                                     );
                                 })()
                             ) : (
@@ -330,7 +337,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                             {catId.includes('prom') && (
                                 <td className="px-4 py-3 capitalize text-slate-600">{e.end_feel?.replace('_', ' ') || '-'}</td>
                             )}
-                            <td className="px-4 py-3 text-slate-500 italic text-xs max-w-xs truncate">{e.notes}</td>
+                             <td className="px-4 py-3 text-slate-500 italic text-xs whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{e.notes}</td>
                         </tr>
                     ))}
                 </ClinicalTable>
@@ -569,67 +576,98 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                 <div className="car-special mb-8">
                     <h3 className="text-xl font-black text-slate-800 mb-6 px-2">Special Tests:</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
-                        {entries.map((e, i) => (
-                            <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
-                                <div className="w-full text-left">
-                                    <h4 className="font-bold text-slate-700 text-lg leading-tight">
-                                        {i + 1}. {e.test_name}
-                                    </h4>
-                                </div>
+                        {entries.map((e, i) => {
+                            const thumbnailUrl = !e.image_url ? getYouTubeThumbnail(e.link) : null
+                            const displayImage = e.image_url || thumbnailUrl
+                            const isRedirectClickable = !!e.link
 
-                                <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
-                                    {e.image_url ? (
-                                        <ImageWithWatermark
-                                            src={e.image_url}
-                                            alt={e.test_name}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            watermarkEnabled={!!e.watermarkEnabled}
-                                        />
-                                    ) : (
-                                        <div className="text-slate-300 flex flex-col items-center">
-                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                                <polyline points="21 15 16 10 5 21" />
-                                            </svg>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest mt-2">No Image</span>
-                                        </div>
-                                    )}
+                            return (
+                                <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
+                                    <div className="w-full text-left">
+                                        <h4 className="font-bold text-slate-700 text-lg leading-tight whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">
+                                            {i + 1}. {e.test_name}
+                                        </h4>
+                                    </div>
 
-                                    {e.result && (
-                                        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${getResultClass(e.result)}`}>
-                                            {e.result}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {e.link && (
-                                    <a
-                                        href={e.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            border: "2px solid #F14722",
-                                            boxShadow: "0px 2px 0px #F14722",
-                                            borderRadius: "10px",
-                                        }}
-                                        className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-800 font-bold text-sm transition-all hover:bg-rose-50 hover:scale-105"
+                                    <div 
+                                        className={`w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative ${isRedirectClickable ? 'cursor-pointer' : ''}`}
+                                        onClick={() => isRedirectClickable && window.open(e.link, '_blank')}
                                     >
-                                        <svg width="20" height="20" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" />
-                                            <path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" />
-                                        </svg>
-                                        View
-                                    </a>
-                                )}
+                                        {displayImage ? (
+                                            <>
+                                                {e.image_url ? (
+                                                    <ImageWithWatermark
+                                                        src={e.image_url}
+                                                        alt={e.test_name}
+                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        watermarkEnabled={!!e.watermarkEnabled}
+                                                        allowLightbox={!e.link}
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={thumbnailUrl}
+                                                        alt={e.test_name}
+                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        loading="lazy"
+                                                    />
+                                                )}
+                                                {/* Play button overlay when link exists */}
+                                                {e.link && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none">
+                                                        <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
+                                                            <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M8 5v14l11-7z" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="text-slate-300 flex flex-col items-center">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                    <polyline points="21 15 16 10 5 21" />
+                                                </svg>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest mt-2">No Image</span>
+                                            </div>
+                                        )}
 
-                                {e.notes && (
-                                    <p className="w-full text-center text-xs text-slate-400 italic mt-auto pt-2 border-t border-slate-50">
-                                        {e.notes}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
+                                        {e.result && (
+                                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-10 ${getResultClass(e.result)}`}>
+                                                {e.result}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {e.link && (
+                                        <a
+                                            href={e.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                border: "2px solid #F14722",
+                                                boxShadow: "0px 2px 0px #F14722",
+                                                borderRadius: "10px",
+                                            }}
+                                            className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-800 font-bold text-sm transition-all hover:bg-rose-50 hover:scale-105"
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" />
+                                                <path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" />
+                                            </svg>
+                                            View
+                                        </a>
+                                    )}
+
+                                    {e.notes && (
+                                        <p className="w-full text-center text-xs text-slate-400 italic mt-auto pt-2 border-t border-slate-50 whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">
+                                            {e.notes}
+                                        </p>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             )
@@ -641,20 +679,61 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
             if (entries.length === 0) return <p className="text-slate-500 italic">No tests found.</p>
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {entries.map((e, i) => (
-                        <ClinicalCard key={i} className={e.result?.includes('positive') ? 'border-rose-100 bg-rose-50/30' : ''}>
-                            <div className="flex justify-between items-start mb-2">
-                                <h5 className="font-bold text-slate-800">{e.test_name}</h5>
-                                <StatusBadge status={e.result || 'Pending'} />
-                            </div>
-                            {e.notes && <p className="text-sm text-slate-600 mb-3">{e.notes}</p>}
-                            {e.link && (
-                                <a href={e.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs font-bold text-teal-600 hover:text-teal-700 uppercase tracking-wide">
-                                    Reference ↗
-                                </a>
-                            )}
-                        </ClinicalCard>
-                    ))}
+                    {entries.map((e, i) => {
+                        const linkUrl = e.link || e.videoUrl || e.video_url
+                        const thumbnailUrl = !e.image_url ? getYouTubeThumbnail(linkUrl) : null
+                        const displayImage = e.image_url || thumbnailUrl
+                        const isRedirectClickable = !!linkUrl
+
+                        return (
+                            <ClinicalCard key={i} className={e.result?.includes('positive') ? 'border-rose-100 bg-rose-50/30' : ''}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <h5 className="font-bold text-slate-800">{e.test_name}</h5>
+                                    <StatusBadge status={e.result || 'Pending'} />
+                                </div>
+
+                                {displayImage && (
+                                    <div 
+                                        className={`group relative w-full aspect-video rounded-xl overflow-hidden shadow-sm border border-slate-100 mb-3 bg-slate-50 flex items-center justify-center ${isRedirectClickable ? 'cursor-pointer' : ''}`}
+                                        onClick={() => isRedirectClickable && window.open(linkUrl, '_blank')}
+                                    >
+                                        {e.image_url ? (
+                                            <ImageWithWatermark
+                                                src={e.image_url}
+                                                alt={e.test_name}
+                                                className="w-full h-full object-cover"
+                                                watermarkEnabled={!!e.watermarkEnabled}
+                                                allowLightbox={!isRedirectClickable}
+                                            />
+                                        ) : (
+                                            <img
+                                                src={thumbnailUrl}
+                                                alt={e.test_name}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                loading="lazy"
+                                            />
+                                        )}
+                                        {isRedirectClickable && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none">
+                                                <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
+                                                    <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M8 5v14l11-7z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {e.notes && <p className="text-sm text-slate-600 mb-3">{e.notes}</p>}
+                                {e.link && (
+                                    <a href={e.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs font-bold text-teal-600 hover:text-teal-700 uppercase tracking-wide">
+                                        Reference ↗
+                                    </a>
+                                )}
+                            </ClinicalCard>
+                        )
+                    })}
                 </div>
             )
         }

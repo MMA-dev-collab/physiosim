@@ -1174,19 +1174,21 @@ function InvestigationsStep({ step, watermarkEnabled = false }) {
     groupedTests[inv.groupLabel].push(inv)
   })
 
-  const getVideoEmbedUrl = (url) => {
+  const getYouTubeThumbnail = (url) => {
     if (!url) return null
-    // Convert YouTube URLs to embed format
-    if (url.includes('youtube.com/watch')) {
-      const videoId = url.split('v=')[1]?.split('&')[0]
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null
+    let videoId = ''
+    try {
+      const raw = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/)
+      if (raw[2] !== undefined) {
+        videoId = raw[2].split(/[^0-9a-z_\-]/i)[0]
+      } else {
+        videoId = raw[0]
+      }
+    } catch (e) {
+      return null
     }
-    if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1]?.split('?')[0]
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null
-    }
-    // For other video URLs, return as-is (assuming they're already embeddable)
-    return url
+    if (!videoId || videoId.includes('http')) return null
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
   }
 
   return (
@@ -1206,7 +1208,6 @@ function InvestigationsStep({ step, watermarkEnabled = false }) {
             </div>
             <div className="investigation-tests-grid">
               {tests.map((inv) => {
-                const embedUrl = getVideoEmbedUrl(inv.videoUrl)
                 const isPositive = inv.result?.toLowerCase().includes('positive')
                 const isNegative = inv.result?.toLowerCase().includes('negative')
 
@@ -1224,15 +1225,29 @@ function InvestigationsStep({ step, watermarkEnabled = false }) {
                         Result: <strong>{inv.result}</strong>
                       </div>
                     )}
-                    {embedUrl && (
-                      <div className="investigation-video-container">
-                        <iframe
-                          src={embedUrl}
-                          title={inv.testName}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
+                    {inv.videoUrl && (
+                      <div 
+                        className="investigation-video-container group cursor-pointer" 
+                        onClick={() => window.open(inv.videoUrl, '_blank')}
+                      >
+                        {getYouTubeThumbnail(inv.videoUrl) ? (
+                          <img
+                            src={getYouTubeThumbnail(inv.videoUrl)}
+                            alt={inv.testName}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="video-placeholder bg-slate-200 flex items-center justify-center text-slate-400 font-medium">
+                            Watch Video
+                          </div>
+                        )}
+                        <div className="video-overlay absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none">
+                          <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
+                            <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

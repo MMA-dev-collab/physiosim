@@ -103,41 +103,43 @@ export default function CompositeHistoryRunner({ step }) {
             </div>
             <div className="space-y-4">
               {pain_characteristics.intensity && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Intensity :</span>
-                  <span className="text-slate-600 font-bold bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
-                    {pain_characteristics.intensity}/10
-                  </span>
+                  <div>
+                    <span className="text-slate-600 font-bold bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 inline-block">
+                      {pain_characteristics.intensity}/10
+                    </span>
+                  </div>
                 </div>
               )}
               {pain_characteristics.pain_type && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Type :</span>
-                  <span className="text-slate-600 font-medium">{pain_characteristics.pain_type}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{pain_characteristics.pain_type}</span>
                 </div>
               )}
               {pain_characteristics.frequency && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Frequency :</span>
-                  <span className="text-slate-600 font-medium">{pain_characteristics.frequency}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{pain_characteristics.frequency}</span>
                 </div>
               )}
               {pain_characteristics.time_of_day && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Time of Day :</span>
-                  <span className="text-slate-600 font-medium">{pain_characteristics.time_of_day}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{pain_characteristics.time_of_day}</span>
                 </div>
               )}
               {pain_characteristics.relief && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Relief :</span>
-                  <span className="text-slate-600 font-medium">{pain_characteristics.relief}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{pain_characteristics.relief}</span>
                 </div>
               )}
               {pain_characteristics.aggravating && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Aggravating :</span>
-                  <span className="text-slate-600 font-medium line-clamp-1">{pain_characteristics.aggravating}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{pain_characteristics.aggravating}</span>
                 </div>
               )}
             </div>
@@ -190,21 +192,21 @@ export default function CompositeHistoryRunner({ step }) {
             </div>
             <div className="space-y-4">
               {present_history.onset && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Onset :</span>
-                  <span className="text-slate-600 font-medium">{present_history.onset}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{present_history.onset}</span>
                 </div>
               )}
               {present_history.course && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Course :</span>
-                  <span className="text-slate-600 font-medium">{present_history.course}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{present_history.course}</span>
                 </div>
               )}
               {present_history.duration && (
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[160px_1fr] gap-4 items-start py-1">
                   <span className="text-slate-900 font-bold">Duration :</span>
-                  <span className="text-slate-600 font-medium">{present_history.duration}</span>
+                  <span className="text-slate-600 font-medium whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">{present_history.duration}</span>
                 </div>
               )}
             </div>

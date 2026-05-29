@@ -1286,12 +1286,19 @@
   border-radius: 0.5rem;
 }
 
-.investigation-video-container iframe {
+.investigation-video-container iframe,
+.investigation-video-container img,
+.investigation-video-container .video-placeholder,
+.investigation-video-container .video-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.investigation-video-container img {
+  object-fit: cover;
 }
 
 .xray-section {

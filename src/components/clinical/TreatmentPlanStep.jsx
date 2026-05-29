@@ -17,7 +17,7 @@ export default function TreatmentPlanStep({ step, hideHeader }) {
         } catch (e) {
             return null;
         }
-        if (!videoId) return null;
+        if (!videoId || videoId.includes('http')) return null;
         return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
 
@@ -74,7 +74,7 @@ export default function TreatmentPlanStep({ step, hideHeader }) {
                             {/* Right Side: Treatment & Video */}
                             <div className="w-full md:w-[45%] lg:w-[40%] bg-slate-50 p-6 md:p-8 flex flex-col items-center justify-center">
                                 <div className="mb-6 w-full text-center">
-                                    <div className="inline-block px-4 py-1.5 border border-emerald-400 rounded-full text-emerald-600 font-semibold text-sm shadow-sm bg-emerald-50 max-w-full truncate text-center">
+                                    <div className="inline-block px-4 py-1.5 border border-emerald-400 rounded-full text-emerald-600 font-semibold text-sm shadow-sm bg-emerald-50 max-w-full text-center whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">
                                         {treat.intervention || 'Treatment Technique'}
                                     </div>
                                 </div>

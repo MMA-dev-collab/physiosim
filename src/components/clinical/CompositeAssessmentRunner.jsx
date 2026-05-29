@@ -3,6 +3,25 @@ import McqStep from './McqStep'
 import EssayStep from './EssayStep'
 import ImageWithWatermark from '../common/ImageWithWatermark'
 
+// Extract YouTube video thumbnail from a URL
+const getYouTubeThumbnail = (url) => {
+  if (!url) return null
+  let videoId = ''
+  try {
+    const raw = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/)
+    if (raw[2] !== undefined) {
+      videoId = raw[2].split(/[^0-9a-z_\-]/i)[0]
+    } else {
+      videoId = raw[0]
+    }
+  } catch (e) {
+    return null
+  }
+  if (!videoId || videoId.includes('http')) return null
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+}
+
+
 /**
  * CompositeAssessmentRunner
  * Renders ALL sub-tests of a single assessment Main Step on one scrollable page.
@@ -299,17 +318,49 @@ function FlexibilitySection({ section }) {
               </div>
 
               {/* Image */}
-              {entry.image_url && (
-                <div className="aspect-[4/3] w-full bg-white flex items-center justify-center p-2">
-                  <ImageWithWatermark
-                    src={entry.image_url}
-                    alt={entry.test_name || 'Flexibility test'}
-                    className="h-full w-full object-cover rounded-lg"
-                    loading="lazy"
-                    watermarkEnabled={!!entry.watermarkEnabled}
-                  />
-                </div>
-              )}
+              {(() => {
+                const linkUrl = entry.link || entry.videoUrl || entry.video_url
+                const thumbnailUrl = !entry.image_url ? getYouTubeThumbnail(linkUrl) : null
+                const displayImage = entry.image_url || thumbnailUrl
+                const isRedirectClickable = !!linkUrl
+
+                if (!displayImage) return null
+
+                return (
+                  <div 
+                    className={`aspect-[4/3] w-full bg-white flex items-center justify-center p-2 relative group overflow-hidden ${isRedirectClickable ? 'cursor-pointer' : ''}`}
+                    onClick={() => isRedirectClickable && window.open(linkUrl, '_blank')}
+                  >
+                    {entry.image_url ? (
+                      <ImageWithWatermark
+                        src={entry.image_url}
+                        alt={entry.test_name || 'Flexibility test'}
+                        className="h-full w-full object-cover rounded-lg"
+                        loading="lazy"
+                        watermarkEnabled={!!entry.watermarkEnabled}
+                        allowLightbox={!isRedirectClickable}
+                      />
+                    ) : (
+                      <img
+                        src={thumbnailUrl}
+                        alt={entry.test_name || 'Flexibility test'}
+                        className="h-full w-full object-cover rounded-lg transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    )}
+                    {/* Play button overlay when link exists */}
+                    {isRedirectClickable && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none rounded-lg m-2">
+                        <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
+                          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Result/Footer */}
               {(entry.result || entry.notes) && (
@@ -345,24 +396,6 @@ function SpecialTestsSection({ section }) {
     return 'bg-blue-50 text-blue-600 border border-blue-100'
   }
 
-  // Extract YouTube video thumbnail from a URL
-  const getYouTubeThumbnail = (url) => {
-    if (!url) return null
-    let videoId = ''
-    try {
-      const raw = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/)
-      if (raw[2] !== undefined) {
-        videoId = raw[2].split(/[^0-9a-z_\-]/i)[0]
-      } else {
-        videoId = raw[0]
-      }
-    } catch (e) {
-      return null
-    }
-    if (!videoId || videoId.includes('http')) return null
-    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-  }
-
   return (
     <div className="car-special mb-8">
       <h3 className="text-xl font-black text-slate-800 mb-6 px-0 md:px-2">Special Tests:</h3>
@@ -371,17 +404,18 @@ function SpecialTestsSection({ section }) {
           {entries.map((entry, i) => {
             const thumbnailUrl = !entry.image_url ? getYouTubeThumbnail(entry.link) : null
             const displayImage = entry.image_url || thumbnailUrl
+            const isRedirectClickable = !!entry.link;
 
             return (
               <div key={i} className="bg-white h-full rounded-[1.5rem] border border-slate-200 p-6 flex flex-col transition-all hover:shadow-lg hover:border-blue-200" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}>
                 
                 {/* Header Section: Title + Notes */}
                 <div className="w-full text-left mb-4">
-                  <h4 className="font-bold text-slate-700 text-lg leading-tight mb-2">
+                  <h4 className="font-bold text-slate-700 text-lg leading-tight mb-2 whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">
                     {i + 1}. {entry.test_name}
                   </h4>
                   {entry.notes && (
-                    <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
+                    <p className="text-xs text-slate-400 font-medium italic leading-relaxed whitespace-normal break-words [overflow-wrap:anywhere] min-w-0">
                       {entry.notes}
                     </p>
                   )}
@@ -389,7 +423,10 @@ function SpecialTestsSection({ section }) {
 
                 {/* Body Section: Image + Button (Pushed to bottom) */}
                 <div className="mt-auto w-full flex flex-col items-center gap-4">
-                  <div className="w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative">
+                  <div 
+                    className={`w-full aspect-video bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner group relative ${isRedirectClickable ? 'cursor-pointer' : ''}`}
+                    onClick={() => isRedirectClickable && window.open(entry.link, '_blank')}
+                  >
                     {displayImage ? (
                       <>
                         {entry.image_url ? (
@@ -399,6 +436,7 @@ function SpecialTestsSection({ section }) {
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                             watermarkEnabled={!!entry.watermarkEnabled}
                             wrapperClassName="w-full h-full"
+                            allowLightbox={!entry.link}
                           />
                         ) : (
                           <img
@@ -408,10 +446,10 @@ function SpecialTestsSection({ section }) {
                             loading="lazy"
                           />
                         )}
-                        {/* Play button overlay when showing YouTube thumbnail */}
-                        {thumbnailUrl && !entry.image_url && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none">
-                            <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                        {/* Play button overlay when link exists */}
+                        {entry.link && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none">
+                            <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
                               <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z" />
                               </svg>
@@ -431,7 +469,7 @@ function SpecialTestsSection({ section }) {
                     )}
                     
                     {entry.result && (
-                      <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${getResultClass(entry.result)}`}>
+                      <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-10 ${getResultClass(entry.result)}`}>
                         {entry.result}
                       </div>
                     )}
@@ -726,52 +764,42 @@ function PalpationSection({ section }) {
           </div>
         )}
 
-        <div className="flex-1 w-full overflow-x-auto">
+        <div className="flex-1 w-full">
           {entries.length > 0 ? (
             (() => {
               const hasAnyNotes = entries.some(e => e.notes && e.notes.trim() !== '');
               return (
-                <table className="w-full text-left border-separate border-spacing-y-2">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-px whitespace-nowrap">Level</th>
-                      <th className={`px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
-                        {section.status_title || 'Status'}
-                      </th>
+                <div className="space-y-3">
+                  {entries.map((entry, i) => (
+                    <div key={i} className="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-[1fr_auto] md:grid-cols-[1.5fr_200px_2fr] gap-4 items-start">
+                      {/* Level */}
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Level</span>
+                        <div className="inline-block px-3 py-1.5 bg-indigo-50 text-indigo-600 text-[13px] font-black rounded-lg border border-indigo-100 shadow-sm whitespace-normal break-words [overflow-wrap:anywhere]">
+                          {entry.level || '-'}
+                        </div>
+                      </div>
+                      
+                      {/* Status */}
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{section.status_title || 'Status'}</span>
+                        <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
+                          {getStatusLabel(entry.status_value)}
+                        </span>
+                      </div>
+
+                      {/* Notes */}
                       {hasAnyNotes && (
-                        <th className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[30%] text-right font-inter">Notes</th>
+                        <div className="min-w-0 md:text-right">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Notes</span>
+                          <p className="text-xs text-slate-500 italic font-medium whitespace-normal break-words [overflow-wrap:anywhere]">
+                            {entry.notes || '-'}
+                          </p>
+                        </div>
                       )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((entry, i) => (
-                      <tr key={i} className="bg-white border border-slate-100 shadow-sm rounded-xl">
-                        <td className="px-4 py-4 first:rounded-l-xl border-y border-l border-slate-100 align-middle w-px whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-[13px] font-black text-indigo-600 border border-indigo-100 shadow-sm">
-                              {entry.level || '-'}
-                            </div>
-                          </div>
-                        </td>
-                        <td className={`px-6 py-4 border-y border-slate-100 align-middle ${hasAnyNotes ? 'text-center' : 'text-right'}`}>
-                          <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
-                            {getStatusLabel(entry.status_value)}
-                          </span>
-                        </td>
-                        {hasAnyNotes && (
-                          <td className="px-4 py-4 border-y border-r border-slate-100 text-[11px] text-slate-500 italic last:rounded-r-xl align-middle text-right font-inter">
-                            <div className="max-w-[180px] ml-auto truncate font-medium">
-                                {entry.notes || '-'}
-                            </div>
-                          </td>
-                        )}
-                        {!hasAnyNotes && (
-                          <td className="border-y border-r border-slate-100 last:rounded-r-xl w-1"></td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </div>
+                  ))}
+                </div>
               );
             })()
           ) : (
