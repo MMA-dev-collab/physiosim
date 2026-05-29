@@ -1272,7 +1272,7 @@ function InvestigationsStep({ step, watermarkEnabled = false }) {
                       src={x.imageUrl}
                       alt={x.label}
                       className="xray-image"
-                      watermarkEnabled={!!x.watermarkEnabled}
+                      watermarkEnabled={true}
                       wrapperClassName="xray-image-wrapper"
                       onError={(e) => {
                         console.error('Failed to load X-ray image:', {

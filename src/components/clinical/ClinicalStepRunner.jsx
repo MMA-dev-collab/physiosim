@@ -206,7 +206,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {data.image_url && (
                             <div className="lg:col-span-1">
-                                <ImageWithWatermark src={data.image_url} alt="Observation" className="w-full rounded-lg shadow-md border border-slate-200" watermarkEnabled={!!data.watermarkEnabled} />
+                                <ImageWithWatermark src={data.image_url} alt="Observation" className="w-full rounded-lg shadow-md border border-slate-200" watermarkEnabled={true} />
                             </div>
                         )}
                         <div className={data.image_url ? 'lg:col-span-2' : 'col-span-full'}>
@@ -262,7 +262,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                         {hasImage && (
                             <div className="w-full lg:w-1/2 shrink-0">
                                 <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
-                                    <ImageWithWatermark src={data.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" watermarkEnabled={!!data.watermarkEnabled} />
+                                    <ImageWithWatermark src={data.image_url} alt="Palpation Reference" className="w-full h-auto object-cover" watermarkEnabled={true} />
                                 </div>
                             </div>
                         )}
@@ -600,7 +600,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                                                         src={e.image_url}
                                                         alt={e.test_name}
                                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                        watermarkEnabled={!!e.watermarkEnabled}
+                                                        watermarkEnabled={true}
                                                         allowLightbox={!e.link}
                                                     />
                                                 ) : (
@@ -702,7 +702,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                                                 src={e.image_url}
                                                 alt={e.test_name}
                                                 className="w-full h-full object-cover"
-                                                watermarkEnabled={!!e.watermarkEnabled}
+                                                watermarkEnabled={true}
                                                 allowLightbox={!isRedirectClickable}
                                             />
                                         ) : (
@@ -754,7 +754,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {e.image_url ? (
                                     <div className="bg-black/5 rounded-lg overflow-hidden border border-black/10 flex items-center justify-center">
-                                        <ImageWithWatermark src={e.image_url} alt={e.modality} className="max-h-64 object-contain" watermarkEnabled={!!e.watermarkEnabled} />
+                                        <ImageWithWatermark src={e.image_url} alt={e.modality} className="max-h-64 object-contain" watermarkEnabled={true} />
                                     </div>
                                 ) : (
                                     <div className="bg-slate-50 flex items-center justify-center rounded-lg h-40 text-slate-400 text-sm border-2 border-dashed border-slate-200">

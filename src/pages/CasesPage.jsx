@@ -181,11 +181,13 @@ function CasesPage({ auth }) {
                   {c.metadata?.brief || 'I have had knee pain for a few months'}
                 </p>
 
-                {c.requiredPlanName && (
-                  <div className="case-card-plan-badge">
-                    {c.requiredPlanName} Plan
-                  </div>
-                )}
+                <div className="case-card-plan-container">
+                  {c.requiredPlanName && (
+                    <div className="case-card-plan-badge">
+                      {c.requiredPlanName} Plan
+                    </div>
+                  )}
+                </div>
 
                 <div className="case-status-box">
                   <div className="case-status-group">
