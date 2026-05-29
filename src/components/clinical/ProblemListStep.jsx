@@ -153,7 +153,7 @@ export default function ProblemListStep({
               <input
                 type="text"
                 className="problem-list-step__item-input"
-                placeholder={`Problem ${idx + 1}...`}
+                placeholder="answer"
                 value={item}
                 onChange={(e) => updateItem(idx, e.target.value)}
                 disabled={isActuallySubmitted}

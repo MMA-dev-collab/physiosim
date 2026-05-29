@@ -122,7 +122,7 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
                   value={essayAnswer}
                   onChange={(e) => setEssayAnswer(e.target.value)}
                   rows={10}
-                  placeholder={eq.placeholder || step.placeholder || "Type your answer here..."}
+                  placeholder={eq.placeholder || step.placeholder || "answer"}
                   disabled={essayScore !== null}
                   style={{
                     width: '100%',

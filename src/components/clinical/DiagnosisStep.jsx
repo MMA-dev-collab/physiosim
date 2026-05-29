@@ -149,7 +149,7 @@ export default function DiagnosisStep({
           <input
             type="text"
             className="diagnosis-step__input"
-            placeholder="e.g. Multiple cervical disc bulges"
+            placeholder="write the condition here"
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
             disabled={isActuallySubmitted}
@@ -184,7 +184,7 @@ export default function DiagnosisStep({
                 <input
                   type="text"
                   className="diagnosis-step__input diagnosis-step__input--tag"
-                  placeholder="e.g. C3-C4"
+                  placeholder="write the level here"
                   value={levelInput}
                   onChange={(e) => setLevelInput(e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, addLevel)}
@@ -230,7 +230,7 @@ export default function DiagnosisStep({
                 <input
                   type="text"
                   className="diagnosis-step__input diagnosis-step__input--tag"
-                  placeholder="e.g. reversed lordosis"
+                  placeholder="write the finding here"
                   value={findingInput}
                   onChange={(e) => setFindingInput(e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, addFinding)}

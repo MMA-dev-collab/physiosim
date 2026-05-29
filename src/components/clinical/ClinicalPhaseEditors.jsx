@@ -80,7 +80,7 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
                                 <div style={{ flex: 1, display: 'flex', gap: '10px' }}>
                                     <input 
                                         type="text" 
-                                        placeholder="Title (e.g. Subjective)" 
+                                        placeholder="answer" 
                                         value={ev.title || ''} 
                                         onChange={(e) => {
                                             const newEv = [...(content.supporting_evidence || [])]
@@ -90,7 +90,7 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
                                         style={{ width: '150px', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
                                     />
                                     <textarea 
-                                        placeholder="Evidence text..." 
+                                        placeholder="answer" 
                                         value={ev.text || ''} 
                                         onChange={(e) => {
                                             const newEv = [...(content.supporting_evidence || [])]
@@ -144,7 +144,7 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
                         value={eq.perfect_answer || ''}
                         onChange={(e) => updateEq('perfect_answer', e.target.value)}
                         rows={3}
-                        placeholder="e.g. Multiple cervical disc bulges at C3-C4, C4-C5, C5-C6 with reversed cervical curve and stenosis"
+                        placeholder="answer"
                         style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '0.95rem', resize: 'vertical' }}
                     />
                     <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
@@ -168,7 +168,7 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <input
                             type="text"
-                            placeholder="Type keyword and press Enter"
+                            placeholder="answer"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ',') {
                                     e.preventDefault()
@@ -205,7 +205,7 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <input
                             type="text"
-                            placeholder="Type synonym and press Enter"
+                            placeholder="answer"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ',') {
                                     e.preventDefault()
@@ -365,7 +365,7 @@ export function ProblemPhaseEditor({ step, onUpdate, errors, touched, setTouched
                                 type="text"
                                 value={prob.question_text || ''}
                                 onChange={(e) => updateProblem(idx, 'question_text', e.target.value)}
-                                placeholder="e.g. Reduced cervical ROM"
+                                placeholder="answer"
                                 style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '0.9rem' }}
                             />
                         </div>
@@ -386,7 +386,7 @@ export function ProblemPhaseEditor({ step, onUpdate, errors, touched, setTouched
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <input
                                     type="text"
-                                    placeholder="Type keyword and press Enter"
+                                    placeholder="answer"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ',') {
                                             e.preventDefault()
@@ -420,7 +420,7 @@ export function ProblemPhaseEditor({ step, onUpdate, errors, touched, setTouched
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <input
                                     type="text"
-                                    placeholder="Type synonym and press Enter"
+                                    placeholder="answer"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ',') {
                                             e.preventDefault()
@@ -543,7 +543,7 @@ export function TreatmentPhaseEditor({ step, allSteps, onUpdate, errors, touched
                                     type="text"
                                     value={treat.problem_label || ''}
                                     onChange={(e) => updateTreatment(idx, 'problem_label', e.target.value)}
-                                    placeholder="Or type custom problem..."
+                                    placeholder="answer"
                                     style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
                                 />
                             </div>
@@ -553,7 +553,7 @@ export function TreatmentPhaseEditor({ step, allSteps, onUpdate, errors, touched
                                 <textarea
                                     value={treat.goal || ''}
                                     onChange={(e) => updateTreatment(idx, 'goal', e.target.value)}
-                                    placeholder="e.g., Reduce muscle tightness..."
+                                    placeholder="answer"
                                     rows={3}
                                     style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
                                 />
@@ -567,7 +567,7 @@ export function TreatmentPhaseEditor({ step, allSteps, onUpdate, errors, touched
                                 <textarea
                                     value={treat.intervention || ''}
                                     onChange={(e) => updateTreatment(idx, 'intervention', e.target.value)}
-                                    placeholder="e.g., Muscle energy technique (MET)"
+                                    placeholder="answer"
                                     rows={2}
                                     style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
                                 />
@@ -599,7 +599,7 @@ export function TreatmentPhaseEditor({ step, allSteps, onUpdate, errors, touched
                             <div style={{ display: 'flex', gap: '6px' }}>
                                 <input
                                     type="text"
-                                    placeholder="Add dosage and press Enter"
+                                    placeholder="answer"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault()
@@ -778,7 +778,7 @@ export function SessionStructureEditor({ step, onUpdate, errors, touched, setTou
                                 <textarea
                                     value={obj}
                                     onChange={e => updateObjective(idx, e.target.value)}
-                                    placeholder={`Objective ${idx + 1}...`}
+                                    placeholder="answer"
                                     rows={2}
                                     style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', resize: 'vertical' }}
                                 />
