@@ -697,6 +697,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
         )
     }
 
+    /* SPRINT CUSTOMIZATION: Commented out standalone Special Tests editor
     // ===== SPECIAL TESTS EDITOR =====
     if (category === 'special_tests') {
         const entries = content.entries || []
@@ -805,6 +806,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
             </div>
         )
     }
+    */
 
     // ===== CERVICAL CURVE EDITOR =====
     if (category === 'cervical_curve') {
@@ -917,6 +919,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
         )
     }
 
+    /* SPRINT CUSTOMIZATION: Commented out standalone Investigations editor
     // ===== INVESTIGATIONS (IMAGING) EDITOR =====
     if (category === 'investigations') {
         const entries = content.entries || []
@@ -1021,6 +1024,7 @@ export function AssessmentPhaseEditor({ step, onUpdate, errors, touched, setTouc
             </div>
         )
     }
+    */
 
     return <div className="phase-editor">Unknown Assessment category: {category}</div>
 }

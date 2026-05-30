@@ -38,7 +38,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
     }
   }, [selectedOption])
 
-  const hints = step.hints || (step.hint ? [{ text: step.hint, delaySeconds: step.hintDelaySeconds || 0 }] : [])
+  const hints = step.content?.hints || step.hints || (step.hint_text ? [{ text: step.hint_text, delaySeconds: step.expected_time || 0 }] : (step.hint ? [{ text: step.hint, delaySeconds: step.hintDelaySeconds || 0 }] : []))
   const [visibleHints, setVisibleHints] = useState([])
 
   // Hint Delay Logic

@@ -210,7 +210,9 @@ function CasesPage({ auth }) {
                   disabled={(c.isLocked && !c.isCompleted) || !auth}
                   onClick={() => navigate(`/cases/${c.id}`)}
                 >
-                  {!auth ? 'Login to Start' : (c.isLocked && !c.isCompleted ? (c.isLockedByPlan ? 'Not Available' : 'Locked') : c.isCompleted ? 'Review Case' : 'Start Case')}
+                  {/* SPRINT CUSTOMIZATION: Commented out 'Review Case' label for completed cases */}
+                  {/* {!auth ? 'Login to Start' : (c.isLocked && !c.isCompleted ? (c.isLockedByPlan ? 'Not Available' : 'Locked') : c.isCompleted ? 'Review Case' : 'Start Case')} */}
+                  {!auth ? 'Login to Start' : (c.isLocked && !c.isCompleted ? (c.isLockedByPlan ? 'Not Available' : 'Locked') : 'Start Case')}
                 </button>
               </div>
             </div>

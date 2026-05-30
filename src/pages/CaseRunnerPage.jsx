@@ -334,10 +334,12 @@ function CaseRunnerPage({ auth }) {
   }, [currentStep, auth.token])
 
   // Idle timer hook
+  // SPRINT CUSTOMIZATION: Disable the legacy global idle timer / HintModal.
+  // Multiple hints are now managed and displayed inline inside McqStep and EssayStep.
   const { resetTimer } = useIdleTimer({
     idleTimeout: getIdleTimeout(),
     onIdle: fetchHint,
-    enabled: (currentStep?.type === 'mcq' || currentStep?.type === 'essay') && !isCorrect && !showHint && (currentStep?.hint_enabled !== false) && essayScore === null && !caseData?.isCompleted
+    enabled: false
   })
 
   const progressPercent = useMemo(() => {

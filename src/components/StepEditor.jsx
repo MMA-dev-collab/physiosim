@@ -659,8 +659,17 @@ function McqStepEditor({ editedStep, setEditedStep, errors, touched, setTouched 
 
             <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
                 <HintsEditor 
-                    hints={editedStep.hints || (editedStep.hint_text ? [{ text: editedStep.hint_text, delaySeconds: editedStep.expected_time || 0 }] : [])}
-                    onUpdate={(newHints) => setEditedStep({ ...editedStep, hints: newHints, hint_text: null, expected_time: null })}
+                    hints={editedStep.content?.hints || editedStep.hints || (editedStep.hint_text ? [{ text: editedStep.hint_text, delaySeconds: editedStep.expected_time || 0 }] : [])}
+                    onUpdate={(newHints) => setEditedStep({
+                        ...editedStep,
+                        hints: newHints,
+                        hint_text: newHints[0]?.text || null,
+                        expected_time: newHints[0]?.delaySeconds || null,
+                        content: {
+                            ...editedStep.content,
+                            hints: newHints
+                        }
+                    })}
                 />
             </div>
 
@@ -1517,8 +1526,17 @@ function EssayStepEditor({ editedStep, setEditedStep, errors, touched, setTouche
 
             <div style={{ gridColumn: '1 / -1' }}>
                 <HintsEditor 
-                    hints={editedStep.hints || (editedStep.hint_text ? [{ text: editedStep.hint_text, delaySeconds: editedStep.expected_time || 0 }] : [])}
-                    onUpdate={(newHints) => setEditedStep({ ...editedStep, hints: newHints, hint_text: null, expected_time: null })}
+                    hints={editedStep.content?.hints || editedStep.hints || (editedStep.hint_text ? [{ text: editedStep.hint_text, delaySeconds: editedStep.expected_time || 0 }] : [])}
+                    onUpdate={(newHints) => setEditedStep({
+                        ...editedStep,
+                        hints: newHints,
+                        hint_text: newHints[0]?.text || null,
+                        expected_time: newHints[0]?.delaySeconds || null,
+                        content: {
+                            ...editedStep.content,
+                            hints: newHints
+                        }
+                    })}
                 />
             </div>
         </div>

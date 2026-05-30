@@ -559,6 +559,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
             )
         }
 
+        /* SPRINT CUSTOMIZATION: Commented out standalone Special Tests rendering
         // Special Tests
         if (catId === 'special_tests') {
             const entries = data.entries || []
@@ -611,7 +612,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                                                         loading="lazy"
                                                     />
                                                 )}
-                                                {/* Play button overlay when link exists */}
+                                                // Play button overlay when link exists
                                                 {e.link && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none">
                                                         <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
@@ -672,6 +673,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                 </div>
             )
         }
+        */
 
         // Flexibility Test
         if (catId === 'flexibility_test') {
@@ -738,6 +740,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
             )
         }
 
+        /* SPRINT CUSTOMIZATION: Commented out standalone Investigations rendering
         // Investigations
         if (catId === 'investigations') {
             const entries = data.entries || []
@@ -781,6 +784,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                 </div>
             )
         }
+        */
 
         // Composite / Multi-section support
         if (data.sections && Array.isArray(data.sections)) {

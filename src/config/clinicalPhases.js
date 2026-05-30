@@ -98,8 +98,8 @@ export const PHASE_CATEGORIES = {
         // { id: 'sensory_exam', label: 'Sensory Examination', inputMode: 'author_only', dataTypes: ['text'] },
         // { id: 'cervical_curve', label: 'Cervical Curve Assessment', inputMode: 'author_only', dataTypes: ['image', 'text'] },
         // { id: 'flexibility_test', label: 'Flexibility Test', inputMode: 'user_input', dataTypes: ['text', 'links'] },
-        { id: 'special_tests', label: 'Special Tests', inputMode: 'user_input', dataTypes: ['text', 'links'] },
-        { id: 'investigations', label: 'Investigations (Imaging)', inputMode: 'author_only', dataTypes: ['image', 'text', 'numbers'] }
+        // { id: 'special_tests', label: 'Special Tests', inputMode: 'user_input', dataTypes: ['text', 'links'] },
+        // { id: 'investigations', label: 'Investigations (Imaging)', inputMode: 'author_only', dataTypes: ['image', 'text', 'numbers'] }
     ],
     diagnosis: [
         { id: 'diagnosis_entry', label: 'Diagnosis', inputMode: 'user_input', dataTypes: ['text', 'numbers', 'image'] }
