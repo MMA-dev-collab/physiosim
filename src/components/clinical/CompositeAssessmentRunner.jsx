@@ -144,7 +144,7 @@ function ObservationSection({ section }) {
                     alt={view.label || 'Observation view'}
                     className="h-full object-contain rounded-lg"
                     loading="lazy"
-                    watermarkEnabled={true}
+                    watermarkEnabled={false}
                   />
                 </div>
               )}
@@ -235,7 +235,7 @@ function RomSection({ section }) {
                           alt={entry.movement}
                           className="w-full h-full object-cover"
                           loading="lazy"
-                          watermarkEnabled={true}
+                          watermarkEnabled={false}
                           wrapperClassName="w-full h-full"
                         />
                       </div>
@@ -337,7 +337,7 @@ function FlexibilitySection({ section }) {
                         alt={entry.test_name || 'Flexibility test'}
                         className="h-full w-full object-cover rounded-lg"
                         loading="lazy"
-                        watermarkEnabled={true}
+                        watermarkEnabled={false}
                         allowLightbox={!isRedirectClickable}
                       />
                     ) : (
@@ -434,7 +434,7 @@ function SpecialTestsSection({ section }) {
                             src={entry.image_url} 
                             alt={entry.test_name} 
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                            watermarkEnabled={true}
+                            watermarkEnabled={false}
                             wrapperClassName="w-full h-full"
                             allowLightbox={!entry.link}
                           />
@@ -533,7 +533,7 @@ function InvestigationsSection({ section }) {
                       alt={entry.modality || 'Investigation'}
                       className="max-h-64 object-contain rounded-lg shadow-sm"
                       loading="lazy"
-                      watermarkEnabled={true}
+                      watermarkEnabled={false}
                     />
                   </div>
                 ) : (
@@ -757,7 +757,7 @@ function PalpationSection({ section }) {
                 src={section.image_url} 
                 alt="Palpation Reference" 
                 className="w-full h-full object-fill" 
-                watermarkEnabled={true}
+                watermarkEnabled={false}
                 wrapperClassName="w-full h-full"
               />
             </div>
@@ -950,7 +950,7 @@ function MriFindingsSection({ section, watermarkEnabled = false }) {
                 src={section.image_url} 
                 alt="MRI Reference" 
                 className="w-full h-full object-fill rounded-xl"
-                watermarkEnabled={true}
+                watermarkEnabled={false}
                 wrapperClassName="w-full h-full"
               />
             </div>
@@ -1050,7 +1050,7 @@ function MriImagingSection({ section, watermarkEnabled = false }) {
                     src={img.image_url}
                     alt={img.title || 'MRI'}
                     className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:grayscale"
-                    watermarkEnabled={true}
+                    watermarkEnabled={false}
                     wrapperClassName="w-full h-full"
                   />
                   {/* Hover overlay */}
@@ -1108,7 +1108,7 @@ function MriImagingSection({ section, watermarkEnabled = false }) {
               src={images[lightboxIdx].image_url}
               alt={images[lightboxIdx].title || 'MRI'}
               className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
-              watermarkEnabled={true}
+              watermarkEnabled={false}
               wrapperClassName="flex items-center justify-center"
             />
             {images[lightboxIdx].title && (

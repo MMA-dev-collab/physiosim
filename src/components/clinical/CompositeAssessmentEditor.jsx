@@ -370,10 +370,7 @@ function ObservationSectionEditor({ section, onUpdate }) {
             </label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="View Image" folderType="observation" initialUrl={view.image_url} onUpload={url => updateView(idx, 'image_url', url)} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                <input type="checkbox" checked={!!view.watermarkEnabled} onChange={e => updateView(idx, 'watermarkEnabled', e.target.checked)} />
-                🔒 Watermark this image
-              </label>
+
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <div className="section-header"><h5>Findings</h5><button type="button" className="btn-small" onClick={() => addViewFinding(idx)}>+ Add</button></div>
@@ -437,10 +434,7 @@ function RomSectionEditor({ section, onUpdate }) {
             
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="Movement Image (Hover)" folderType="rom" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                <input type="checkbox" checked={!!e.watermarkEnabled} onChange={ev => updateEntry(idx, 'watermarkEnabled', ev.target.checked)} />
-                🔒 Watermark this image
-              </label>
+
             </div>
 
             {endFeelMode === 'per_movement' && (
@@ -579,10 +573,7 @@ function FlexibilityTestSectionEditor({ section, onUpdate }) {
             <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="Enter flexibility test name" /></label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="Test Image" folderType="flexibility" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                <input type="checkbox" checked={!!e.watermarkEnabled} onChange={ev => updateEntry(idx, 'watermarkEnabled', ev.target.checked)} />
-                🔒 Watermark this image
-              </label>
+
             </div>
             <label>Result<input value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)} placeholder="Enter test result" /></label>
             <label>Link<input value={e.link || ''} onChange={ev => updateEntry(idx, 'link', ev.target.value)} placeholder="https://..." /></label>
@@ -612,10 +603,7 @@ function SpecialTestsSectionEditor({ section, onUpdate }) {
             <label style={{ gridColumn: '1 / -1' }}>Test Name *<input value={e.test_name || ''} onChange={ev => updateEntry(idx, 'test_name', ev.target.value)} placeholder="Enter special test name" /></label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="Test Image" folderType="special_tests" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                <input type="checkbox" checked={!!e.watermarkEnabled} onChange={ev => updateEntry(idx, 'watermarkEnabled', ev.target.checked)} />
-                🔒 Watermark this image
-              </label>
+
             </div>
             <label>Result
               <select value={e.result || ''} onChange={ev => updateEntry(idx, 'result', ev.target.value)}>
@@ -671,10 +659,7 @@ function PalpationSectionEditor({ section, onUpdate }) {
             initialUrl={section.image_url} 
             onUpload={url => onUpdate({ ...section, image_url: url })} 
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-            <input type="checkbox" checked={!!section.watermarkEnabled} onChange={e => onUpdate({ ...section, watermarkEnabled: e.target.checked })} />
-            🔒 Watermark this image
-          </label>
+
         </div>
       </div>
 
@@ -801,10 +786,7 @@ function CervicalCurveEditor({ section, onUpdate }) {
                 initialUrl={opt.image_url} 
                 onUpload={url => updateOption(idx, 'image_url', url)} 
               />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                <input type="checkbox" checked={!!opt.watermarkEnabled} onChange={e => updateOption(idx, 'watermarkEnabled', e.target.checked)} />
-                🔒 Watermark this image
-              </label>
+
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Footer (Unselected)</span>
@@ -853,10 +835,7 @@ function InvestigationsSectionEditor({ section, onUpdate }) {
             </label>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImageUpload label="Image" folderType="investigations" initialUrl={e.image_url} onUpload={url => updateEntry(idx, 'image_url', url)} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                <input type="checkbox" checked={!!e.watermarkEnabled} onChange={ev => updateEntry(idx, 'watermarkEnabled', ev.target.checked)} />
-                🔒 Watermark this image
-              </label>
+
             </div>
             <label style={{ gridColumn: '1/-1' }}>Report<textarea value={e.report_text || ''} onChange={ev => updateEntry(idx, 'report_text', ev.target.value)} rows={2} placeholder="Provide detailed interpretation of images" /></label>
             <label style={{ gridColumn: '1/-1' }}>Conclusion *<textarea value={e.conclusion || ''} onChange={ev => updateEntry(idx, 'conclusion', ev.target.value)} rows={2} placeholder="Clinical implication..." /></label>
@@ -925,10 +904,7 @@ function McqSectionEditor({ section, onUpdate }) {
                        initialUrl={opt.imageUrl}
                        onUpload={url => updateOption(idx, 'imageUrl', url)}
                      />
-                     <label className="flex items-center gap-2 mt-2 cursor-pointer text-[12px] font-bold text-slate-500">
-                       <input type="checkbox" checked={!!opt.watermarkEnabled} onChange={e => updateOption(idx, 'watermarkEnabled', e.target.checked)} className="w-3 h-3" />
-                       🔒 Watermark this image
-                     </label>
+
                      <div className="mt-2">
                        <label className="text-[11px] text-slate-500">Or enter Image URL manually:</label>
                        <input
@@ -1207,10 +1183,7 @@ function MriFindingsSectionEditor({ section, onUpdate }) {
             initialUrl={section.image_url} 
             onUpload={url => onUpdate({ ...section, image_url: url })} 
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-            <input type="checkbox" checked={!!section.watermarkEnabled} onChange={e => onUpdate({ ...section, watermarkEnabled: e.target.checked })} />
-            🔒 Watermark this image
-          </label>
+
         </div>
       </div>
 
@@ -1358,10 +1331,7 @@ function MriImagingSectionEditor({ section, onUpdate }) {
                   initialUrl={img.image_url} 
                   onUpload={url => updateImage(idx, 'image_url', url)} 
                 />
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                  <input type="checkbox" checked={!!img.watermarkEnabled} onChange={e => updateImage(idx, 'watermarkEnabled', e.target.checked)} />
-                  🔒 Watermark this image
-                </label>
+
               </div>
             </div>
           </div>

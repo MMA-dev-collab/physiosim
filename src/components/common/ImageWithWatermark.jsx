@@ -19,12 +19,13 @@ function ImageWithWatermark({
   alt = '',
   className = '',
   style,
-  watermarkEnabled = false,
+  watermarkEnabled: watermarkEnabledProp = false,
   wrapperClassName = '',
   allowLightbox = true,
   hasAnnotations = false,
   ...imgProps
 }) {
+  const watermarkEnabled = false // Forced globally disabled
   const [isOpen, setIsOpen] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })

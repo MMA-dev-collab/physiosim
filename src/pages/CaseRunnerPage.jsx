@@ -14,7 +14,6 @@ import ProblemListStep from '@/components/clinical/ProblemListStep'
 import TreatmentPlanStep from '@/components/clinical/TreatmentPlanStep'
 import SessionStructureRunner from '@/components/clinical/SessionStructureRunner'
 import CaseRunnerLayout from './CaseRunnerLayout'
-import WatermarkOverlay from '@/components/common/WatermarkOverlay'
 import ImageWithWatermark from '@/components/common/ImageWithWatermark'
 
 function CaseRunnerPage({ auth }) {
@@ -1037,11 +1036,7 @@ function CaseRunnerPage({ auth }) {
         maxReachedIndex={caseData?.isCompleted ? steps.length - 1 : maxReachedIndex}
         completedSubSteps={completedSubSteps}
       >
-        {/* Watermark — absolute inside the case content box */}
-        { <WatermarkOverlay
-          userId={auth.user.id || auth.user._id || ''}
-          userEmail={auth.user.email || ''}
-        />}
+
         {/* Step Content */}
         <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
 
@@ -1274,7 +1269,7 @@ function InvestigationsStep({ step, watermarkEnabled = false }) {
                       src={x.imageUrl}
                       alt={x.label}
                       className="xray-image"
-                      watermarkEnabled={true}
+                      watermarkEnabled={false}
                       wrapperClassName="xray-image-wrapper"
                       onError={(e) => {
                         console.error('Failed to load X-ray image:', {
