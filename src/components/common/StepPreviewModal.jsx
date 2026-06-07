@@ -1,5 +1,6 @@
 import React, { useState, useDeferredValue } from 'react'
-import { X } from 'lucide-react'
+import { X, RefreshCw } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { PreviewProvider, usePreview } from '../../context/PreviewContext'
 import StepRenderer from '../clinical/StepRenderer'
 import './StepPreviewModal.css'
@@ -46,7 +47,7 @@ function SingleStepPreviewRunner() {
   const essayScore = scores[stepId]?.score ?? null
 
   return (
-    <div className="single-step-preview-content animate-in fade-in duration-300">
+    <div className="single-step-preview-content">
       <StepRenderer
         step={step}
         caseData={caseData}
@@ -81,6 +82,9 @@ export default function StepPreviewModal({ isOpen, onClose, step, caseData }) {
 
   // Defer rendering changes on the step data to keep editor typing fluid
   const deferredStep = useDeferredValue(step)
+  
+  // Professional loading state: detection of stall while deferring
+  const isStale = step !== deferredStep
 
   if (!isOpen) return null
 
@@ -92,6 +96,20 @@ export default function StepPreviewModal({ isOpen, onClose, step, caseData }) {
           <div className="step-preview-header-left">
             <span className="step-preview-badge">Live Preview</span>
             <h3>{deferredStep?.title || deferredStep?.category?.replace(/_/g, ' ') || deferredStep?.type?.toUpperCase()}</h3>
+            
+            <AnimatePresence>
+              {isStale && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="step-preview-updating-tag"
+                >
+                  <RefreshCw size={12} className="animate-spin" />
+                  <span>Updating...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           <div className="step-preview-header-actions">
@@ -117,17 +135,37 @@ export default function StepPreviewModal({ isOpen, onClose, step, caseData }) {
           </div>
         </div>
 
+        {/* Loading Bar Container */}
+        <div className="step-preview-progress-container">
+          <AnimatePresence>
+            {isStale && (
+              <motion.div 
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: '100%', opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="step-preview-progress-bar"
+              />
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Body */}
-        <div className="step-preview-modal-body bg-slate-50">
-          <PreviewProvider 
-            key={mode} /* Key by mode resets state upon switching modes */
-            mode={mode} 
-            initialSteps={[deferredStep]} 
-            caseData={caseData} 
-            isSingleStep={true}
+        <div className={`step-preview-modal-body bg-slate-50 ${isStale ? 'is-stale' : ''}`}>
+          <motion.div
+            animate={{ opacity: isStale ? 0.6 : 1 }}
+            transition={{ duration: 0.2 }}
           >
-            <SingleStepPreviewRunner />
-          </PreviewProvider>
+            <PreviewProvider 
+              key={mode} /* Key by mode resets state upon switching modes */
+              mode={mode} 
+              initialSteps={[deferredStep]} 
+              caseData={caseData} 
+              isSingleStep={true}
+            >
+              <SingleStepPreviewRunner />
+            </PreviewProvider>
+          </motion.div>
         </div>
         
         {/* Optional small helper text footer */}
