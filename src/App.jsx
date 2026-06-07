@@ -11,6 +11,7 @@ const CasesPage = lazy(() => import('./pages/CasesPage'))
 const CaseRunnerPage = lazy(() => import('./pages/CaseRunnerPage'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const CaseEditorPage = lazy(() => import('./pages/CaseEditorPage'))
+const CasePreviewPage = lazy(() => import('./pages/CasePreviewPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -230,6 +231,10 @@ function App() {
                 <Route
                   path="/admin/cases/:id/edit"
                   element={isAdmin ? <CaseEditorPage auth={auth} /> : <Navigate to="/" />}
+                />
+                <Route
+                  path="/admin/cases/:id/preview"
+                  element={isAdmin ? <CasePreviewPage auth={auth} /> : <Navigate to="/" />}
                 />
                 <Route
                   path="/profile"

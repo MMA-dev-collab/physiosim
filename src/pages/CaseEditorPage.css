@@ -144,3 +144,16 @@
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
 }
+
+/* Premium Preview Dropdown */
+.preview-dropdown-item {
+    transition: background-color 0.15s ease, color 0.15s ease;
+    border-radius: 6px;
+    margin: 2px 4px;
+    width: calc(100% - 8px) !important;
+}
+
+.preview-dropdown-item:hover {
+    background-color: #f1f5f9 !important;
+    color: #2563eb !important;
+}

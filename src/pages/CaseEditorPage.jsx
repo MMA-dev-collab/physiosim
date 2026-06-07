@@ -49,6 +49,7 @@ export default function CaseEditorPage({ auth }) {
     // Steps Data
     const [steps, setSteps] = useState([])
     const [editingStepId, setEditingStepId] = useState(null)
+    const [showPreviewDropdown, setShowPreviewDropdown] = useState(false)
 
     // Load Categories
     useEffect(() => {
@@ -494,7 +495,73 @@ export default function CaseEditorPage({ auth }) {
                     )}
                 </div>
                 {isEdit && (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        {/* Preview Dropdown */}
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                className="btn-secondary"
+                                onClick={() => setShowPreviewDropdown(!showPreviewDropdown)}
+                                disabled={steps.length === 0}
+                                title={steps.length === 0 ? 'Add steps first to preview' : ''}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.875rem' }}
+                            >
+                                👁 Preview Case <span style={{ fontSize: '0.65rem' }}>▼</span>
+                            </button>
+                            {showPreviewDropdown && (
+                                <div style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    marginTop: '0.5rem',
+                                    width: '180px',
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                    border: '1px solid #cbd5e1',
+                                    zIndex: 100,
+                                    padding: '0.25rem 0'
+                                }}>
+                                    <button
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: '8px 16px',
+                                            background: 'none',
+                                            border: 'none',
+                                            fontSize: '0.875rem',
+                                            color: '#334155',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => {
+                                            setShowPreviewDropdown(false);
+                                            window.open(`/admin/cases/${id}/preview?mode=preview-user`, '_blank');
+                                        }}
+                                        className="preview-dropdown-item"
+                                    >
+                                        👤 User Mode
+                                    </button>
+                                    <button
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: '8px 16px',
+                                            background: 'none',
+                                            border: 'none',
+                                            fontSize: '0.875rem',
+                                            color: '#334155',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => {
+                                            setShowPreviewDropdown(false);
+                                            window.open(`/admin/cases/${id}/preview?mode=preview-review`, '_blank');
+                                        }}
+                                        className="preview-dropdown-item"
+                                    >
+                                        👁 Review Mode
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         {caseData.status === 'draft' ? (
                             <button
                                 className="btn-primary"
@@ -729,6 +796,7 @@ export default function CaseEditorPage({ auth }) {
                     <div className="steps-section">
                         <ClinicalPhaseManager
                             caseId={id}
+                            caseData={caseData}
                             steps={steps}
                             onAddStep={handleAddStep}
                             onUpdateStep={handleUpdateStep}

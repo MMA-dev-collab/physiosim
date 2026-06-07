@@ -1,0 +1,190 @@
+/* StepPreviewModal.css */
+
+.step-preview-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.4); /* Elegant slate mask */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050; /* Above regular dialogs */
+  padding: 1.5rem;
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  animation: modal-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.step-preview-modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 900px;
+  height: 85vh;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-scale-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+@keyframes modal-scale-up {
+  from { transform: scale(0.95) translateY(10px); }
+  to { transform: scale(1) translateY(0); }
+}
+
+/* Modal Header */
+.step-preview-modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+
+.step-preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.step-preview-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  flex-shrink: 0;
+}
+
+.step-preview-header-left h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Header Actions */
+.step-preview-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Mode Switcher pill style */
+.step-preview-mode-selector {
+  display: flex;
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+}
+
+.step-preview-mode-selector .mode-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.step-preview-mode-selector .mode-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.step-preview-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.step-preview-close-btn:hover {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+/* Modal Body */
+.step-preview-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: #f8fafc;
+}
+
+.single-step-preview-content {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Modal Footer */
+.step-preview-modal-footer {
+  padding: 0.75rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-preview-modal-footer p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Scrollbar styling for modal body */
+.step-preview-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.step-preview-modal-body::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.step-preview-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.step-preview-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

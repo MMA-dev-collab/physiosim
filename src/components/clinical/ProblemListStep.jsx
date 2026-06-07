@@ -1,13 +1,10 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { X, Plus, Check, AlertCircle, ListChecks } from 'lucide-react'
 import { evaluateProblemList } from '@/utils/matchingUtils'
+import { usePreview } from '../../context/PreviewContext'
 
 /**
  * ProblemListStep — Interactive dynamic problem list with array‑based evaluation.
- *
- * Users add / remove problems. On submit the list is evaluated against the
- * admin‑defined expected problems using the matching utilities (front‑end).
- * The result is then optionally forwarded to the backend for logging.
  */
 export default function ProblemListStep({
   step,
@@ -17,54 +14,27 @@ export default function ProblemListStep({
   isReviewMode,
   initialValue
 }) {
-  // ─── Local state ──────────────────────────────────────────────────────────
-  // Use lazy initialisers so that if props are already populated on first render
-  // (e.g. after a page refresh that rehydrates from cache), state is correct
-  // immediately without needing an extra effect cycle.
-  const [items, setItems] = useState(() =>
-    initialValue?.problemListItems?.length ? initialValue.problemListItems : ['']
-  )
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const preview = usePreview()
+  const mode = preview?.mode || 'production'
+  const isPreview = mode !== 'production'
 
-  // "submitted" is only true when we have BOTH a numeric score AND saved items.
-  // Relying on essayScore alone caused a race: the score could arrive before
-  // items were hydrated, locking the form in a broken submitted state.
-  const [submitted, setSubmitted] = useState(() =>
-    essayScore !== null && essayScore !== undefined && !!initialValue?.problemListItems?.length
-  )
-  const [evalResult, setEvalResult] = useState(() => initialValue?.evalResult || null)
+  const currentEssayScore = isPreview
+    ? (mode === 'preview-review'
+        ? (step.maxScore || 10)
+        : (preview.scores[step.id]?.score ?? null))
+    : essayScore
 
-  // ─── Hydration effect ────────────────────────────────────────────────────────
-  // Re-runs whenever the parent provides a new `initialValue` (e.g. navigating
-  // back to this step in review mode). The `key={step.id}` prop on the parent
-  // already guarantees a fresh component instance per step, so there is no risk
-  // of an infinite loop — we simply don't need a one-shot guard here.
-  useEffect(() => {
-    if (!initialValue) return
+  const currentEssayFeedback = isPreview
+    ? (mode === 'preview-review'
+        ? 'Model answer provided for review.'
+        : (preview.feedback[step.id] || null))
+    : essayFeedback
 
-    if (initialValue.problemListItems?.length) {
-      setItems(initialValue.problemListItems)
-    }
-    if (initialValue.evalResult) {
-      setEvalResult(initialValue.evalResult)
-    }
-    // Lock as submitted only when BOTH the score AND saved items are present
-    // so the form is never disabled with an empty list.
-    if (
-      essayScore !== null &&
-      essayScore !== undefined &&
-      initialValue.problemListItems?.length
-    ) {
-      setSubmitted(true)
-    }
-  }, [initialValue, essayScore])
-
-  const isActuallySubmitted = submitted || isReviewMode
+  const currentIsReviewMode = isReviewMode || mode === 'preview-review'
 
   // ─── Expected problems from admin ─────────────
   const expectedProblems = useMemo(() => {
     const eqs = step?.essayQuestions || []
-    // Each essay question represents one expected problem
     return eqs.map(eq => ({
       label: eq.question_text || eq.question || (typeof eq === 'string' ? eq : ''),
       keywords: eq.keywords || [],
@@ -73,15 +43,72 @@ export default function ProblemListStep({
   }, [step])
   const maxScore = step?.maxScore || 10
 
-  // ─── Auto-evaluate on load ────────────────────
-  React.useEffect(() => {
-    if (isActuallySubmitted && !evalResult && items.length > 0) {
-      const filled = items.filter(i => i.trim().length > 0)
-      if (filled.length > 0) {
-        setEvalResult(evaluateProblemList(filled, expectedProblems, maxScore))
+  // ─── Local state ──────────────────────────────────────────────────────────
+  const [items, setItems] = useState(() => {
+    if (isPreview && mode === 'preview-review') {
+      const expected = expectedProblems.map(p => p.label)
+      return expected.length ? expected : ['']
+    }
+    return initialValue?.problemListItems?.length ? initialValue.problemListItems : ['']
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(() => {
+    if (isPreview) return mode === 'preview-review' ? true : (preview.scores[step.id]?.score !== undefined)
+    return essayScore !== null && essayScore !== undefined && !!initialValue?.problemListItems?.length
+  })
+  const [evalResult, setEvalResult] = useState(() => {
+    if (isPreview) {
+      if (mode === 'preview-review') {
+        const expected = expectedProblems.map(p => p.label)
+        return evaluateProblemList(expected, expectedProblems, maxScore)
+      }
+      return preview.answers[step.id]?.evalResult || null
+    }
+    return initialValue?.evalResult || null
+  })
+
+  // ─── Hydration effect ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isPreview) {
+      if (mode === 'preview-review') {
+        const expected = expectedProblems.map(p => p.label)
+        setItems(expected.length ? expected : [''])
+        setSubmitted(true)
+        setEvalResult(evaluateProblemList(expected, expectedProblems, maxScore))
+      } else {
+        const ad = preview.answers[step.id]
+        if (ad?.problemListItems) {
+          setItems(ad.problemListItems)
+          setSubmitted(true)
+        } else {
+          setItems([''])
+          setSubmitted(false)
+        }
+        if (ad?.evalResult) {
+          setEvalResult(ad.evalResult)
+        } else {
+          setEvalResult(null)
+        }
+      }
+    } else {
+      if (!initialValue) return
+      if (initialValue.problemListItems?.length) {
+        setItems(initialValue.problemListItems)
+      }
+      if (initialValue.evalResult) {
+        setEvalResult(initialValue.evalResult)
+      }
+      if (
+        essayScore !== null &&
+        essayScore !== undefined &&
+        initialValue.problemListItems?.length
+      ) {
+        setSubmitted(true)
       }
     }
-  }, [isActuallySubmitted, evalResult, items, expectedProblems, maxScore])
+  }, [initialValue, essayScore, isPreview, mode, step.id, expectedProblems, maxScore])
+
+  const isActuallySubmitted = submitted || currentIsReviewMode
 
   // ─── Item manipulation ────────────────────────
   const updateItem = useCallback((idx, value) => {
@@ -110,16 +137,22 @@ export default function ProblemListStep({
     setIsSubmitting(true)
 
     try {
-      // Run front‑end evaluation
       const result = evaluateProblemList(filledItems, expectedProblems, maxScore)
       setEvalResult(result)
 
-      // Forward to parent (which may optionally call backend)
-      await onSubmit({
-        essayAnswer: filledItems.join(', '),
-        problemListItems: filledItems,
-        evalResult: result
-      })
+      if (isPreview) {
+        preview.submitAnswer(step, {
+          essayAnswer: filledItems.join(', '),
+          problemListItems: filledItems,
+          evalResult: result
+        })
+      } else {
+        await onSubmit({
+          essayAnswer: filledItems.join(', '),
+          problemListItems: filledItems,
+          evalResult: result
+        })
+      }
 
       setSubmitted(true)
     } finally {
@@ -128,7 +161,7 @@ export default function ProblemListStep({
   }
 
   // Use evalResult for display, fall back to essayScore/feedback from backend
-  const displayScore = evalResult?.score ?? essayScore
+  const displayScore = evalResult?.score ?? currentEssayScore
   const isPassed = displayScore !== null && displayScore >= maxScore * 0.6
 
   return (
@@ -231,8 +264,8 @@ export default function ProblemListStep({
               Score: {displayScore} / {maxScore}
             </span>
           </div>
-          {essayFeedback && (
-            <p className="problem-list-step__feedback-text">{essayFeedback}</p>
+          {currentEssayFeedback && (
+            <p className="problem-list-step__feedback-text">{currentEssayFeedback}</p>
           )}
           {evalResult && (
             <div className="problem-list-step__result-details">

@@ -3,11 +3,13 @@ import { useToast } from '../context/ToastContext'
 import './StepEditor.css'
 import EmojiInput from './common/EmojiInput'
 import ImageUpload from './common/ImageUpload'
+import StepPreviewModal from './common/StepPreviewModal'
 
-export default function StepEditor({ step, onSave, onCancel }) {
+export default function StepEditor({ step, caseData, onSave, onCancel }) {
     const [editedStep, setEditedStep] = useState({ ...step })
     const [saving, setSaving] = useState(false)
     const [touched, setTouched] = useState({})
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false)
     const { toast } = useToast()
 
     const updateContent = (field, value) => {
@@ -199,7 +201,14 @@ export default function StepEditor({ step, onSave, onCancel }) {
             <div className="step-editor-header">
                 <h3>Edit {step.type.toUpperCase()} Step</h3>
                 <div className="header-actions">
-                    {/* Placeholder for future header-level buttons */}
+                    <button 
+                        type="button" 
+                        className="btn-secondary" 
+                        onClick={() => setIsPreviewOpen(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', padding: '0.35rem 0.75rem' }}
+                    >
+                        👁 Preview Step
+                    </button>
                 </div>
             </div>
 
@@ -242,6 +251,13 @@ export default function StepEditor({ step, onSave, onCancel }) {
                     {saving ? 'Saving...' : 'Save Step'}
                 </button>
             </div>
+            
+            <StepPreviewModal 
+                isOpen={isPreviewOpen} 
+                onClose={() => setIsPreviewOpen(false)} 
+                step={editedStep} 
+                caseData={caseData} 
+            />
         </div>
     )
 }

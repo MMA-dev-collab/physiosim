@@ -4,9 +4,10 @@ import { API_BASE_URL } from '../config'
 import Loader from '@/components/ui/loader-12'
 import { useIdleTimer } from '../hooks/useIdleTimer'
 import HintModal from '@/components/common/HintModal'
-import { ClinicalStepRunner } from '@/components/clinical'
+import { ClinicalStepRunner, StepRenderer } from '@/components/clinical'
 import ClinicalHub from '@/components/clinical/ClinicalHub'
 import CompositeAssessmentRunner from '@/components/clinical/CompositeAssessmentRunner'
+
 import McqStep from '@/components/clinical/McqStep'
 import EssayStep from '@/components/clinical/EssayStep'
 import DiagnosisStep from '@/components/clinical/DiagnosisStep'
@@ -365,161 +366,33 @@ function CaseRunnerPage({ auth }) {
 
   // The combined load effect now handles MCQ/Essay state reset on sub-step change
 
-  const renderStepContent = (step, hideHeader = false) => {
-    if (!step) return null
-
-    switch (step.type) {
-      case 'info':
-        return <PatientInfoStep content={step.content} />
-      case 'history':
-        return <HistoryStep step={step} />
-      case 'mcq':
-        return (
-          <McqStep
-            step={step}
-            selectedOption={selectedOption}
-            feedback={feedback}
-            isCorrect={isCorrect}
-            onAnswer={handleAnswer}
-          />
-        )
-      case 'essay':
-        return (
-          <EssayStep
-            step={step}
-            essayAnswer={essayAnswer}
-            setEssayAnswer={setEssayAnswer}
-            essayFeedback={essayFeedback}
-            essayScore={essayScore}
-            isReviewMode={caseData?.isCompleted}
-            onSubmit={handleEssaySubmit}
-          />
-        )
-      case 'diagnosis':
-        return (
-          <DiagnosisStep
-            step={step}
-            essayFeedback={essayFeedback}
-            essayScore={essayScore}
-            isReviewMode={caseData?.isCompleted}
-            initialValue={stepInitialData}
-            onSubmit={handleDiagnosisSubmit}
-          />
-        )
-      case 'problem_list':
-        return (
-          <ProblemListStep
-            key={step.id}
-            step={step}
-            essayFeedback={essayFeedback}
-            essayScore={essayScore}
-            isReviewMode={caseData?.isCompleted}
-            initialValue={stepInitialData}
-            onSubmit={handleProblemListSubmit}
-          />
-        )
-      case 'treatment':
-        return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
-      case 'investigation':
-        return <InvestigationsStep step={step} />
-      case 'clinical':
-        if (step.phase === 'case_overview') {
-          return (
-            <div className="animate-in fade-in duration-700 slide-in-from-bottom-6">
-               <h1 className="text-4xl font-black text-slate-900 mb-8 tracking-tight">
-                  {caseData.title}
-               </h1>
-               <PatientInfoStep content={{ 
-                  ...(caseData.patientData || {}), 
-                  patientImageUrl: caseData.patientData?.imageUrl,
-                  illustrationUrl: step.content?.imageUrl 
-               }} />
-            </div>
-          )
-        }
-        if (step.category === 'composite_history') {
-             return (
-               <div className="animate-in fade-in duration-500">
-                  {!hideHeader && <h2 className="text-3xl font-bold text-slate-800 mb-8">Subjective Data</h2>}
-                  <ClinicalStepRunner 
-                    step={step} 
-                    hideHeader={true} 
-                    watermarkEnabled={!!caseData?.watermarkEnabled} 
-                    mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
-                    essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
-                  />
-               </div>
-             )
-        }
-        if (step.content?.sections) {
-          return (
-            <CompositeAssessmentRunner 
-                step={step} 
-                mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
-                essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
-                hideHeader={hideHeader}
-                initialValue={stepInitialData}
-            />
-          )
-        }
-        // Interactive Diagnosis (phase-based clinical step)
-        if (step.phase === 'diagnosis') {
-          return (
-            <DiagnosisStep
-              step={step}
-              essayFeedback={essayFeedback}
-              essayScore={essayScore}
-              isReviewMode={caseData?.isCompleted}
-              initialValue={stepInitialData}
-              onSubmit={handleDiagnosisSubmit}
-            />
-          )
-        }
-        // Interactive Problem List (phase-based clinical step)
-        if (step.phase === 'problem_list') {
-          return (
-            <ProblemListStep
-              key={step.id}
-              step={step}
-              essayFeedback={essayFeedback}
-              essayScore={essayScore}
-              isReviewMode={caseData?.isCompleted}
-              initialValue={stepInitialData}
-              onSubmit={handleProblemListSubmit}
-            />
-          )
-        }
-        if (step.phase === 'treatment') {
-          return <TreatmentPlanStep step={step} hideHeader={hideHeader} />
-        }
-        if (step.phase === 'session_structure') {
-          return (
-             <SessionStructureRunner 
-                step={step}
-                notes={essayAnswer}
-                setNotes={setEssayAnswer}
-                onSubmit={async () => {
-                   if (essayAnswer) {
-                     // Optionally save the custom notes into progress payload
-                     await saveProgress({ session_notes: essayAnswer })
-                   }
-                   handleFinish(essayAnswer)
-                }}
-                isReviewMode={caseData?.isCompleted}
-             />
-          )
-        }
-        return (
-            <ClinicalStepRunner 
-                step={step} 
-                hideHeader={hideHeader} 
-                mcqProps={{ selectedOption, feedback, isCorrect, onAnswer: handleAnswer }}
-                essayProps={{ essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit: handleEssaySubmit, isReviewMode: caseData?.isCompleted }}
-            />
-        )
-      default:
-        return null
-    }
+  const renderStepContent = (stepToRender, hideHeader = false) => {
+    return (
+      <StepRenderer
+        step={stepToRender}
+        caseData={caseData}
+        hideHeader={hideHeader}
+        selectedOption={selectedOption}
+        feedback={feedback}
+        isCorrect={isCorrect}
+        onAnswer={handleAnswer}
+        essayAnswer={essayAnswer}
+        setEssayAnswer={setEssayAnswer}
+        essayFeedback={essayFeedback}
+        essayScore={essayScore}
+        onSubmit={handleEssaySubmit}
+        onDiagnosisSubmit={handleDiagnosisSubmit}
+        onProblemListSubmit={handleProblemListSubmit}
+        onSessionStructureSubmit={async () => {
+           if (essayAnswer) {
+             await saveProgress({ session_notes: essayAnswer })
+           }
+           handleFinish(essayAnswer)
+        }}
+        stepInitialData={stepInitialData}
+        isReviewMode={caseData.isCompleted}
+      />
+    )
   }
 
   const updateLocalProgress = (stepIdToUpdate, dataToMerge) => {
@@ -1088,249 +961,10 @@ function CaseRunnerPage({ auth }) {
           )}
         </div>
 
-
       </CaseRunnerLayout>
     </div>
   )
 }
-
-
-
-function PatientInfoStep({ content, watermarkEnabled = false }) {
-  if (!content) return null
-  return (
-    <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center mx-auto mt-4 px-4 h-full min-h-[500px] w-full max-w-[1200px]">
-      {/* Left: Patient Card */}
-      <div className="w-full lg:w-[40%] shrink-0 bg-white border border-slate-200 rounded-2xl p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-6">
-        <div>
-          <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-6">Patient Card</h3>
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-full bg-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
-               {content.patientImageUrl || content.imageUrl ? (
-                  <ImageWithWatermark src={content.patientImageUrl || content.imageUrl} alt="Avatar" className="w-full h-full object-cover" watermarkEnabled={watermarkEnabled} wrapperClassName="w-full h-full" />
-               ) : (
-                 <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xl">
-                   {(content.patientName || 'P').charAt(0).toUpperCase()}
-                 </div>
-               )}
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[#1e293b] font-semibold text-lg leading-none">{content.patientName || 'Patient'}</span>
-              <span className="text-slate-600 font-medium text-[15px] leading-none">
-                {content.gender}{content.gender && content.age ? ', ' : ''}{content.age ? `${content.age} years old` : ''}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {content.chiefComplaint && (
-          <div className="mt-4">
-            <h3 className="text-[#1e293b] font-bold uppercase tracking-widest text-sm mb-4">Chief Complaint</h3>
-            <div className="border border-slate-200 rounded-xl p-6 bg-white text-right text-slate-800 text-[19px] leading-relaxed shadow-sm font-semibold" dir="rtl">
-              {content.chiefComplaint}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Right: Main Image */}
-      <div className="w-full lg:w-[60%] flex shrink-0 rounded-2xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-200 bg-white min-h-[400px]">
-         {content.illustrationUrl || content.imageUrl ? (
-            <ImageWithWatermark src={content.illustrationUrl || content.imageUrl} alt="Case Illustration" className="w-full h-full object-cover" watermarkEnabled={watermarkEnabled} wrapperClassName="w-full h-full" />
-         ) : (
-            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400 font-medium">
-               Image / Diagram
-            </div>
-         )}
-      </div>
-    </div>
-  )
-}
-
-
-function HistoryStep({ step }) {
-  const questions = step.content?.questions || []
-
-  return (
-    <div className="history-step">
-      <div className="section-title" style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>
-        {step.content?.title || 'History of Pain'}
-      </div>
-      <p className="section-description" style={{ color: 'var(--cf-text-muted)', marginBottom: '32px' }}>
-        {step.content?.description || 'Questions you should ask and patient answers'}
-      </p>
-      <div className="history-questions space-y-4">
-        {questions.map((q, index) => (
-          <div key={index} className="history-section-box">
-             <div className="flex items-start gap-4">
-               <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg shadow-sm">
-                 {q.icon || '❓'}
-               </div>
-               <div className="flex-1">
-                 <div className="history-section-title" style={{ fontSize: '15px', color: 'var(--cf-text-muted)', marginBottom: '4px' }}>Question {index + 1}</div>
-                 <div className="history-section-content" style={{ fontSize: '17px', fontWeight: '600', marginBottom: '16px' }}>{q.question}</div>
-                 
-                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Patient Answer</div>
-                    <div className="text-slate-800 font-medium">{q.answer}</div>
-                 </div>
-               </div>
-             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function InvestigationsStep({ step, watermarkEnabled = false }) {
-  const groupedTests = {}
-  step.investigations?.forEach((inv) => {
-    if (!groupedTests[inv.groupLabel]) {
-      groupedTests[inv.groupLabel] = []
-    }
-    groupedTests[inv.groupLabel].push(inv)
-  })
-
-  const getYouTubeThumbnail = (url) => {
-    if (!url) return null
-    let videoId = ''
-    try {
-      const raw = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/)
-      if (raw[2] !== undefined) {
-        videoId = raw[2].split(/[^0-9a-z_\-]/i)[0]
-      } else {
-        videoId = raw[0]
-      }
-    } catch (e) {
-      return null
-    }
-    if (!videoId || videoId.includes('http')) return null
-    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-  }
-
-  return (
-    <div className="investigations-step">
-      <div className="section-title" style={{ marginBottom: '0.5rem' }}>
-        Investigations
-      </div>
-      <p className="section-description" style={{ marginBottom: '1.5rem' }}>
-        Investigations you should consider and patient-friendly explanations
-      </p>
-
-      <div className="investigations-sections">
-        {Object.entries(groupedTests).map(([groupLabel, tests]) => (
-          <div key={groupLabel} className="investigation-section">
-            <div className="investigation-section-title">
-              <span>📋</span> {groupLabel}
-            </div>
-            <div className="investigation-tests-grid">
-              {tests.map((inv) => {
-                const isPositive = inv.result?.toLowerCase().includes('positive')
-                const isNegative = inv.result?.toLowerCase().includes('negative')
-
-                return (
-                  <div key={inv.id} className="investigation-test-card">
-                    <div className="investigation-test-header">
-                      <div className="investigation-test-name">{inv.testName}</div>
-                      <div className={`investigation-result ${isPositive ? 'positive' : isNegative ? 'negative' : ''}`}>
-                        {isPositive ? '✓' : isNegative ? '✗' : ''}
-                      </div>
-                    </div>
-                    <div className="investigation-test-description">{inv.description}</div>
-                    {inv.result && (
-                      <div className="investigation-test-result">
-                        Result: <strong>{inv.result}</strong>
-                      </div>
-                    )}
-                    {inv.videoUrl && (
-                      <div 
-                        className="investigation-video-container group cursor-pointer" 
-                        onClick={() => window.open(inv.videoUrl, '_blank')}
-                      >
-                        {getYouTubeThumbnail(inv.videoUrl) ? (
-                          <img
-                            src={getYouTubeThumbnail(inv.videoUrl)}
-                            alt={inv.testName}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="video-placeholder bg-slate-200 flex items-center justify-center text-slate-400 font-medium">
-                            Watch Video
-                          </div>
-                        )}
-                        <div className="video-overlay absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition-colors pointer-events-none">
-                          <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300">
-                            <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {step.xrays && step.xrays.length > 0 && (
-        <div className="xray-section" style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e5e7eb' }}>
-          <div className="section-title" style={{ marginBottom: '1rem' }}>X-ray Findings</div>
-          <div className="xray-findings-grid">
-            {step.xrays.map((x) => {
-              const hasImage = x.imageUrl && x.imageUrl.trim() !== '';
-
-              return (
-                <div key={x.id} className="xray-finding-card">
-                  {hasImage ? (
-                    <ImageWithWatermark
-                      src={x.imageUrl}
-                      alt={x.label}
-                      className="xray-image"
-                      watermarkEnabled={false}
-                      wrapperClassName="xray-image-wrapper"
-                      onError={(e) => {
-                        console.error('Failed to load X-ray image:', {
-                          label: x.label,
-                          imageUrl: x.imageUrl?.substring(0, 100),
-                          fullUrl: x.imageUrl
-                        });
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '100%',
-                      height: '150px',
-                      backgroundColor: '#f3f4f6',
-                      borderRadius: '0.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '0.75rem',
-                      color: '#9ca3af',
-                      fontSize: '0.85rem'
-                    }}>
-                      No image
-                    </div>
-                  )}
-                  <div className="xray-finding-label">
-                    {x.icon && <span>{x.icon} </span>}
-                    {x.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 
 export default CaseRunnerPage
 

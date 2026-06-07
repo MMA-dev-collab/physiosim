@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { usePreview } from '../../context/PreviewContext'
 
 export default function McqStep({ step, selectedOption, feedback, isCorrect, onAnswer, isReviewMode }) {
+  const preview = usePreview()
+  const mode = preview?.mode || 'production'
+  const isPreview = mode !== 'production'
+
+  const currentSelectedOption = isPreview
+    ? (mode === 'preview-review'
+        ? ((step.options || []).find(o => o.isCorrect)?.id || null)
+        : (preview.answers[step.id]?.selectedOptionId || null))
+    : selectedOption
+
+  const currentIsCorrect = isPreview
+    ? (mode === 'preview-review'
+        ? true
+        : (preview.scores[step.id]?.isCorrect ?? null))
+    : isCorrect
+
+  const currentFeedback = isPreview
+    ? (mode === 'preview-review'
+        ? ((step.options || []).find(o => o.isCorrect)?.feedback || null)
+        : (preview.feedback[step.id] || null))
+    : feedback
+
+  const currentIsReviewMode = isReviewMode || mode === 'preview-review'
+
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [localSelection, setLocalSelection] = useState(null)
   const [hintVisible, setHintVisible] = useState(false)
@@ -12,7 +37,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
   }
 
   const handleOptionClick = (optionId) => {
-    if (isReviewMode) return
+    if (currentIsReviewMode) return
     if (!isSubmitted) {
       setLocalSelection(optionId)
     }
@@ -21,22 +46,26 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
   const handleSubmit = () => {
     if (localSelection && !isSubmitted) {
       setIsSubmitted(true)
-      onAnswer(localSelection)
+      if (isPreview) {
+        preview.submitAnswer(step, localSelection)
+      } else {
+        onAnswer(localSelection)
+      }
     }
   }
 
   // Reset or restore submission state when step changes or when retry/load happens
   useEffect(() => {
     setHintVisible(false)
-    if (selectedOption) {
+    if (currentSelectedOption) {
       // Restoring from saved progress — mark as already submitted
-      setLocalSelection(selectedOption)
+      setLocalSelection(currentSelectedOption)
       setIsSubmitted(true)
     } else {
       setIsSubmitted(false)
       setLocalSelection(null)
     }
-  }, [selectedOption])
+  }, [currentSelectedOption])
 
   const hints = step.content?.hints || step.hints || (step.hint_text ? [{ text: step.hint_text, delaySeconds: step.expected_time || 0 }] : (step.hint ? [{ text: step.hint, delaySeconds: step.hintDelaySeconds || 0 }] : []))
   const [visibleHints, setVisibleHints] = useState([])
@@ -48,7 +77,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
     const timeouts = []
 
     // Only set up hint timers if not submitted and not in review mode
-    if (!isSubmitted && !isReviewMode) {
+    if (!isSubmitted && !currentIsReviewMode) {
       hints.forEach((hint, idx) => {
         const delay = hint.delaySeconds || 0
         if (delay > 0) {
@@ -71,17 +100,17 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
     }
 
     return () => timeouts.forEach(clearTimeout)
-  }, [step.id, JSON.stringify(hints), isSubmitted, isReviewMode])
+  }, [step.id, JSON.stringify(hints), isSubmitted, currentIsReviewMode])
 
   // Show all hints immediately on wrong answer
   useEffect(() => {
-    if (isCorrect === false) {
+    if (currentIsCorrect === false) {
       setVisibleHints(new Array(hints.length).fill(true))
     }
-  }, [isCorrect, hints.length])
+  }, [currentIsCorrect, hints.length])
 
   // Determine which selection to show: submitted answer or local selection
-  const displaySelection = isReviewMode ? selectedOption : (isSubmitted ? (selectedOption || localSelection) : localSelection)
+  const displaySelection = currentIsReviewMode ? currentSelectedOption : (isSubmitted ? (currentSelectedOption || localSelection) : localSelection)
 
   return (
     <div className="relative w-full">
@@ -94,10 +123,10 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             const isSelected = displaySelection === opt.id
             let statusClass = ''
 
-            if (isSelected && (isSubmitted || isReviewMode)) {
-              if (isCorrect === false) {
+            if (isSelected && (isSubmitted || currentIsReviewMode)) {
+              if (currentIsCorrect === false) {
                 statusClass = ' wrong'
-              } else if (isCorrect === true) {
+              } else if (currentIsCorrect === true) {
                 statusClass = ' correct'
               }
             }
@@ -108,7 +137,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
                 type="button"
                 className={`mcq-option-card${opt.imageUrl ? ' mcq-rich-card' : ''}${statusClass}${isSelected ? ' selected' : ''}`}
                 onClick={() => handleOptionClick(opt.id)}
-                disabled={isSubmitted || isReviewMode}
+                disabled={isSubmitted || currentIsReviewMode}
               >
                 {opt.imageUrl ? (
                    <div className="mcq-rich-content">
@@ -143,7 +172,7 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             )
           })}
         </div>
-        {!isSubmitted && !isReviewMode && (
+        {!isSubmitted && !currentIsReviewMode && (
           <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
             <button
               className="cf-btn cf-btn-primary"
@@ -154,25 +183,25 @@ export default function McqStep({ step, selectedOption, feedback, isCorrect, onA
             </button>
           </div>
         )}
-        {(isSubmitted || isReviewMode) && isCorrect !== undefined && isCorrect !== null && (
+        {(isSubmitted || currentIsReviewMode) && currentIsCorrect !== undefined && currentIsCorrect !== null && (
           <div className={`mt-6 p-3.5 rounded-lg flex items-center gap-3 ${
-            isCorrect ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
+            currentIsCorrect ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
           }`}>
             <div className={`w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0 ${
-              isCorrect ? 'text-[#10b981]' : 'text-[#ef4444]'
+              currentIsCorrect ? 'text-[#10b981]' : 'text-[#ef4444]'
             }`}>
-              {isCorrect ? (
+              {currentIsCorrect ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               ) : (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               )}
             </div>
             <span className="text-[1.05rem] font-medium">
-              {isCorrect ? 'Correct Answer' : 'Incorrect Answer'}
+              {currentIsCorrect ? 'Correct Answer' : 'Incorrect Answer'}
             </span>
           </div>
         )}
-        {feedback && <div className={`mcq-feedback mt-4${isCorrect ? ' mcq-feedback-correct' : ''}`}>{feedback}</div>}
+        {currentFeedback && <div className={`mcq-feedback mt-4${currentIsCorrect ? ' mcq-feedback-correct' : ''}`}>{currentFeedback}</div>}
       </div>
 
       {hints.length > 0 && (

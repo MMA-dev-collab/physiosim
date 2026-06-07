@@ -11,6 +11,7 @@ import './ClinicalPhaseManager.css'
  */
 export default function ClinicalPhaseManager({
     caseId,
+    caseData,
     steps,
     onAddStep,
     onUpdateStep,
@@ -416,6 +417,7 @@ export default function ClinicalPhaseManager({
                                                                     <ClinicalStepEditor
                                                                         step={existingStep}
                                                                         allSteps={steps}
+                                                                        caseData={caseData}
                                                                         onSave={handleStepSave}
                                                                         onCancel={() => setEditingStepId(null)}
                                                                     />
@@ -499,6 +501,7 @@ export default function ClinicalPhaseManager({
                                                         <div className="category-editor-wrapper" style={{ width: '100%' }}>
                                                             <ClinicalStepEditor
                                                                 step={cStep}
+                                                                caseData={caseData}
                                                                 onSave={handleStepSave}
                                                                 onCancel={() => setEditingStepId(null)}
                                                             />
@@ -582,6 +585,7 @@ export default function ClinicalPhaseManager({
                                             <div className="category-editor-wrapper">
                                                 <StepEditor
                                                     step={step}
+                                                    caseData={caseData}
                                                     onSave={handleStepSave}
                                                     onCancel={() => setEditingStepId(null)}
                                                 />

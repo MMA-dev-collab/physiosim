@@ -7,16 +7,18 @@ import { AssessmentPhaseEditor } from './AssessmentPhaseEditor'
 import CompositeAssessmentEditor from './CompositeAssessmentEditor'
 import { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor, SessionStructureEditor } from './ClinicalPhaseEditors'
 import ImageUpload from '../common/ImageUpload'
+import StepPreviewModal from '../common/StepPreviewModal'
 import './PhaseEditors.css'
 
 /**
  * ClinicalStepEditor - Unified wrapper for all clinical phase editors
  * Routes to the correct phase editor based on step.phase and step.category
  */
-export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel }) {
+export default function ClinicalStepEditor({ step, allSteps, caseData, onSave, onCancel }) {
     const [editedStep, setEditedStep] = useState({ ...step })
     const [saving, setSaving] = useState(false)
     const [touched, setTouched] = useState({})
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false)
     const { toast } = useToast()
 
     const handleStepUpdate = (updatedStep) => {
@@ -179,10 +181,18 @@ export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel })
                     </span>
                     <h3>{categoryInfo?.label || editedStep.category}</h3>
                 </div>
-                <div className="header-meta">
+                <div className="header-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     {categoryInfo?.inputMode === 'user_input' && (
                         <span className="input-mode-badge user">User Input</span>
                     )}
+                    <button 
+                        type="button" 
+                        className="btn-secondary" 
+                        onClick={() => setIsPreviewOpen(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', padding: '0.35rem 0.75rem' }}
+                    >
+                        👁 Preview Step
+                    </button>
                 </div>
             </div>
 
@@ -216,6 +226,13 @@ export default function ClinicalStepEditor({ step, allSteps, onSave, onCancel })
                     {saving ? 'Saving...' : 'Save Step'}
                 </button>
             </div>
+
+            <StepPreviewModal 
+                isOpen={isPreviewOpen} 
+                onClose={() => setIsPreviewOpen(false)} 
+                step={editedStep} 
+                caseData={caseData} 
+            />
         </div>
     )
 }

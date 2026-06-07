@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { usePreview } from '../../context/PreviewContext'
 
 export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeedback, essayScore, onSubmit, isReviewMode }) {
+  const preview = usePreview()
+  const mode = preview?.mode || 'production'
+  const isPreview = mode !== 'production'
+
+  const currentEssayAnswer = isPreview
+    ? (mode === 'preview-review'
+        ? (step.essayQuestions?.[0]?.perfect_answer || step.perfect_answer || '')
+        : (preview.answers[step.id]?.essayAnswer || ''))
+    : essayAnswer
+
+  const currentEssayFeedback = isPreview
+    ? (mode === 'preview-review'
+        ? 'Model answer provided for review.'
+        : (preview.feedback[step.id] || null))
+    : essayFeedback
+
+  const currentEssayScore = isPreview
+    ? (mode === 'preview-review'
+        ? (step.maxScore || 10)
+        : (preview.scores[step.id]?.score ?? null))
+    : essayScore
+
+  const currentIsReviewMode = isReviewMode || mode === 'preview-review'
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hintVisible, setHintVisible] = useState(false)
 
@@ -14,10 +39,10 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
     setVisibleHints(new Array(hints.length).fill(false))
     const timeouts = []
 
-    const isSubmitted = essayScore !== null && essayScore !== undefined
+    const isSubmitted = currentEssayScore !== null && currentEssayScore !== undefined
 
     // Only set up hint timers if not submitted and not in review mode
-    if (!isSubmitted && !isReviewMode) {
+    if (!isSubmitted && !currentIsReviewMode) {
       hints.forEach((hint, idx) => {
         const delay = hint.delaySeconds || 0
         if (delay > 0) {
@@ -40,21 +65,25 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
     }
 
     return () => timeouts.forEach(clearTimeout)
-  }, [step.id, JSON.stringify(hints), essayScore, isReviewMode])
+  }, [step.id, JSON.stringify(hints), currentEssayScore, currentIsReviewMode])
 
   // Show all hints immediately on low score (< 60%)
   useEffect(() => {
-    if (essayScore !== null && essayScore !== undefined) {
+    if (currentEssayScore !== null && currentEssayScore !== undefined) {
       const maxScore = step.maxScore || 10
-      if (essayScore < maxScore * 0.6) {
+      if (currentEssayScore < maxScore * 0.6) {
         setVisibleHints(new Array(hints.length).fill(true))
       }
     }
-  }, [essayScore, step.maxScore, hints.length])
+  }, [currentEssayScore, step.maxScore, hints.length])
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
-    await onSubmit()
+    if (isPreview) {
+      await preview.submitAnswer(step, currentEssayAnswer)
+    } else {
+      await onSubmit()
+    }
     setIsSubmitting(false)
   }
 
@@ -89,7 +118,7 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
               </div>
             </div>
 
-            {isReviewMode ? (
+            {currentIsReviewMode ? (
               <div style={{
                 padding: '1.5rem',
                 borderRadius: '12px',
@@ -114,16 +143,22 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
                   whiteSpace: 'pre-wrap',
                   fontSize: '0.95rem'
                 }}>
-                  {essayAnswer || <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>No answer submitted.</span>}
+                  {currentEssayAnswer || <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>No answer submitted.</span>}
                 </div>
               </div>
             ) : (
                 <textarea
-                  value={essayAnswer}
-                  onChange={(e) => setEssayAnswer(e.target.value)}
+                  value={currentEssayAnswer}
+                  onChange={(e) => {
+                    if (isPreview) {
+                      preview.updateDraftAnswer(step.id, e.target.value)
+                    } else {
+                      setEssayAnswer(e.target.value)
+                    }
+                  }}
                   rows={10}
                   placeholder={eq.placeholder || step.placeholder || "Enter your answer here..."}
-                  disabled={essayScore !== null}
+                  disabled={currentEssayScore !== null}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -134,34 +169,34 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
                     lineHeight: '1.6',
                     resize: 'vertical',
                     minHeight: '200px',
-                    opacity: essayScore !== null ? 0.6 : 1,
-                    cursor: essayScore !== null ? 'not-allowed' : 'text'
+                    opacity: currentEssayScore !== null ? 0.6 : 1,
+                    cursor: currentEssayScore !== null ? 'not-allowed' : 'text'
                   }}
                 />
             )}
           </div>
         ))}
 
-        {essayScore === null && !isReviewMode && (
+        {currentEssayScore === null && !currentIsReviewMode && (
           <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
             <button
               className="cf-btn cf-btn-primary"
               
               onClick={handleSubmit}
-              disabled={!essayAnswer || essayAnswer.trim().length === 0 || isSubmitting}
+              disabled={!currentEssayAnswer || currentEssayAnswer.trim().length === 0 || isSubmitting}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Answer'}
             </button>
           </div>
         )}
 
-        {essayFeedback && (
+        {currentEssayFeedback && (
           <div style={{
             marginTop: '1.5rem',
             padding: '1.5rem',
             borderRadius: '12px',
-            background: essayScore >= ((step.maxScore || 10) * 0.6) ? '#f0fdf4' : '#fef2f2',
-            border: `2px solid ${essayScore >= ((step.maxScore || 10) * 0.6) ? '#86efac' : '#fca5a5'}`,
+            background: currentEssayScore >= ((step.maxScore || 10) * 0.6) ? '#f0fdf4' : '#fef2f2',
+            border: `2px solid ${currentEssayScore >= ((step.maxScore || 10) * 0.6) ? '#86efac' : '#fca5a5'}`,
           }}>
             <div style={{
               display: 'flex',
@@ -170,23 +205,23 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
               marginBottom: '1rem',
               fontSize: '1.1rem',
               fontWeight: 600,
-              color: essayScore >= ((step.maxScore || 10) * 0.6) ? '#166534' : '#991b1b'
+              color: currentEssayScore >= ((step.maxScore || 10) * 0.6) ? '#166534' : '#991b1b'
             }}>
               <span style={{ fontSize: '1.5rem' }}>
-                {essayScore >= ((step.maxScore || 10) * 0.6) ? '✓' : '⚠️'}
+                {currentEssayScore >= ((step.maxScore || 10) * 0.6) ? '✓' : '⚠️'}
               </span>
-              Score: {essayScore} / {(step.maxScore || 10)}
+              Score: {currentEssayScore} / {(step.maxScore || 10)}
             </div>
             <div style={{
-              color: essayScore >= ((step.maxScore || 10) * 0.6) ? '#166534' : '#991b1b',
+              color: currentEssayScore >= ((step.maxScore || 10) * 0.6) ? '#166534' : '#991b1b',
               lineHeight: '1.6'
             }}>
-              {essayFeedback}
+              {currentEssayFeedback}
             </div>
           </div>
         )}
 
-        {(essayScore !== null || isReviewMode) && essayQuestions.length > 0 && essayQuestions[0].perfect_answer && (
+        {(currentEssayScore !== null || currentIsReviewMode) && essayQuestions.length > 0 && essayQuestions[0].perfect_answer && (
           <div style={{
             marginTop: '1.5rem',
             padding: '1.5rem',

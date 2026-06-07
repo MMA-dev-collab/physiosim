@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { X, Plus, ChevronRight, Check, AlertCircle, Sparkles } from 'lucide-react'
 import { matchKeywords } from '@/utils/matchingUtils'
+import { usePreview } from '../../context/PreviewContext'
 
 /**
  * DiagnosisStep — Interactive structured diagnosis builder.
@@ -20,32 +21,80 @@ export default function DiagnosisStep({
   isReviewMode,
   initialValue
 }) {
+  const preview = usePreview()
+  const mode = preview?.mode || 'production'
+  const isPreview = mode !== 'production'
+
+  const currentEssayScore = isPreview
+    ? (mode === 'preview-review'
+        ? (step.maxScore || 10)
+        : (preview.scores[step.id]?.score ?? null))
+    : essayScore
+
+  const currentEssayFeedback = isPreview
+    ? (mode === 'preview-review'
+        ? 'Model answer provided for review.'
+        : (preview.feedback[step.id] || null))
+    : essayFeedback
+
+  const currentIsReviewMode = isReviewMode || mode === 'preview-review'
+
   // ─── Local state ──────────────────────────────
-  const [condition, setCondition] = useState(initialValue?.structuredAnswer?.condition || '')
-  const [levels, setLevels] = useState(initialValue?.structuredAnswer?.levels || [])
-  const [findings, setFindings] = useState(initialValue?.structuredAnswer?.findings || [])
+  const [condition, setCondition] = useState(() => {
+    if (isPreview && mode === 'preview-review') return step?.essayQuestions?.[0]?.perfect_answer || step?.perfect_answer || ''
+    return initialValue?.structuredAnswer?.condition || ''
+  })
+  const [levels, setLevels] = useState(() => initialValue?.structuredAnswer?.levels || [])
+  const [findings, setFindings] = useState(() => initialValue?.structuredAnswer?.findings || [])
   const [levelInput, setLevelInput] = useState('')
   const [findingInput, setFindingInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(essayScore !== null)
+  const [submitted, setSubmitted] = useState(() => {
+    if (isPreview) return mode === 'preview-review' ? true : (preview.scores[step.id]?.score !== undefined)
+    return essayScore !== null
+  })
 
   // ─── Re-hydrate from initialValue when it changes (navigation/refresh) ────
   useEffect(() => {
-    if (initialValue?.structuredAnswer) {
-      setCondition(initialValue.structuredAnswer.condition || '')
-      setLevels(initialValue.structuredAnswer.levels || [])
-      setFindings(initialValue.structuredAnswer.findings || [])
+    if (isPreview) {
+      if (mode === 'preview-review') {
+        setCondition(step?.essayQuestions?.[0]?.perfect_answer || step?.perfect_answer || '')
+        setLevels([])
+        setFindings([])
+        setSubmitted(true)
+      } else {
+        const ad = preview.answers[step.id]
+        if (ad?.structuredAnswer) {
+          setCondition(ad.structuredAnswer.condition || '')
+          setLevels(ad.structuredAnswer.levels || [])
+          setFindings(ad.structuredAnswer.findings || [])
+          setSubmitted(true)
+        } else {
+          setCondition('')
+          setLevels([])
+          setFindings([])
+          setSubmitted(false)
+        }
+      }
+    } else {
+      if (initialValue?.structuredAnswer) {
+        setCondition(initialValue.structuredAnswer.condition || '')
+        setLevels(initialValue.structuredAnswer.levels || [])
+        setFindings(initialValue.structuredAnswer.findings || [])
+      }
     }
-  }, [initialValue])
+  }, [initialValue, isPreview, mode, step.id])
 
   // ─── Sync submitted state with essayScore ────
   useEffect(() => {
-    if (essayScore !== null && essayScore !== undefined) {
-      setSubmitted(true)
+    if (!isPreview) {
+      if (essayScore !== null && essayScore !== undefined) {
+        setSubmitted(true)
+      }
     }
-  }, [essayScore])
+  }, [essayScore, isPreview])
 
-  const isActuallySubmitted = submitted || isReviewMode
+  const isActuallySubmitted = submitted || currentIsReviewMode
 
   // ─── Derive expected data from step.essayQuestions ────
   const expectedData = useMemo(() => {
@@ -104,10 +153,17 @@ export default function DiagnosisStep({
     if (!generatedSentence || isSubmitting) return
     setIsSubmitting(true)
     try {
-      await onSubmit({
-        essayAnswer: generatedSentence,
-        structuredAnswer: { condition, levels, findings }
-      })
+      if (isPreview) {
+        preview.submitAnswer(step, {
+          essayAnswer: generatedSentence,
+          structuredAnswer: { condition, levels, findings }
+        })
+      } else {
+        await onSubmit({
+          essayAnswer: generatedSentence,
+          structuredAnswer: { condition, levels, findings }
+        })
+      }
       setSubmitted(true)
     } finally {
       setIsSubmitting(false)
@@ -121,7 +177,7 @@ export default function DiagnosisStep({
   }, [isActuallySubmitted, generatedSentence, expectedData])
 
   const maxScore = step?.maxScore || 10
-  const isPassed = essayScore !== null && essayScore >= maxScore * 0.6
+  const isPassed = currentEssayScore !== null && currentEssayScore >= maxScore * 0.6
 
   // ─── Is form valid? (for external isStepCompleted) ────
   const isValid = condition.trim().length > 0 && levels.length > 0
@@ -281,19 +337,19 @@ export default function DiagnosisStep({
       )}
 
       {/* Score Feedback */}
-      {essayScore !== null && (
+      {currentEssayScore !== null && (
         <div className={`diagnosis-step__feedback ${isPassed ? 'diagnosis-step__feedback--pass' : 'diagnosis-step__feedback--fail'}`}>
           <div className="diagnosis-step__feedback-header">
             <span className="diagnosis-step__feedback-icon">
               {isPassed ? <Check size={22} /> : <AlertCircle size={22} />}
             </span>
             <span className="diagnosis-step__feedback-score">
-              Score: {essayScore} / {maxScore}
+              Score: {currentEssayScore} / {maxScore}
             </span>
           </div>
-          {essayFeedback && (
+          {currentEssayFeedback && (
             <div className="diagnosis-step__feedback-body">
-              {essayFeedback}
+              {currentEssayFeedback}
             </div>
           )}
           {matchResults && (

@@ -7,3 +7,5 @@ export { DiagnosisPhaseEditor, ProblemPhaseEditor, TreatmentPhaseEditor } from '
 export { ClinicalStepEditor } from './ClinicalStepEditor'
 export { default as ClinicalPhaseManager } from './ClinicalPhaseManager'
 export { default as ClinicalStepRunner } from './ClinicalStepRunner'
+export { default as StepRenderer } from './StepRenderer'
+
