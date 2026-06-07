@@ -274,7 +274,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                                     return (
                                         <div className="space-y-3">
                                             {entries.map((entry, i) => (
-                                                <div key={i} className="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-[1fr_auto] md:grid-cols-[1.5fr_200px_2fr] gap-4 items-start">
+                                                <div key={i} className={`bg-white border border-slate-100 shadow-sm rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-[1fr_200px] ${hasAnyNotes ? 'md:grid-cols-[1.5fr_200px_2fr]' : 'md:grid-cols-[1fr_200px]'} gap-4 items-start`}>
                                                     {/* Level */}
                                                     <div className="min-w-0">
                                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Level</span>
@@ -284,7 +284,7 @@ export default function ClinicalStepRunner({ step, hideHeader = false }) {
                                                     </div>
                                                     
                                                     {/* Status */}
-                                                    <div className="min-w-0">
+                                                    <div className={`min-w-0 ${!hasAnyNotes ? 'sm:text-right' : ''}`}>
                                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{data.status_title || 'Status'}</span>
                                                         <span className={`px-5 py-2 rounded-full text-[13px] font-black uppercase tracking-wider shadow-sm inline-block ${getStatusBadgeClass(entry.status_value)}`}>
                                                             {getStatusLabel(entry.status_value)}

@@ -44,10 +44,19 @@ function CasesPage({ auth }) {
       setLoading(true)
       setError(null)
       try {
-        // Load cases with pagination and filters
-        const headers = {
-          'ngrok-skip-browser-warning': 'true'
+        // --- SPRINT CUSTOMIZATION: Session-based progress isolation ---
+        // Pass sessionId so isCompleted status is per-browser, not per-account.
+        // REVERT: Remove the sessionId logic and X-Session-Id header.
+        let sessionId = localStorage.getItem('physiosim_session_id')
+        if (!sessionId) {
+          sessionId = crypto.randomUUID()
+          localStorage.setItem('physiosim_session_id', sessionId)
         }
+        const headers = {
+          'ngrok-skip-browser-warning': 'true',
+          'X-Session-Id': sessionId
+        }
+        // --- END SPRINT CUSTOMIZATION ---
         if (auth?.token) {
           headers.Authorization = `Bearer ${auth.token}`
         }

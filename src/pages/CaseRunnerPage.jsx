@@ -19,6 +19,20 @@ import ImageWithWatermark from '@/components/common/ImageWithWatermark'
 function CaseRunnerPage({ auth }) {
   const { id } = useParams()
   const navigate = useNavigate()
+
+  // --- SPRINT CUSTOMIZATION: Session-based progress isolation ---
+  // Generate a persistent browser-specific session ID (UUID) stored in localStorage.
+  // This allows multiple users on the same account to have separate progress tracks.
+  // REVERT: Remove this block and remove all 'X-Session-Id' headers from fetch calls.
+  const sessionId = useMemo(() => {
+    let sid = localStorage.getItem('physiosim_session_id')
+    if (!sid) {
+      sid = crypto.randomUUID()
+      localStorage.setItem('physiosim_session_id', sid)
+    }
+    return sid
+  }, [])
+  // --- END SPRINT CUSTOMIZATION ---
   const [caseData, setCaseData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -72,7 +86,8 @@ function CaseRunnerPage({ auth }) {
         const res = await fetch(`${API_BASE_URL}/api/cases/${id}`, {
           headers: {
             Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
+            'ngrok-skip-browser-warning': 'true',
+            'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
           },
         })
         if (!res.ok) {
@@ -544,7 +559,8 @@ function CaseRunnerPage({ auth }) {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
+            'ngrok-skip-browser-warning': 'true',
+            'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
           },
           body: JSON.stringify({
             essayAnswer,
@@ -605,7 +621,8 @@ function CaseRunnerPage({ auth }) {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
+            'ngrok-skip-browser-warning': 'true',
+            'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
           },
           body: JSON.stringify({
             essayAnswer: genSentence,
@@ -663,7 +680,8 @@ function CaseRunnerPage({ auth }) {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
+            'ngrok-skip-browser-warning': 'true',
+            'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
           },
           body: JSON.stringify({
             essayAnswer: joinedAnswer,
@@ -709,7 +727,8 @@ function CaseRunnerPage({ auth }) {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${auth.token}`,
-            'ngrok-skip-browser-warning': 'true'
+            'ngrok-skip-browser-warning': 'true',
+            'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
           },
           body: JSON.stringify({
             selectedOptionId: optionId,
@@ -890,7 +909,8 @@ function CaseRunnerPage({ auth }) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
-          'ngrok-skip-browser-warning': 'true'
+          'ngrok-skip-browser-warning': 'true',
+          'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
         },
         body: JSON.stringify(payload)
       })
@@ -906,7 +926,8 @@ function CaseRunnerPage({ auth }) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
-          'ngrok-skip-browser-warning': 'true'
+          'ngrok-skip-browser-warning': 'true',
+          'X-Session-Id': sessionId  // SPRINT CUSTOMIZATION: session-based progress
         },
         body: JSON.stringify({ feedback: feedbackText || '' })
       })
