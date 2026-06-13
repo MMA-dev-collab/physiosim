@@ -224,7 +224,7 @@ function OverviewTab({ auth, onTabChange }) {
 
                   {/* Actions (visible on hover or always on small screens) */}
                   <div className="flex items-center gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <Link to={`/admin/cases/${c.id}`} className="p-2 text-admin-text-muted hover:text-admin-primary rounded-lg hover:bg-admin-primary-soft transition-colors tooltip" title="Edit Case">
+                    <Link to={`/admin/cases/${c.id}/edit`} className="p-2 text-admin-text-muted hover:text-admin-primary rounded-lg hover:bg-admin-primary-soft transition-colors tooltip" title="Edit Case">
                       <span className="material-symbols-outlined text-[18px]">edit_square</span>
                     </Link>
                     <button onClick={() => handleDeleteCaseLocal(c.id)} className="p-2 text-admin-text-muted hover:text-admin-danger rounded-lg hover:bg-admin-danger/10 transition-colors tooltip" title="Delete Case">

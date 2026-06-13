@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
-import Loader from '@/components/ui/loader-12'
+import MedicalLoader from '@/components/ui/MedicalLoader'
 import './MembershipPage.css'
 
 function MembershipPage({ auth }) {
@@ -84,9 +84,7 @@ function MembershipPage({ auth }) {
   }
 
   if (loading) return (
-    <div className="membership-loading">
-      <Loader />
-    </div>
+    <MedicalLoader />
   )
 
   return (

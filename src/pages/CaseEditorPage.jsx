@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config'
 import StepEditor from '../components/StepEditor'
 import { useToast } from '../context/ToastContext'
 import ConfirmationModal from '../components/common/ConfirmationModal'
-import Loader from '../components/ui/loader-12'
+import MedicalLoader from '../components/ui/MedicalLoader'
 import ImageUpload from '../components/common/ImageUpload'
 import { ClinicalPhaseManager } from '../components/clinical'
 import './CaseEditorPage.css'
@@ -463,15 +463,7 @@ export default function CaseEditorPage({ auth }) {
 
     if (loading) {
         return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '80vh',
-                width: '100%'
-            }}>
-                <Loader />
-            </div>
+            <MedicalLoader />
         )
     }
 

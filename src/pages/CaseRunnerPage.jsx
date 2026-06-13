@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
-import Loader from '@/components/ui/loader-12'
+import MedicalLoader from '@/components/ui/MedicalLoader'
 import { useIdleTimer } from '../hooks/useIdleTimer'
 import HintModal from '@/components/common/HintModal'
 import { ClinicalStepRunner, StepRenderer } from '@/components/clinical'
@@ -826,9 +826,7 @@ function CaseRunnerPage({ auth }) {
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
-      <Loader />
-    </div>
+    <MedicalLoader />
   )
   if (error)
     return (

@@ -20,16 +20,12 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'))
 const ComponentShowcase = lazy(() => import('./pages/ComponentShowcase'))
 
+import MedicalLoader from './components/ui/MedicalLoader'
+
 function LoadingFallback() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-        <p className="text-sm text-slate-500">Loading...</p>
-      </div>
-    </div>
-  )
+  return <MedicalLoader />
 }
+
 
 function Navbar({ auth, logout, menuOpen, toggleMenu, closeMenu, isAdmin, showDropdown, setShowDropdown }) {
   const location = useLocation()

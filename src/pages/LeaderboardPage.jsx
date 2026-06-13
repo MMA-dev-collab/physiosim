@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../config';
-import Loader from '@/components/ui/loader-12';
+import MedicalLoader from '@/components/ui/MedicalLoader';
 import { motion } from 'framer-motion';
 import { Trophy, Medal, User, Award, Hash, BookOpen } from 'lucide-react';
 
@@ -27,9 +27,7 @@ export default function LeaderboardPage({ auth }) {
   }, [auth]);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-[80vh] w-full">
-      <Loader />
-    </div>
+    <MedicalLoader />
   );
 
   const topThree = leaderboard.slice(0, 3);

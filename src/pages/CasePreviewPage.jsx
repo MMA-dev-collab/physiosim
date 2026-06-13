@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
-import Loader from '@/components/ui/loader-12'
+import MedicalLoader from '@/components/ui/MedicalLoader'
 import CaseRunnerLayout from './CaseRunnerLayout'
 import { StepRenderer } from '@/components/clinical'
 import { PreviewProvider, usePreview } from '../context/PreviewContext'
@@ -354,9 +354,7 @@ export default function CasePreviewPage({ auth }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
-        <Loader />
-      </div>
+      <MedicalLoader />
     )
   }
 
