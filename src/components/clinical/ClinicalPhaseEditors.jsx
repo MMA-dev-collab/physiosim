@@ -56,6 +56,18 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
         updateEq('synonyms', (eq.synonyms || []).filter((_, i) => i !== idx))
     }
 
+    const addExpectedLevel = (lv) => {
+        if (!lv.trim()) return
+        const existing = content.expected_levels || []
+        if (!existing.includes(lv.trim())) {
+            onUpdate({ ...step, content: { ...content, expected_levels: [...existing, lv.trim()] } })
+        }
+    }
+
+    const removeExpectedLevel = (idx) => {
+        onUpdate({ ...step, content: { ...content, expected_levels: (content.expected_levels || []).filter((_, i) => i !== idx) } })
+    }
+
     return (
         <div className="phase-editor diagnosis-phase">
             <div className="phase-header user-input-header">
@@ -117,6 +129,60 @@ export function DiagnosisPhaseEditor({ step, onUpdate, errors, touched, setTouch
                     }} style={{ marginTop: '10px', padding: '8px 16px', borderRadius: '8px', background: '#f1f5f9', color: '#334155', border: '1px dashed #cbd5e1', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', width: '100%' }}>
                         + Add Evidence
                     </button>
+                </div>
+
+                {/* Expected Condition (Optional) */}
+                <div className="form-group">
+                    <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', fontSize: '0.85rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                        Expected Condition <span style={{ color: '#94a3b8', fontWeight: 400, textTransform: 'none' }}>(Optional)</span>
+                    </label>
+                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '10px', display: 'block' }}>
+                        If provided, the Condition input field will appear in the student view. Leave empty to hide it.
+                    </span>
+                    <input
+                        type="text"
+                        value={content.expected_condition || ''}
+                        onChange={(e) => onUpdate({ ...step, content: { ...content, expected_condition: e.target.value } })}
+                        placeholder="e.g. Bilateral knee osteoarthritis"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '0.9rem' }}
+                    />
+                </div>
+
+                {/* Expected Levels (Optional) */}
+                <div className="form-group">
+                    <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', fontSize: '0.85rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                        Expected Levels <span style={{ color: '#94a3b8', fontWeight: 400, textTransform: 'none' }}>(Optional)</span>
+                    </label>
+                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '10px', display: 'block' }}>
+                        If provided, the Levels input field will appear in the student view. Leave empty to hide it.
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                        {(content.expected_levels || []).map((lv, idx) => (
+                            <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', background: '#fce7f3', color: '#9d174d', fontSize: '0.85rem', fontWeight: 600 }}>
+                                {lv}
+                                <button type="button" onClick={() => removeExpectedLevel(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9d174d', fontSize: '1.1rem', padding: 0, lineHeight: 1, fontWeight: 700 }}>×</button>
+                            </span>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                            type="text"
+                            placeholder="Enter expected level..."
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ',') {
+                                    e.preventDefault()
+                                    addExpectedLevel(e.target.value)
+                                    e.target.value = ''
+                                }
+                            }}
+                            style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '0.9rem' }}
+                        />
+                        <button type="button" onClick={(e) => {
+                            const input = e.target.closest('div').querySelector('input')
+                            addExpectedLevel(input.value)
+                            input.value = ''
+                        }} style={{ padding: '10px 20px', borderRadius: '8px', background: '#ec4899', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Add</button>
+                    </div>
                 </div>
 
                 {/* Max Score */}

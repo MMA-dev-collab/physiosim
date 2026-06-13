@@ -36,6 +36,19 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
   const sections = content.sections || []
   const clinicalTip = content.clinicalTip || null
 
+  // Assign stable IDs to essay/mcq sections if missing
+  const processedSections = React.useMemo(() => {
+    return sections.map((section, idx) => {
+      if (section.type === 'essay' || section.type === 'mcq') {
+        return {
+          ...section,
+          id: section.id || `${step?.id}-section-${idx}`
+        }
+      }
+      return section
+    })
+  }, [sections, step?.id])
+
   if (sections.length === 0) {
     return (
       <div className="car-empty">
@@ -55,7 +68,7 @@ export default function CompositeAssessmentRunner({ step, mcqProps, essayProps, 
       )}
 
       {/* Render each section */}
-      {sections.map((section, idx) => (
+      {processedSections.map((section, idx) => (
         <div key={idx} className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm mb-6">
           {renderSection(section, mcqProps, essayProps)}
         </div>
@@ -916,7 +929,7 @@ function GenericSection({ section }) {
 ========================== */
 function MriFindingsSection({ section, watermarkEnabled = false }) {
   const entries = section.entries || []
-  const hasImage = !!section.image_url
+  const hasImage = !!(section.image_url && section.image_url.trim())
   const statusOptions = section.status_options || []
 
   const getStatusLabel = (val) => {
@@ -942,7 +955,7 @@ function MriFindingsSection({ section, watermarkEnabled = false }) {
     <div className="car-mri-findings relative">
       <h3 className="car-section-title">{section.title || 'MRI Findings'}</h3>
       
-      <div className={`flex flex-col ${hasImage ? 'lg:flex-row' : ''} gap-8 items-stretch`}>
+      <div className={hasImage ? "flex flex-col lg:flex-row gap-8 items-stretch" : "w-full"}>
         {hasImage && (
           <div className="w-full lg:w-1/2 shrink-0 relative min-h-[350px] lg:min-h-0">
             <div className="absolute inset-0 rounded-2xl overflow-hidden border border-slate-200 bg-[#0f172a] shadow-sm p-3 flex items-center justify-center">
@@ -957,7 +970,7 @@ function MriFindingsSection({ section, watermarkEnabled = false }) {
           </div>
         )}
 
-        <div className="flex-1 w-full overflow-x-auto mt-2">
+        <div className={hasImage ? "flex-1 w-full overflow-x-auto mt-2" : "w-full overflow-x-auto mt-2 -mx-8 w-[calc(100%+64px)]"}>
           {entries.length > 0 ? (
             <table className="w-full text-left border-separate border-spacing-y-2">
               <thead>

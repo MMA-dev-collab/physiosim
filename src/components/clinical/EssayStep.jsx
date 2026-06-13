@@ -89,7 +89,10 @@ export default function EssayStep({ step, essayAnswer, setEssayAnswer, essayFeed
 
   const essayQuestions = (step.essayQuestions && step.essayQuestions.length > 0)
     ? step.essayQuestions
-    : [{ question_text: step.question || step.prompt || '' }]
+    : [{ 
+        question_text: step.question || step.prompt || '',
+        perfect_answer: step.perfect_answer || step.perfectAnswer || ''
+      }]
 
   return (
     <div className="relative w-full">

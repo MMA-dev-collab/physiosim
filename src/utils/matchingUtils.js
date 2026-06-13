@@ -275,7 +275,7 @@ export function evaluateEssay(step, answer) {
         keywords: sec.expectedKeywords || [],
         synonyms: [],
         perfect_answer: sec.perfectAnswer || '',
-        max_score: 10
+        max_score: sec.maxScore || sec.max_score || 10
       }))
     }
   }
@@ -283,14 +283,14 @@ export function evaluateEssay(step, answer) {
   if (essayQuestions.length === 0) {
     // Fallback if no questions are found
     const questionText = step.question || step.prompt || ''
-    const keywords = step.keywords || []
+    const keywords = step.keywords || step.expectedKeywords || []
     const perfectAnswer = step.perfect_answer || step.perfectAnswer || ''
     essayQuestions = [{
       question_text: questionText,
       keywords: Array.isArray(keywords) ? keywords : String(keywords).split(',').map(s => s.trim()).filter(Boolean),
       synonyms: [],
       perfect_answer: perfectAnswer,
-      max_score: 10
+      max_score: step.maxScore || step.max_score || 10
     }]
   }
 

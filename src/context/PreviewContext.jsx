@@ -206,21 +206,19 @@ export const PreviewProvider = ({ children, mode = 'production', initialSteps = 
     }, [steps, isSingleStep]);
 
     const resetStep = useCallback((stepId) => {
-        setAnswers(prev => {
+        const cleanupKeys = (prev) => {
             const next = { ...prev };
             delete next[stepId];
+            Object.keys(next).forEach(key => {
+                if (key.startsWith(`${stepId}-`)) {
+                    delete next[key];
+                }
+            });
             return next;
-        });
-        setFeedback(prev => {
-            const next = { ...prev };
-            delete next[stepId];
-            return next;
-        });
-        setScores(prev => {
-            const next = { ...prev };
-            delete next[stepId];
-            return next;
-        });
+        };
+        setAnswers(cleanupKeys);
+        setFeedback(cleanupKeys);
+        setScores(cleanupKeys);
     }, []);
 
     const finishCase = useCallback(() => {
@@ -245,19 +243,31 @@ export const PreviewProvider = ({ children, mode = 'production', initialSteps = 
                 const stepMax = step.maxScore || 10;
                 maxPossibleScore += stepMax;
 
+                const getStepScore = (s, maxS) => {
+                    if (s.content?.sections) {
+                        let compositeScore = 0;
+                        s.content.sections.forEach((sec, idx) => {
+                            if (sec.type === 'mcq' || sec.type === 'essay') {
+                                const secId = sec.id || `${s.id}-section-${idx}`;
+                                const secAttempt = scores[secId];
+                                if (secAttempt?.score !== undefined) {
+                                    compositeScore += secAttempt.score;
+                                }
+                            }
+                        });
+                        return Math.min(compositeScore, maxS);
+                    }
+                    const attempt = scores[s.id];
+                    return attempt?.score !== undefined ? Math.min(attempt.score, maxS) : 0;
+                };
+
                 // Standalone or sub-steps
                 if (step.type === 'clinical_hub' && step.subSteps) {
                     for (const sub of step.subSteps) {
-                        const attempt = scores[sub.id];
-                        if (attempt?.score !== undefined) {
-                            totalScore += Math.round(Math.min(attempt.score, sub.maxScore || 10));
-                        }
+                        totalScore += Math.round(getStepScore(sub, sub.maxScore || 10));
                     }
                 } else {
-                    const attempt = scores[step.id];
-                    if (attempt?.score !== undefined) {
-                        totalScore += Math.round(Math.min(attempt.score, stepMax));
-                    }
+                    totalScore += Math.round(getStepScore(step, stepMax));
                 }
             }
         }

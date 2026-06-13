@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PreviewProvider, usePreview } from '../../context/PreviewContext'
 import StepRenderer from '../clinical/StepRenderer'
 import './StepPreviewModal.css'
+import '../../styles/caseflow.css'
 
 function SingleStepPreviewRunner() {
   const preview = usePreview()
@@ -24,9 +25,21 @@ function SingleStepPreviewRunner() {
   if (!step) return null
 
   const stepId = step.id
-  const stepFeedback = feedback[stepId] || null
-  const stepScore = scores[stepId]
-  const isCorrect = stepScore?.isCorrect ?? null
+  let stepFeedback = feedback[stepId] || null
+  let isCorrect = scores[stepId]?.isCorrect ?? null
+
+  if (step.content?.sections) {
+    step.content.sections.forEach((sec, idx) => {
+      const secId = sec.id || `${stepId}-section-${idx}`
+      if (sec.type === 'mcq') {
+        const secScore = scores[secId]
+        if (secScore?.isCorrect === false) {
+          isCorrect = false
+          stepFeedback = feedback[secId] || stepFeedback
+        }
+      }
+    })
+  }
 
   const checkHasMcq = (stepToCheck) => {
     if (!stepToCheck) return false;

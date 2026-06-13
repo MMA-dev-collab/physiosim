@@ -74,9 +74,21 @@ function CasePreviewRunner({ onExit }) {
 
   const activeStepForMcq = activeSubStep || currentStep
   const stepId = activeStepForMcq?.id
-  const stepFeedback = feedback[stepId] || null
-  const stepScore = scores[stepId]
-  const isCorrect = stepScore?.isCorrect ?? null
+  let stepFeedback = feedback[stepId] || null
+  let isCorrect = scores[stepId]?.isCorrect ?? null
+
+  if (activeStepForMcq?.content?.sections) {
+    activeStepForMcq.content.sections.forEach((sec, idx) => {
+      const secId = sec.id || `${stepId}-section-${idx}`
+      if (sec.type === 'mcq') {
+        const secScore = scores[secId]
+        if (secScore?.isCorrect === false) {
+          isCorrect = false
+          stepFeedback = feedback[secId] || stepFeedback
+        }
+      }
+    })
+  }
 
   const getIsStepCompleted = (s) => {
     if (!s) return true
@@ -96,15 +108,20 @@ function CasePreviewRunner({ onExit }) {
     }
     if (s.content?.sections) {
       const sections = s.content.sections
-      const hasMcq = sections.some(sec => sec.type === 'mcq')
-      const hasEssay = sections.some(sec => sec.type === 'essay')
-      if (hasMcq) {
-        const mcqCorrect = score?.isCorrect === true
-        if (!mcqCorrect) return false
-      }
-      if (hasEssay) {
-        const essayScored = score?.score !== undefined && score?.score !== null
-        if (!essayScored) return false
+      for (let idx = 0; idx < sections.length; idx++) {
+        const sec = sections[idx]
+        const secId = sec.id || `${s.id}-section-${idx}`
+        if (sec.type === 'mcq') {
+          const secAnswer = answers[secId]
+          const secScore = scores[secId]
+          const mcqCorrect = secAnswer?.selectedOptionId !== undefined && secScore?.isCorrect === true
+          if (!mcqCorrect) return false
+        }
+        if (sec.type === 'essay') {
+          const secScore = scores[secId]
+          const essayScored = secScore?.score !== undefined && secScore?.score !== null
+          if (!essayScored) return false
+        }
       }
     }
     return true

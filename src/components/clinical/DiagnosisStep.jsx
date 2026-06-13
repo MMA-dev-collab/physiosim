@@ -96,6 +96,10 @@ export default function DiagnosisStep({
 
   const isActuallySubmitted = submitted || currentIsReviewMode
 
+  // ─── Determine which fields admin configured ────
+  const showCondition = !!(step?.content?.expected_condition?.trim())
+  const showLevels = !!(step?.content?.expected_levels && step.content.expected_levels.length > 0)
+
   // ─── Derive expected data from step.essayQuestions ────
   const expectedData = useMemo(() => {
     const eq = step?.essayQuestions?.[0] || {}
@@ -108,15 +112,81 @@ export default function DiagnosisStep({
 
   // ─── Auto‑generate sentence ───────────────────
   const generatedSentence = useMemo(() => {
-    if (!condition) return ''
-    let sentence = condition
-    if (levels.length > 0) {
-      sentence += ` at ${levels.join(', ')}`
+    const hasCond = !!condition.trim()
+    const hasLev = levels.length > 0
+    const hasFind = findings.length > 0
+
+    if (hasCond && hasLev && hasFind) {
+      return `${condition.trim()} ${levels.join(', ')} with ${findings.join(' and ')}`
     }
-    if (findings.length > 0) {
-      sentence += ` with ${findings.join(' and ')}`
+    if (!hasCond && hasLev && hasFind) {
+      return `${levels.join(', ')} with ${findings.join(' and ')}`
     }
-    return sentence
+    if (!hasCond && !hasLev && hasFind) {
+      return `has ${findings.join(' and ')}`
+    }
+    if (hasCond && !hasLev && hasFind) {
+      return `${condition.trim()} with ${findings.join(' and ')}`
+    }
+    if (hasCond && hasLev && !hasFind) {
+      return `${condition.trim()} ${levels.join(', ')}`
+    }
+    if (hasCond && !hasLev && !hasFind) {
+      return condition.trim()
+    }
+    if (!hasCond && hasLev && !hasFind) {
+      return levels.join(', ')
+    }
+    return ''
+  }, [condition, levels, findings])
+
+  // ─── Render preview sentence with highlights ──
+  const previewSentence = useMemo(() => {
+    const hasCond = !!condition.trim()
+    const hasLev = levels.length > 0
+    const hasFind = findings.length > 0
+
+    const condSpan = hasCond ? (
+      <span key="cond" style={{ fontWeight: 700, color: '#1e293b' }}>
+        {condition.trim()}
+      </span>
+    ) : null
+
+    const levSpan = hasLev ? (
+      <span key="lev" style={{ fontWeight: 600, color: '#3b4cca' }}>
+        {levels.join(', ')}
+      </span>
+    ) : null
+
+    const findSpan = hasFind ? (
+      <span key="find" style={{ fontWeight: 600, color: '#7c3aed' }}>
+        {findings.join(' and ')}
+      </span>
+    ) : null
+
+    const parts = []
+
+    if (hasCond && hasLev && hasFind) {
+      parts.push(condSpan, ' ', levSpan, ' with ', findSpan)
+    } else if (!hasCond && hasLev && hasFind) {
+      parts.push(levSpan, ' with ', findSpan)
+    } else if (!hasCond && !hasLev && hasFind) {
+      parts.push('has ', findSpan)
+    } else if (hasCond && !hasLev && hasFind) {
+      parts.push(condSpan, ' with ', findSpan)
+    } else if (hasCond && hasLev && !hasFind) {
+      parts.push(condSpan, ' ', levSpan)
+    } else if (hasCond && !hasLev && !hasFind) {
+      parts.push(condSpan)
+    } else if (!hasCond && hasLev && !hasFind) {
+      parts.push(levSpan)
+    }
+
+    return (
+      <div className="diagnosis-step__preview-text" style={{ fontSize: '1.15rem', color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+        {parts}
+      </div>
+    )
   }, [condition, levels, findings])
 
   // ─── Tag helpers ──────────────────────────────
@@ -180,7 +250,15 @@ export default function DiagnosisStep({
   const isPassed = currentEssayScore !== null && currentEssayScore >= maxScore * 0.6
 
   // ─── Is form valid? (for external isStepCompleted) ────
-  const isValid = condition.trim().length > 0 && levels.length > 0
+  // At minimum, need findings. Condition and levels are optional based on admin config.
+  const isValid = findings.length > 0 || (showCondition && condition.trim().length > 0)
+
+  // ─── Dynamic subtitle ────
+  const subtitleParts = []
+  if (showCondition) subtitleParts.push('the condition')
+  if (showLevels) subtitleParts.push('affected levels')
+  subtitleParts.push('associated findings')
+  const subtitleText = `Build your diagnosis by selecting ${subtitleParts.join(', ')}.`
 
   return (
     <div className="diagnosis-step">
@@ -190,73 +268,77 @@ export default function DiagnosisStep({
           {step?.content?.title || step?.title || 'Diagnosis'}
         </h2>
         <p className="diagnosis-step__subtitle">
-          Build your diagnosis by selecting the condition, affected levels, and associated findings.
+          {subtitleText}
         </p>
       </div>
 
       {/* Form Card */}
       <div className="diagnosis-step__card">
-        {/* Condition */}
-        <div className="diagnosis-step__field">
-          <label className="diagnosis-step__label">
-            <span className="diagnosis-step__label-icon">🏥</span>
-            Condition
-          </label>
-          <input
-            type="text"
-            className="diagnosis-step__input"
-            placeholder="Enter clinical condition"
-            value={condition}
-            onChange={(e) => setCondition(e.target.value)}
-            disabled={isActuallySubmitted}
-          />
-        </div>
-
-        {/* Levels */}
-        <div className="diagnosis-step__field">
-          <label className="diagnosis-step__label">
-            <span className="diagnosis-step__label-icon">📍</span>
-            Levels
-          </label>
-          <div className="diagnosis-step__tag-input-wrap">
-            <div className="diagnosis-step__tags">
-              {levels.map((lv, idx) => (
-                <span key={idx} className="diagnosis-step__tag">
-                  {lv}
-                  {!isActuallySubmitted && (
-                    <button
-                      onClick={() => removeLevel(idx)}
-                      className="diagnosis-step__tag-remove"
-                      aria-label={`Remove ${lv}`}
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-            {!isActuallySubmitted && (
-              <div className="diagnosis-step__tag-input-row">
-                <input
-                  type="text"
-                  className="diagnosis-step__input diagnosis-step__input--tag"
-                  placeholder="Enter level"
-                  value={levelInput}
-                  onChange={(e) => setLevelInput(e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, addLevel)}
-                />
-                <button
-                  onClick={addLevel}
-                  className="diagnosis-step__add-btn"
-                  disabled={!levelInput.trim()}
-                  type="button"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            )}
+        {/* Condition — only if admin configured it */}
+        {showCondition && (
+          <div className="diagnosis-step__field">
+            <label className="diagnosis-step__label">
+              <span className="diagnosis-step__label-icon">🏥</span>
+              Condition
+            </label>
+            <input
+              type="text"
+              className="diagnosis-step__input"
+              placeholder="Enter clinical condition"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+              disabled={isActuallySubmitted}
+            />
           </div>
-        </div>
+        )}
+
+        {/* Levels — only if admin configured it */}
+        {showLevels && (
+          <div className="diagnosis-step__field">
+            <label className="diagnosis-step__label">
+              <span className="diagnosis-step__label-icon">📍</span>
+              Levels
+            </label>
+            <div className="diagnosis-step__tag-input-wrap">
+              <div className="diagnosis-step__tags">
+                {levels.map((lv, idx) => (
+                  <span key={idx} className="diagnosis-step__tag">
+                    {lv}
+                    {!isActuallySubmitted && (
+                      <button
+                        onClick={() => removeLevel(idx)}
+                        className="diagnosis-step__tag-remove"
+                        aria-label={`Remove ${lv}`}
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+              {!isActuallySubmitted && (
+                <div className="diagnosis-step__tag-input-row">
+                  <input
+                    type="text"
+                    className="diagnosis-step__input diagnosis-step__input--tag"
+                    placeholder="Enter level"
+                    value={levelInput}
+                    onChange={(e) => setLevelInput(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, addLevel)}
+                  />
+                  <button
+                    onClick={addLevel}
+                    className="diagnosis-step__add-btn"
+                    disabled={!levelInput.trim()}
+                    type="button"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Associated Findings */}
         <div className="diagnosis-step__field">
@@ -306,21 +388,15 @@ export default function DiagnosisStep({
       </div>
 
       {/* Generated Preview */}
-      {condition.trim() && (
+      {(condition.trim() || findings.length > 0 || levels.length > 0) && (
         <div className={`diagnosis-step__preview ${isActuallySubmitted ? 'diagnosis-step__preview--submitted' : ''}`} style={{ background: 'white', borderRadius: '12px', border: '1px solid #3b4cca', padding: '24px', marginTop: '24px' }}>
           <div style={{ color: '#3b4cca', fontWeight: 800, fontSize: '1.2rem', marginBottom: '16px' }}>
             Diagnosis
           </div>
-          <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '1.15rem' }}>
-            {condition.trim()} {levels.length > 0 && levels.map(l => `(${l})`).join(' ')}
-          </div>
-          {findings.length > 0 && (
-            <div style={{ color: '#64748b', fontSize: '1rem', marginTop: '6px' }}>
-              with {findings.join(' and ')}
-            </div>
-          )}
+          {previewSentence}
         </div>
       )}
+
 
       {/* Submit Button */}
       {!isActuallySubmitted && (
