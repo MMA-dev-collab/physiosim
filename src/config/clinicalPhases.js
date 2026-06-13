@@ -85,6 +85,7 @@ export const PHASE_CATEGORIES = {
         // { id: 'medication', label: 'Medication (Legacy)', inputMode: 'author_only', dataTypes: ['text', 'numbers'] }
     ],
     assessment: [
+        { id: 'composite_assessment', label: 'Examination (Unified)', inputMode: 'composite', dataTypes: ['composite'] },
         // { id: 'observation_anterior', label: 'Observation - Anterior View', inputMode: 'author_only', dataTypes: ['image', 'text'] },
         // { id: 'observation_sagittal', label: 'Observation - Sagittal View', inputMode: 'author_only', dataTypes: ['image', 'text'] },
         // { id: 'observation_posterior', label: 'Observation - Posterior View', inputMode: 'author_only', dataTypes: ['image', 'text'] },
@@ -246,6 +247,10 @@ export const CATEGORY_TEMPLATES = {
     },
     diagnosis_entry: {
         diagnoses: [] // [{ code, label, confidence, supporting_findings, notes, image_url }]
+    },
+    composite_assessment: {
+        sections: [],
+        clinicalTip: ''
     },
     composite_imaging: {
         sections: [],
