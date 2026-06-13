@@ -2,3 +2,10 @@ node_modules/
 dist/
 .env
 src/config.js
+
+# AI-Slab agents
+.agents/
+.claude/
+.cursor/
+.gemini/
+.opencode/
