@@ -103,11 +103,19 @@ export default function ClinicalPhaseManager({
     // Count steps in each phase
     const getPhaseProgress = (phaseId) => {
         const categories = getCategoriesForPhase(phaseId)
-        const phaseSteps = stepsByPhase[phaseId] || []
-        const filledCategories = new Set(phaseSteps.map(s => s.category))
+        const phaseSteps = [
+            ...(stepsByPhase[phaseId] || []),
+            // Include educational steps that might not be in slots
+            ...steps.filter(s => (s.type === 'mcq' || s.type === 'essay') && (s.phase === phaseId || (!s.phase && phaseId === 'assessment')))
+        ]
+        
+        // Count unique categories + unique educational steps
+        const filledCategories = new Set(phaseSteps.filter(s => s.category).map(s => s.category))
+        const eduSteps = phaseSteps.filter(s => !s.category)
+        
         return {
-            filled: filledCategories.size,
-            total: categories.length
+            filled: filledCategories.size + eduSteps.length,
+            total: categories.length + eduSteps.length
         }
     }
 
@@ -401,10 +409,21 @@ export default function ClinicalPhaseManager({
                                             return (
                                                 <div key={cat.id} className={`category-card ${existingStep ? 'has-content' : ''}`}>
                                                     <div className="category-header">
-                                                        <span className="category-label">{cat.label}</span>
-                                                        {cat.inputMode === 'user_input' && (
-                                                            <span className="user-input-badge-small">User Input</span>
-                                                        )}
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span className="category-label">{cat.label}</span>
+                                                            {cat.inputMode === 'user_input' && (
+                                                                <span className="user-input-badge-small">User Input</span>
+                                                            )}
+                                                            {existingStep && (
+                                                                <span className="edu-step-index" style={{ 
+                                                                    fontSize: '0.7rem', 
+                                                                    opacity: 0.8,
+                                                                    marginLeft: '4px'
+                                                                }}>
+                                                                    Step {existingStep.stepIndex + 1}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         {existingStep && (
                                                             <span className="filled-indicator">✓</span>
                                                         )}
@@ -637,14 +656,14 @@ export default function ClinicalPhaseManager({
             {/* Quick stats */}
             <div className="manager-stats">
                 <div className="stat">
-                    <span className="stat-value">{steps.filter(s => s.phase).length}</span>
+                    <span className="stat-value">{steps.filter(s => s.phase && s.type !== 'mcq' && s.type !== 'essay').length}</span>
                     <span className="stat-label">Clinical Steps</span>
                 </div>
                 <div className="stat">
                     <span className="stat-value">
                         {steps.filter(s => s.type === 'mcq' || s.type === 'essay').length}
                     </span>
-                    <span className="stat-label">Educational Steps</span>
+                    <span className="stat-label">Decision Points</span>
                 </div>
                 <div className="stat">
                     <span className="stat-value">
